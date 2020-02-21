@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // lazy_integer_column
 SEXP lazy_integer_column(SEXP mat, SEXP idx);
-RcppExport SEXP _scater_lazy_integer_column(SEXP matSEXP, SEXP idxSEXP) {
+RcppExport SEXP _scuttle_lazy_integer_column(SEXP matSEXP, SEXP idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type mat(matSEXP);
@@ -18,7 +18,7 @@ END_RCPP
 }
 // lazy_integer_row
 SEXP lazy_integer_row(SEXP mat, SEXP idx);
-RcppExport SEXP _scater_lazy_integer_row(SEXP matSEXP, SEXP idxSEXP) {
+RcppExport SEXP _scuttle_lazy_integer_row(SEXP matSEXP, SEXP idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type mat(matSEXP);
@@ -29,7 +29,7 @@ END_RCPP
 }
 // lazy_double_column
 SEXP lazy_double_column(SEXP mat, SEXP idx);
-RcppExport SEXP _scater_lazy_double_column(SEXP matSEXP, SEXP idxSEXP) {
+RcppExport SEXP _scuttle_lazy_double_column(SEXP matSEXP, SEXP idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type mat(matSEXP);
@@ -40,7 +40,7 @@ END_RCPP
 }
 // lazy_double_row
 SEXP lazy_double_row(SEXP mat, SEXP idx);
-RcppExport SEXP _scater_lazy_double_row(SEXP matSEXP, SEXP idxSEXP) {
+RcppExport SEXP _scuttle_lazy_double_row(SEXP matSEXP, SEXP idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type mat(matSEXP);
@@ -51,7 +51,7 @@ END_RCPP
 }
 // per_cell_qc
 Rcpp::RObject per_cell_qc(Rcpp::RObject matrix, Rcpp::List featcon, Rcpp::IntegerVector top, SEXP limit);
-RcppExport SEXP _scater_per_cell_qc(SEXP matrixSEXP, SEXP featconSEXP, SEXP topSEXP, SEXP limitSEXP) {
+RcppExport SEXP _scuttle_per_cell_qc(SEXP matrixSEXP, SEXP featconSEXP, SEXP topSEXP, SEXP limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
@@ -64,7 +64,7 @@ END_RCPP
 }
 // per_feature_qc
 Rcpp::RObject per_feature_qc(Rcpp::RObject matrix, Rcpp::List cellcon, SEXP limit);
-RcppExport SEXP _scater_per_feature_qc(SEXP matrixSEXP, SEXP cellconSEXP, SEXP limitSEXP) {
+RcppExport SEXP _scuttle_per_feature_qc(SEXP matrixSEXP, SEXP cellconSEXP, SEXP limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
@@ -76,7 +76,7 @@ END_RCPP
 }
 // top_cumprop
 Rcpp::NumericMatrix top_cumprop(Rcpp::RObject matrix, Rcpp::IntegerVector top);
-RcppExport SEXP _scater_top_cumprop(SEXP matrixSEXP, SEXP topSEXP) {
+RcppExport SEXP _scuttle_top_cumprop(SEXP matrixSEXP, SEXP topSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
@@ -87,7 +87,7 @@ END_RCPP
 }
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
-RcppExport SEXP _scater_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
+RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type counts(countsSEXP);
@@ -99,19 +99,19 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scater_lazy_integer_column", (DL_FUNC) &_scater_lazy_integer_column, 2},
-    {"_scater_lazy_integer_row", (DL_FUNC) &_scater_lazy_integer_row, 2},
-    {"_scater_lazy_double_column", (DL_FUNC) &_scater_lazy_double_column, 2},
-    {"_scater_lazy_double_row", (DL_FUNC) &_scater_lazy_double_row, 2},
-    {"_scater_per_cell_qc", (DL_FUNC) &_scater_per_cell_qc, 4},
-    {"_scater_per_feature_qc", (DL_FUNC) &_scater_per_feature_qc, 3},
-    {"_scater_top_cumprop", (DL_FUNC) &_scater_top_cumprop, 2},
-    {"_scater_sum_row_counts", (DL_FUNC) &_scater_sum_row_counts, 3},
+    {"_scuttle_lazy_integer_column", (DL_FUNC) &_scuttle_lazy_integer_column, 2},
+    {"_scuttle_lazy_integer_row", (DL_FUNC) &_scuttle_lazy_integer_row, 2},
+    {"_scuttle_lazy_double_column", (DL_FUNC) &_scuttle_lazy_double_column, 2},
+    {"_scuttle_lazy_double_row", (DL_FUNC) &_scuttle_lazy_double_row, 2},
+    {"_scuttle_per_cell_qc", (DL_FUNC) &_scuttle_per_cell_qc, 4},
+    {"_scuttle_per_feature_qc", (DL_FUNC) &_scuttle_per_feature_qc, 3},
+    {"_scuttle_top_cumprop", (DL_FUNC) &_scuttle_top_cumprop, 2},
+    {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };
 
 void init_lazy_vector(DllInfo* dll);
-RcppExport void R_init_scater(DllInfo *dll) {
+RcppExport void R_init_scuttle(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
     init_lazy_vector(dll);

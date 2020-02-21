@@ -2,34 +2,34 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 lazy_integer_column <- function(mat, idx) {
-    .Call(`_scater_lazy_integer_column`, mat, idx)
+    .Call(`_scuttle_lazy_integer_column`, mat, idx)
 }
 
 lazy_integer_row <- function(mat, idx) {
-    .Call(`_scater_lazy_integer_row`, mat, idx)
+    .Call(`_scuttle_lazy_integer_row`, mat, idx)
 }
 
 lazy_double_column <- function(mat, idx) {
-    .Call(`_scater_lazy_double_column`, mat, idx)
+    .Call(`_scuttle_lazy_double_column`, mat, idx)
 }
 
 lazy_double_row <- function(mat, idx) {
-    .Call(`_scater_lazy_double_row`, mat, idx)
+    .Call(`_scuttle_lazy_double_row`, mat, idx)
 }
 
 per_cell_qc <- function(matrix, featcon, top, limit) {
-    .Call(`_scater_per_cell_qc`, matrix, featcon, top, limit)
+    .Call(`_scuttle_per_cell_qc`, matrix, featcon, top, limit)
 }
 
 per_feature_qc <- function(matrix, cellcon, limit) {
-    .Call(`_scater_per_feature_qc`, matrix, cellcon, limit)
+    .Call(`_scuttle_per_feature_qc`, matrix, cellcon, limit)
 }
 
 top_cumprop <- function(matrix, top) {
-    .Call(`_scater_top_cumprop`, matrix, top)
+    .Call(`_scuttle_top_cumprop`, matrix, top)
 }
 
 sum_row_counts <- function(counts, genes, runs) {
-    .Call(`_scater_sum_row_counts`, counts, genes, runs)
+    .Call(`_scuttle_sum_row_counts`, counts, genes, runs)
 }
 
