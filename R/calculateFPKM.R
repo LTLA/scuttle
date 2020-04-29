@@ -7,9 +7,15 @@
 #' Alternatively, a \linkS4class{SummarizedExperiment} or a \linkS4class{SingleCellExperiment} containing such counts.
 #' @param lengths Numeric vector providing the effective length for each feature in \code{x}.
 #' @param ... Further arguments to pass to \code{\link{calculateCPM}}.
-#' @param subset_row A vector specifying the subset of rows of \code{x} for which to return a result.
+#' @param subset.row A vector specifying the subset of rows of \code{x} for which to return a result.
+#' @param subset_row Soft-deprecated equivalent to the argument above.
 #'
-#' @return A numeric matrix of FPKM values.
+#' @details
+#' FPKMs are computed by dividing the CPMs by the effective length of each gene in kilobases.
+#' For RNA-seq datasets, the effective length is best set to the sum of lengths of all exons;
+#' for nucleus sequencing datasets, the effective length may instead be the entire width of the gene body.
+#' 
+#' @return A numeric matrix of FPKM values with the same dimensions as \code{x} (unless \code{subset.row} is specified).
 #'
 #' @author Aaron Lun, based on code by Davis McCarthy
 #'
@@ -22,12 +28,14 @@
 #' fout <- calculateFPKM(example_sce, eff_len)
 #' str(fout)
 #' @export
-calculateFPKM <- function(x, lengths, ..., subset_row=NULL) {
-    if (!is.null(subset_row)) {
-        subset_row <- .subset2index(subset_row, x, byrow=TRUE)
-        lengths <- lengths[subset_row]
+calculateFPKM <- function(x, lengths, ..., subset.row=NULL, subset_row=NULL) {
+    subset.row <- .replace(subset.row, subset_row)
+
+    if (!is.null(subset.row)) {
+        subset.row <- .subset2index(subset.row, x, byrow=TRUE)
+        lengths <- lengths[subset.row]
     }
 
-    out <- calculateCPM(x, subset_row=subset_row, ...)
+    out <- calculateCPM(x, subset.row=subset.row, ...)
     out / (lengths / 1e3)
 }

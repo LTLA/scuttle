@@ -5,29 +5,32 @@
 #' @param x A numeric matrix-like object containing counts for cells in the columns and features in the rows.
 #'
 #' Alternatively, a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} object containing such a count matrix.
-#' @param exprs_values A string or integer scalar specifying the assay of \code{x} containing the count matrix.
-#' @param size_factors A numeric vector of cell-specific size factors.
+#' @param assay.type A string or integer scalar specifying the assay of \code{x} containing the count matrix.
+#' @param size.factors A numeric vector of cell-specific size factors.
 #' Alternatively \code{NULL}, in which case the size factors are extracted or computed from \code{x}.
 #' @param log Logical scalar indicating whether normalized values should be log2-transformed.
-#' @param pseudo_count Numeric scalar specifying the pseudo_count to add when log-transforming expression values.
-#' @param center_size_factors Logical scalar indicating whether size factors should be centered at unity before being used.
-#' @param subset_row A vector specifying the subset of rows of \code{x} for which to return a result.
+#' @param pseudo.count Numeric scalar specifying the pseudo-count to add when log-transforming expression values.
+#' @param center.size.factors Logical scalar indicating whether size factors should be centered at unity before being used.
+#' @param subset.row A vector specifying the subset of rows of \code{x} for which to return a result.
 #' @param downsample Logical scalar indicating whether downsampling should be performed prior to scaling and log-transformation.
-#' @param down_target Numeric scalar specifying the downsampling target when \code{downsample=TRUE}.
-#' If \code{NULL}, this is defined by \code{down_prop} and a warning is emitted.
-#' @param down_prop Numeric scalar between 0 and 1 indicating the quantile to use to define the downsampling target when \code{downsample=TRUE}.
+#' @param down.target Numeric scalar specifying the downsampling target when \code{downsample=TRUE}.
+#' If \code{NULL}, this is defined by \code{down.prop} and a warning is emitted.
+#' @param down.prop Numeric scalar between 0 and 1 indicating the quantile to use to define the downsampling target.
+#' Only used when \code{downsample=TRUE}.
 #' @param ... For the generic, arguments to pass to specific methods.
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY or \linkS4class{DelayedMatrix} methods.
 #' 
 #' For the SingleCellExperiment method, further arguments to pass to the SummarizedExperiment method.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
-#' Only used if \code{size_factors} is not specified.
+#' Only used if \code{size.factors} is not specified.
+#' @param exprs_values,size_factors,pseudo_count,center_size_factors,subset_row,down_target,down_prop
+#' Soft-deprecated equivalents to the arguments described previously.
 #'
 #' @details 
 #' Normalized expression values are computed by dividing the counts for each cell by the size factor for that cell.
-#' This aims to remove cell-specific scaling biases, e.g., due to differences in sequencing coverage or capture efficiency.
-#' If \code{log=TRUE}, log-normalized values are calculated by adding \code{pseudo_count} to the normalized count and performing a log2 transformation.
+#' This removes cell-specific scaling biases due to differences in sequencing coverage, capture efficiency or total RNA content.
+#' If \code{log=TRUE}, log-normalized values are calculated by adding \code{pseudo.count} to the normalized count and performing a log2-transformation.
 #'
 #' If no size factors are supplied, they are determined automatically from \code{x}:
 #' \itemize{
@@ -36,14 +39,14 @@
 #' \item For \linkS4class{SingleCellExperiment} instances, the function searches for \code{\link{sizeFactors}} from \code{x}.
 #' If none are available, it defaults to library size-derived size factors.
 #' }
-#' If \code{size_factors} are supplied, they will override any size factors present in \code{x}.
+#' If \code{size.factors} are supplied, they will override any size factors present in \code{x}.
 #'
 #' @section Centering the size factors:
-#' If \code{center_size_factors=TRUE}, size factors are centred at unity prior to calculation of normalized expression values.
+#' If \code{center.size.factors=TRUE}, size factors are centred at unity prior to calculation of normalized expression values.
 #' This ensures that the computed expression values can be interpreted as being on the same scale as original counts.
 #' We can then compare abundances between features normalized with different sets of size factors; the most common use of this fact is in the comparison between spike-in and endogenous abundances when modelling technical noise (see \code{\link[scran]{modelGeneVarWithSpikes}} package for an example).
 #'
-#' More generally, when \code{log=TRUE}, centering of the size factors ensures that the value of \code{pseudo_count} can be interpreted as being on the same scale as the counts, i.e., the pseudo-count can actually be thought of as a \emph{count}.
+#' More generally, when \code{log=TRUE}, centering of the size factors ensures that the value of \code{pseudo.count} can be interpreted as being on the same scale as the counts, i.e., the pseudo-count can actually be thought of as a \emph{count}.
 #' This is important as it implies that the pseudo-count's impact will diminish as sequencing coverage improves.
 #' Thus, if the size factors are centered, differences between log-normalized expression values will more closely approximate the true log-fold change with increasing coverage, whereas this would not be true of other metrics like log-CPMs with a fixed offset.
 #'
@@ -51,91 +54,121 @@
 #' In theory, this is not a problem for metrics like the CPM, but in practice, we have to apply batch correction methods anyway to perform any joint analysis - see \code{\link[batchelor]{multiBatchNorm}} for more details. 
 #'
 #' @section Downsampling instead of scaling:
-#' If \code{downsample=TRUE}, counts for each cell are randomly downsampled according to their size factors prior to log-transformation.
+#' If \code{downsample=TRUE}, counts for each cell are randomly downsampled instead of being scaled.
 #' This is occasionally useful for avoiding artifacts caused by scaling count data with a strong mean-variance relationship.
-#' Each cell is downsampled according to the ratio between \code{down_target} and that cell's size factor.
+#' Each cell is downsampled according to the ratio between \code{down.target} and that cell's size factor.
 #' (Cells with size factors below the target are not downsampled and are directly scaled by this ratio.)
-#' If \code{log=TRUE}, a log-transformation is also performed after adding \code{pseudo_count} to the downsampled counts.
+#' If \code{log=TRUE}, a log-transformation is also performed after adding \code{pseudo.count} to the downsampled counts.
 #'
-#' Note that the normalized expression values in this mode cannot be interpreted as being on the same abundance as the original counts,
-#' but instead have abundance equivalent to counts after downsampling to the target size factor.
-#' This motivates the use of a fixed \code{down_target} to ensure that expression values are comparable across different \code{normalizeCounts} calls. 
-#' We automatically set \code{down_target} to the 1st percentile of size factors across all cells involved in the analysis,
-#' but this is only appropriate if the resulting expression values are only compared within the same call to \code{normalizeCounts}.
-#' If expression values are to be compared across multiple calls (e.g., in \code{\link[scran]{modelGeneVarWithSpikes}} or \code{\link[batchelor]{multiBatchNorm}}),
+#' We automatically set \code{down.target} to the 1st percentile of size factors across all cells involved in the analysis,
+#' but this is only appropriate if the resulting expression values are not compared across different \code{normalizeCounts} calls.
+#' To obtain expression values that are comparable across different \code{normalizeCounts} calls
+#' (e.g., in \code{\link[scran]{modelGeneVarWithSpikes}} or \code{\link[batchelor]{multiBatchNorm}}),
 #' \code{down_target} should be manually set to a constant target value that can be considered a low size factor in every call.
 #'  
-#' @return A numeric matrix-like object of the same class as \code{x}, containing (log-)normalized expression values.
+#' @return A numeric matrix-like object containing (log-)normalized expression values.
+#' This has the same dimensions as \code{x} (unless \code{subset.row} is specified)
+#' and is of the same class as the original count matrix.
 #'
 #' @author Aaron Lun
 #'
-#' @name normalizeCounts
 #' @seealso
 #' \code{\link{logNormCounts}}, which wraps this function for convenient use with SingleCellExperiment instances.
+#'
+#' \code{\link{librarySizeFactors}}, to compute the default size factors.
 #'
 #' \code{\link[DropletUtils]{downsampleMatrix}}, to perform the downsampling.
 #' @examples
 #' example_sce <- mockSCE()
+#'
+#' # Standard scaling + log-transformation:
 #' normed <- normalizeCounts(example_sce)
-#' str(normed)
+#' normed[1:5,1:5]
+#'
+#' # Scaling without transformation:
+#' normed <- normalizeCounts(example_sce, log=FALSE)
+#' normed[1:5,1:5]
+#'
+#' # Downscaling with transformation:
+#' normed <- normalizeCounts(example_sce, downsample=TRUE)
+#' normed[1:5,1:5]
+#'
+#' # Using custom size factors:
+#' with.meds <- computeMedianFactors(example_sce)
+#' normed <- normalizeCounts(with.meds)
+#' normed[1:5,1:5]
+#' 
+#' @name normalizeCounts
 NULL
 
 #' @export
 #' @rdname normalizeCounts
+setGeneric("normalizeCounts", function(x, ...) standardGeneric("normalizeCounts"))
+
+#' @export
+#' @rdname normalizeCounts
 #' @importFrom BiocParallel SerialParam
-setMethod("normalizeCounts", "ANY", function(x, size_factors=NULL, 
-    log=TRUE, pseudo_count=1, center_size_factors=TRUE, subset_row=NULL,
-    downsample=FALSE, down_target=NULL, down_prop=0.01,
-    BPPARAM=SerialParam())
+setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL, 
+    log=TRUE, pseudo.count=1, center.size.factors=TRUE, subset.row=NULL,
+    downsample=FALSE, down.target=NULL, down.prop=0.01, BPPARAM=SerialParam(),
+    size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL,
+    subset_row=NULL, down_target=NULL, down_prop=NULL)
 {
-    if (!is.null(subset_row)) {
-        x <- x[subset_row,,drop=FALSE]
+    subset.row <- .replace(subset.row, subset_row)
+    size.factors <- .replace(size.factors, size_factors)
+    center.size.factors <- .replace(center.size.factors, center_size_factors)
+    down.target <- .replace(down.target, down_target)
+    down.prop <- .replace(down.prop, down_prop)
+    pseudo.count <- .replace(pseudo.count, pseudo_count)
+
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
     }
     if (nrow(x)==0L) {
         return(x + 0) # coerce to numeric.
     }
 
-    size_factors <- .get_default_sizes(x, size_factors, center_size_factors, BPPARAM=BPPARAM)
-    if (length(size_factors)!=ncol(x)) {
+    size.factors <- .get_default_sizes(x, size.factors, center.size.factors, BPPARAM=BPPARAM)
+    if (length(size.factors)!=ncol(x)) {
         stop("number of size factors does not equal 'ncol(x)'")
     }
-    if (!all(is.finite(size_factors) & size_factors > 0)) {
+    if (!all(is.finite(size.factors) & size.factors > 0)) {
         stop("size factors should be positive")
     }
 
     if (downsample) {
-        down.out <- .downsample_counts(x, size_factors, down_prop=down_prop, down_target=down_target)
+        down.out <- .downsample_counts(x, size.factors, down.prop=down.prop, down.target=down.target)
         x <- down.out$x
-        size_factors <- down.out$size_factors
+        size.factors <- down.out$size.factors
     }
 
-    .internal_transformer(x, size_factors, log, pseudo_count) 
+    .internal_transformer(x, size.factors, log, pseudo.count) 
 })
 
-.get_default_sizes <- function(x, size_factors, center_size_factors, ...) {
-    if (is.null(size_factors)) {
-        size_factors <- librarySizeFactors(x, ...)
+.get_default_sizes <- function(x, size.factors, center.size.factors, ...) {
+    if (is.null(size.factors)) {
+        size.factors <- librarySizeFactors(x, ...)
     }
-    .center_size_factors(size_factors, center_size_factors)
+    .center.size.factors(size.factors, center.size.factors)
 }
 
-.center_size_factors <- function(size_factors, center_size_factors) {
-    if (center_size_factors) {
-        size_factors <- size_factors/mean(size_factors)
+.center.size.factors <- function(size.factors, center.size.factors) {
+    if (center.size.factors) {
+        size.factors <- size.factors/mean(size.factors)
     }
-    size_factors
+    size.factors
 }
 
 #' @importFrom stats quantile
-.downsample_counts <- function(x, size_factors, down_prop, down_target) {
-    if (is.null(down_target)) {
-        down_target <- quantile(size_factors, probs=down_prop)
-        warning("'down_target' defined as the 1st percentile of size factors")
+.downsample_counts <- function(x, size.factors, down.prop, down.target) {
+    if (is.null(down.target)) {
+        down.target <- quantile(size.factors, probs=down.prop)
+        warning("'down.target' defined as the 1st percentile of size factors")
     }
-    down_rate <- pmin(1, down_target/size_factors)
+    down_rate <- pmin(1, down.target/size.factors)
     x <- DropletUtils::downsampleMatrix(x, down_rate, bycol=TRUE)
-    size_factors <- size_factors * down_rate/down_target
-    list(x=x, size_factors=size_factors)
+    size.factors <- size.factors * down_rate/down.target
+    list(x=x, size.factors=size.factors)
 }
 
 ###########################################
@@ -144,19 +177,20 @@ setMethod("normalizeCounts", "ANY", function(x, size_factors=NULL,
 #' @rdname normalizeCounts
 #' @importFrom SummarizedExperiment assay 
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("normalizeCounts", "SummarizedExperiment", function(x, ..., exprs_values="counts") {
-    normalizeCounts(assay(x, exprs_values), ...)
+setMethod("normalizeCounts", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    normalizeCounts(assay(x, assay.type), ...)
 })
 
 #' @export
 #' @rdname normalizeCounts
 #' @importFrom BiocGenerics sizeFactors
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("normalizeCounts", "SingleCellExperiment", function(x, size_factors=NULL, ...) {
-    if (is.null(size_factors)) {
-        size_factors <- sizeFactors(x)
+setMethod("normalizeCounts", "SingleCellExperiment", function(x, size.factors=NULL, ...) {
+    if (is.null(size.factors)) {
+        size.factors <- sizeFactors(x)
     }
-    callNextMethod(x=x, size_factors=size_factors, ...)
+    callNextMethod(x=x, size.factors=size.factors, ...)
 })
 
 ###########################################
@@ -164,36 +198,36 @@ setMethod("normalizeCounts", "SingleCellExperiment", function(x, size_factors=NU
 setGeneric(".internal_transformer", function(x, ...) standardGeneric(".internal_transformer"))
 
 #' @importFrom Matrix t
-setMethod(".internal_transformer", "ANY", function(x, size_factors, log, pseudo_count) {
-    norm_exprs <- t(t(x) / size_factors)
+setMethod(".internal_transformer", "ANY", function(x, size.factors, log, pseudo.count) {
+    norm_exprs <- t(t(x) / size.factors)
     if (log) {
-        norm_exprs <- log2(norm_exprs + pseudo_count)
+        norm_exprs <- log2(norm_exprs + pseudo.count)
     }
     norm_exprs
 })
 
 #' @importClassesFrom Matrix dgTMatrix
-setMethod(".internal_transformer", "dgCMatrix", function(x, size_factors, log, pseudo_count) {
-    if (log && pseudo_count!=1) {
+setMethod(".internal_transformer", "dgCMatrix", function(x, size.factors, log, pseudo.count) {
+    if (log && pseudo.count!=1) {
         callNextMethod()
     } else {
-        .transform_sparse(x, rep(size_factors, diff(x@p)), log, pseudo_count)
+        .transform_sparse(x, rep(size.factors, diff(x@p)), log, pseudo.count)
     }
 })
 
 #' @importClassesFrom Matrix dgTMatrix
-setMethod(".internal_transformer", "dgTMatrix", function(x, size_factors, log, pseudo_count) {
-    if (log && pseudo_count!=1) {
+setMethod(".internal_transformer", "dgTMatrix", function(x, size.factors, log, pseudo.count) {
+    if (log && pseudo.count!=1) {
         callNextMethod()
     } else {
-        .transform_sparse(x, size_factors[x@j+1L], log, pseudo_count)
+        .transform_sparse(x, size.factors[x@j+1L], log, pseudo.count)
     }
 })
 
-.transform_sparse <- function(x, expanded_sf, log, pseudo_count) {
+.transform_sparse <- function(x, expanded_sf, log, pseudo.count) {
     x@x <- x@x/expanded_sf
     if (log) {
-        x@x <- log2(x@x + pseudo_count)
+        x@x <- log2(x@x + pseudo.count)
     }
     x
 }

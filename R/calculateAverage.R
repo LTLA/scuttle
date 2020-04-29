@@ -1,25 +1,26 @@
 #' Calculate per-feature average counts
 #'
-#' Calculate average counts per feature after normalizing observations using size factors. 
+#' Calculate the average count for each feature after normalizing observations using per-cell size factors. 
 #'
-#' @param x A numeric matrix of counts where features are rows and 
+#' @param x A numeric matrix of counts where features are rows and columns are cells.
 #'
 #' Alternatively, a \linkS4class{SummarizedExperiment} or a \linkS4class{SingleCellExperiment} containing such counts.
-#' @param size_factors A numeric vector containing size factors.
+#' @param size.factors A numeric vector containing size factors.
 #' If \code{NULL}, these are calculated or extracted from \code{x}.
-#' @param exprs_values A string specifying the assay of \code{x} containing the count matrix.
-#' @param subset_row A vector specifying the subset of rows of \code{object} for which to return a result.
-#' @param BPPARAM A BiocParallelParam object specifying whether the calculations should be parallelized.
+#' @param assay.type A string specifying the assay of \code{x} containing the count matrix.
+#' @param subset.row A vector specifying the subset of rows of \code{object} for which to return a result.
+#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether the calculations should be parallelized.
 #' Only relevant for parallelized \code{\link{rowSums}(x)}, e.g., for \linkS4class{DelayedMatrix} inputs.
 #' @param ... For the generic, arguments to pass to specific methods.
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #'
 #' For the SingleCellExperiment method, further arguments to pass to the SummarizedExperiment method.
+#' @param size_factors,subset_row Soft-deprecated counterparts to the arguments above.
 #'
 #' @details 
-#' The size-adjusted average count is defined by dividing each count by the size factor and taking the average across cells.
-#' All sizes factors are scaled so that the mean is 1 across all cells, to ensure that the averages are interpretable on the same scale of the raw counts. 
+#' The size factor-adjusted average count is defined by dividing each count by the size factor and taking the average across cells.
+#' All size factors are scaled so that the mean is 1 across all cells, to ensure that the averages are interpretable on the same scale of the raw counts. 
 #'
 #' If no size factors are supplied, they are determined automatically:
 #' \itemize{
@@ -51,10 +52,14 @@ NULL
 #' @importFrom BiocParallel register bpparam SerialParam
 #' @importFrom Matrix rowMeans
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
-.calculate_average <- function(x, size_factors=NULL, subset_row=NULL, BPPARAM = SerialParam())
+.calculate_average <- function(x, size.factors=NULL, subset.row=NULL, BPPARAM = SerialParam(),
+    size_factors=NULL, subset_row=NULL)
 {
-    subset_row <- .subset2index(subset_row, x, byrow=TRUE)
-    size_factors <- .get_default_sizes(x, size_factors, center_size_factors=TRUE, subset_row=subset_row)
+    subset.row <- .replace(subset.row, subset_row)
+    size.factors <- .replace(size.factors, size_factors)
+
+    subset.row <- .subset2index(subset.row, x, byrow=TRUE)
+    size.factors <- .get_default_sizes(x, size.factors, center.size.factors=TRUE, subset.row=subset.row)
 
     # For DelayedArray's parallelized row/colSums.
     oldbp <- getAutoBPPARAM()
@@ -66,15 +71,19 @@ NULL
 
 #' @export
 #' @rdname calculateAverage
+setGeneric("calculateAverage", function(x, ...) standardGeneric("calculateAverage"))
+
+#' @export
+#' @rdname calculateAverage
 setMethod("calculateAverage", "ANY", .calculate_average)
 
 #' @export
 #' @rdname calculateAverage
 #' @importFrom SummarizedExperiment assay
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("calculateAverage", "SummarizedExperiment", function(x, ..., exprs_values="counts")
-{ 
-    .calculate_average(assay(x, exprs_values), ...)
+setMethod("calculateAverage", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) { 
+    assay.type <- .replace(assay.type, exprs_values)
+    .calculate_average(assay(x, assay.type), ...)
 })
 
 #' @export
@@ -82,10 +91,9 @@ setMethod("calculateAverage", "SummarizedExperiment", function(x, ..., exprs_val
 #' @importFrom BiocGenerics sizeFactors
 #' @importFrom SingleCellExperiment altExp
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("calculateAverage", "SingleCellExperiment", function(x, size_factors=NULL, ...)
-{ 
+setMethod("calculateAverage", "SingleCellExperiment", function(x, size.factors=NULL, ...) { 
     if (is.null(size_factors)) {
         size_factors <- sizeFactors(x)
     }
-    callNextMethod(x, size_factors=size_factors, ...)
+    callNextMethod(x, size.factors=size.factors, ...)
 })

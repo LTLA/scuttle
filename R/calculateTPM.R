@@ -24,11 +24,11 @@
 #' Here, the division is done before calculation of the library size to compute per-million values,
 #' where \code{\link{calculateFPKM}} will only divide by the length after library size normalization.
 #'
-#' For UMI count data, this function should be run with \code{effective_length=NULL}, i.e., no division by the effective length.
+#' For UMI count data, this function should be run with \code{lengths=NULL}, i.e., no division by the effective length.
 #' This is because the number of UMIs is a direct (albeit biased) estimate of the number of transcripts.
 #'
-#' @name calculateTPM
-#' @return A numeric matrix of TPM values.
+#' @return A numeric matrix of TPM values with the same dimensions as \code{x} (unless \code{subset.row} is specified).
+#'
 #' @author Aaron Lun, based on code by Davis McCarthy
 #' @seealso
 #' \code{\link{calculateCPM}}, on which this function is based.
@@ -38,6 +38,8 @@
 #' eff_len <- runif(nrow(example_sce), 500, 2000)
 #' tout <- calculateTPM(example_sce, lengths = eff_len)
 #' str(tout)
+#'
+#' @name calculateTPM
 NULL
 
 .calculate_tpm <- function(x, lengths=NULL, ...) {
@@ -49,23 +51,28 @@ NULL
 
 #' @export
 #' @rdname calculateTPM
+setGeneric("calculateTPM", function(x, ...) standardGeneric("calculateTPM"))
+
+#' @export
+#' @rdname calculateTPM
 setMethod("calculateTPM", "ANY", .calculate_tpm)
 
 #' @export
 #' @rdname calculateTPM
-#' @importFrom SummarizedExperiment assay assay<-
+#' @importFrom SummarizedExperiment assay 
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("calculateTPM", "SummarizedExperiment", function(x, ..., exprs_values="counts") {
-    .calculate_tpm(assay(x, exprs_values), ...)
+setMethod("calculateTPM", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    .calculate_tpm(assay(x, assay.type), ...)
 })
 
 #' @export
 #' @rdname calculateTPM
-#' @importFrom SingleCellExperiment altExp
-#' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("calculateTPM", "SingleCellExperiment", function(x, lengths=NULL, size_factors=NULL, ...) {
-    if (is.null(size_factors)) {
-        size_factors <- sizeFactors(x)
+#' @importFrom BiocGenerics sizeFactors
+#' @importClassesFrom SingleCellExperiment SingleCellExperiment 
+setMethod("calculateTPM", "SingleCellExperiment", function(x, lengths=NULL, size.factors=NULL, ...) {
+    if (is.null(size.factors)) {
+        size.factors <- sizeFactors(x)
     }
-    callNextMethod(x=x, lengths=lengths, size_factors=size_factors, ...)
+    callNextMethod(x=x, lengths=lengths, size.factors=size.factors, ...)
 })

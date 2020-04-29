@@ -6,14 +6,15 @@
 #' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing such counts.
 #'
 #' For \code{computeMedianFactors}, only a \linkS4class{SingleCellExperiment} is accepted.
-#' @param subset_row A vector specifying whether the size factors should be computed from a subset of rows of \code{x}.
+#' @param subset.row A vector specifying whether the size factors should be computed from a subset of rows of \code{x}.
 #' @param reference A numeric vector of length equal to \code{nrow(x)}, containing the reference expression profile.
 #' Defaults to \code{\link{rowMeans}(x)}.
-#' @param exprs_values String or integer scalar indicating the assay of \code{x} containing the counts.
+#' @param assay.type String or integer scalar indicating the assay of \code{x} containing the counts.
 #' @param ... For the \code{medianSizeFactors} generic, arguments to pass to specific methods.
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #'
 #' For \code{computeMedianFactors}, further arguments to pass to \code{medianSizeFactors}.
+#' @param subset_row,exprs_values Soft-deprecated equivalent to the arguments above.
 #'
 #' @details
 #' This function implements a modified version of the \pkg{DESeq2} size factor calculation.
@@ -35,21 +36,21 @@
 #'
 #' One valid application of this method lies in the normalization of antibody-derived tag counts for quantifying surface proteins.
 #' These counts are usually large enough to avoid zeroes yet are also susceptible to strong composition biases that preclude the use of \code{\link{librarySizeFactors}}.
-#' In such cases, we would also set \code{reference} to the ambient profile (where possible).
+#' In such cases, we would also set \code{reference} to some estimate of the the ambient profile.
 #' This assumes that most proteins are not expressed in each cell; thus, counts for most tags for any given cell can be attributed to background contamination that should not be DE between cells.
 #' 
 #' @author Aaron Lun
 #'
 #' @seealso 
-#' \code{\link{logNormCounts}}, where these size factors can be used.
+#' \code{\link{normalizeCounts}} and \code{\link{logNormCounts}}, where these size factors can be used.
 #'
-#' \code{\link{librarySizeFactors}}, for the default method for computing size factors.
+#' \code{\link{librarySizeFactors}} and \code{\link{geometricSizeFactors}}
+#' for other simple methods for computing size factors.
 #' 
 #' @return 
 #' For \code{medianSizeFactors}, a numeric vector of size factors is returned for all methods.
 #'
-#' For \code{computeMedianFactors}, a numeric vector is also returned for the ANY and SummarizedExperiment methods.
-#' For the SingleCellExperiment method, \code{x} is returned containing the size factors in \code{\link{sizeFactors}(x)}.
+#' For \code{computeMedianFactors}, \code{x} is returned containing the size factors in \code{\link{sizeFactors}(x)}.
 #'
 #' @name medianSizeFactors
 #' @examples
@@ -60,19 +61,27 @@ NULL
 #' @importFrom DelayedArray DelayedArray
 #' @importFrom DelayedMatrixStats colMedians
 #' @importFrom Matrix rowMeans
-.median_size_factors <- function(x, subset_row=NULL, reference=NULL) {
+.median_size_factors <- function(x, subset.row=NULL, reference=NULL, subset_row=NULL) {
+    subset.row <- .replace(subset.row, subset_row)
+
     if (is.null(reference)) {
         reference <- rowMeans(x)
     }
-    if (!is.null(subset_row)) {
-        i <- .subset2index(subset_row, x, byrow=TRUE)
+
+    if (!is.null(subset.row)) {
+        i <- .subset2index(subset.row, x, byrow=TRUE)
         reference <- reference[i]
         x <- x[i,,drop=FALSE]
     }
+
     sf.amb <- colMedians(DelayedArray(x/reference))
     sf.amb <- sf.amb/mean(sf.amb)
     sf.amb
 }       
+
+#' @export
+#' @rdname medianSizeFactors
+setGeneric("medianSizeFactors", function(x, ...) standardGeneric("medianSizeFactors"))
 
 #' @export
 #' @rdname medianSizeFactors
@@ -82,8 +91,9 @@ setMethod("medianSizeFactors", "ANY", .median_size_factors)
 #' @rdname medianSizeFactors
 #' @importFrom SummarizedExperiment assay
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("medianSizeFactors", "SummarizedExperiment", function(x, exprs_values="counts", ...) {
-    .median_size_factors(assay(x, exprs_values), ...)
+setMethod("medianSizeFactors", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    .median_size_factors(assay(x, assay.type), ...)
 })
 
 #' @export
