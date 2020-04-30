@@ -2,14 +2,6 @@
 # Metric calculator generics.
 
 #' @export
-#' @rdname perCellQCMetrics
-setGeneric("perCellQCMetrics", function(x, ...) standardGeneric("perCellQCMetrics"))
-
-#' @export
-#' @rdname perFeatureQCMetrics
-setGeneric("perFeatureQCMetrics", function(x, ...) standardGeneric("perFeatureQCMetrics"))
-
-#' @export
 #' @rdname getVarianceExplained
 setGeneric("getVarianceExplained", function(x, ...) standardGeneric("getVarianceExplained"))
 

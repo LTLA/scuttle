@@ -1,4 +1,4 @@
-#_' Per-cell quality control metrics
+#' Per-cell quality control metrics
 #'
 #' Compute per-cell quality control metrics for a count matrix or a \linkS4class{SingleCellExperiment}.
 #'
@@ -8,34 +8,35 @@
 #' @param subsets A named list containing one or more vectors 
 #' (a character vector of feature names, a logical vector, or a numeric vector of indices),
 #' used to identify interesting feature subsets such as ERCC spike-in transcripts or mitochondrial genes. 
-#' @param percent_top An integer vector. 
-#' Each element is treated as a number of top genes to compute the percentage of library size occupied by the most highly expressed genes in each cell.
-#' @param detection_limit A numeric scalar specifying the lower detection_limit for expression.
-#' @param BPPARAM A BiocParallelParam object specifying whether the QC calculations should be parallelized. 
+#' @param percent.top An integer vector specifying the size(s) of the top set of high-abundance genes.
+#' Used to compute the percentage of library size occupied by the most highly expressed genes in each cell.
+#' @param threshold A numeric scalar specifying the threshold above which a gene is considered to be detected.
+#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how parallelization should be performed.
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' 
 #' For the SummarizedExperiment and SingleCellExperiment methods, further arguments to pass to the ANY method.
-#' @param exprs_values A string or integer scalar indicating which \code{assays} in the \code{x} contains the count matrix.
-#' @param use_altexps Logical scalar indicating whether QC statistics should be computed for alternative Experiments in \code{x}.
+#' @param assay.type A string or integer scalar indicating which \code{assays} in the \code{x} contains the count matrix.
+#' @param use.altexps Logical scalar indicating whether QC statistics should be computed for alternative Experiments in \code{x}.
 #' If \code{TRUE}, statistics are computed for all alternative experiments. 
 #'
 #' Alternatively, an integer or character vector specifying the alternative Experiments to use to compute QC statistics.
 #' 
 #' Alternatively \code{NULL}, in which case alternative experiments are not used.
 #' @param flatten Logical scalar indicating whether the nested \linkS4class{DataFrame}s in the output should be flattened.
+#' @param percent_top,detection_limit,exprs_values,use_altexps Soft deprecated equivalents to the arguments described above.
 #'
 #' @return
 #' A \linkS4class{DataFrame} of QC statistics where each row corresponds to a column in \code{x}.
 #' This contains the following fields:
 #' \itemize{
 #' \item \code{sum}: numeric, the sum of counts for each cell.
-#' \item \code{detected}: numeric, the number of observations above \code{detection_limit}.
+#' \item \code{detected}: numeric, the number of observations above \code{threshold}.
 #' }
 #'
 #' If \code{flatten=FALSE}, the DataFrame will contain the additional columns:
 #' \itemize{
-#' \item \code{percent_top}: numeric matrix, the percentage of counts assigned to the percent_topage of most highly expressed genes.
-#' Each column of the matrix corresponds to an entry of the sorted \code{percent_top}, in increasing order.
+#' \item \code{percent.top}: numeric matrix, the percentage of counts assigned to the top most highly expressed genes.
+#' Each column of the matrix corresponds to an entry of \code{percent.top}, sorted in increasing order.
 #' \item \code{subsets}: A nested DataFrame containing statistics for each subset, see Details.
 #' \item \code{altexps}: A nested DataFrame containing statistics for each alternative experiment, see Details.
 #' This is only returned for the SingleCellExperiment method.
@@ -59,7 +60,7 @@
 #' \preformatted{  output 
 #'   |-- sum
 #'   |-- detected
-#'   |-- percent_top
+#'   |-- percent.top
 #'   +-- subsets
 #'       |-- Mito
 #'       |   |-- sum
@@ -72,14 +73,14 @@
 #' }
 #' Here, the \code{percent} field contains the percentage of each cell's count sum assigned to each subset. 
 #'
-#' If \code{use_altexps} is \code{TRUE}, the same statistics are computed for each alternative experiment in \code{x}.
+#' If \code{use.altexps=TRUE}, the same statistics are computed for each alternative experiment in \code{x}.
 #' This can also be an integer or character vector specifying the alternative Experiments to use.
 #' These statistics are also stored as nested \linkS4class{DataFrame}s, this time in the \code{altexps} field of the output.
 #' For example, if \code{x} contained the alternative Experiments \code{"Spike"} and \code{"Ab"}, the output would look like:
 #' \preformatted{  output 
 #'   |-- sum
 #'   |-- detected
-#'   |-- percent_top
+#'   |-- percent.top
 #'   +-- altexps 
 #'   |   |-- Spike
 #'   |   |   |-- sum
@@ -125,19 +126,23 @@ NULL
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bpmapply SerialParam
 #' @importClassesFrom S4Vectors DataFrame
-.per_cell_qc_metrics <- function(x, subsets = NULL, percent_top = c(50, 100, 200, 500), 
-    detection_limit = 0, BPPARAM=SerialParam(), flatten=TRUE) 
+.per_cell_qc_metrics <- function(x, subsets = NULL, percent.top = integer(0),
+    threshold = 0, BPPARAM=SerialParam(), flatten=TRUE, 
+    percent_top=NULL, detection_limit=NULL)
 {
+    threshold <- .replace(threshold, detection_limit)
+    percent.top <- .replace(percent.top, percent_top)
+
     if (length(subsets) && is.null(names(subsets))){ 
         stop("'subsets' must be named")
     }
     subsets <- lapply(subsets, FUN = .subset2index, target = x, byrow = TRUE)
-    percent_top <- sort(as.integer(percent_top))
+    percent.top <- sort(as.integer(percent.top))
 
     # Computing all QC metrics, with cells split across workers. 
     by.core <- .splitColsByWorkers(x, BPPARAM)
     bp.out <- bplapply(by.core, FUN=per_cell_qc, 
-        featcon=subsets, top=percent_top, limit=detection_limit,
+        featcon=subsets, top=percent.top, limit=threshold,
         BPPARAM=BPPARAM)
 
     # Aggregating across cores.
@@ -148,8 +153,8 @@ NULL
     )
 
     pct <- do.call(cbind, lapply(bp.out, FUN=function(x) x[[1]][[3]]))
-    rownames(pct) <- percent_top
-    full.info$percent_top <- t(pct)
+    rownames(pct) <- percent.top
+    full.info$percent.top <- t(pct)
 
     # Collecting subset information.
     if (!is.null(subsets)) {
@@ -171,6 +176,12 @@ NULL
     full.info
 }
 
+##################################################
+
+#' @export
+#' @rdname perCellQCMetrics
+setGeneric("perCellQCMetrics", function(x, ...) standardGeneric("perCellQCMetrics"))
+
 #' @export
 #' @rdname perCellQCMetrics
 setMethod("perCellQCMetrics", "ANY", .per_cell_qc_metrics)
@@ -178,8 +189,9 @@ setMethod("perCellQCMetrics", "ANY", .per_cell_qc_metrics)
 #' @export
 #' @rdname perCellQCMetrics
 #' @importFrom SummarizedExperiment assay
-setMethod("perCellQCMetrics", "SummarizedExperiment", function(x, ..., exprs_values="counts") {
-    .per_cell_qc_metrics(assay(x, exprs_values), ...)
+setMethod("perCellQCMetrics", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    .per_cell_qc_metrics(assay(x, assay.type), ...)
 })
 
 #' @export
@@ -188,21 +200,25 @@ setMethod("perCellQCMetrics", "SummarizedExperiment", function(x, ..., exprs_val
 #' @importFrom SingleCellExperiment altExp altExpNames
 #' @importFrom S4Vectors make_zero_col_DFrame
 #' @importClassesFrom S4Vectors DataFrame
-setMethod("perCellQCMetrics", "SingleCellExperiment", function(x, 
-    subsets=NULL, percent_top=c(50, 100, 200, 500), ..., flatten=TRUE,
-    exprs_values="counts", use_altexps=TRUE) 
+setMethod("perCellQCMetrics", "SingleCellExperiment", 
+    function(x, subsets=NULL, percent.top=integer(0), ..., flatten=TRUE, assay.type="counts", use.altexps=TRUE, 
+        percent_top=NULL, exprs_values=NULL, use_altexps=NULL) 
 {
-    # subsets and percent_top need to be explicitly listed,
+    assay.type <- .replace(assay.type, exprs_values)
+    use.altexps <- .replace(use.altexps, use_altexps)
+    percent.top <- .replace(percent.top, percent_top)
+
+    # subsets and percent.top need to be explicitly listed,
     # because the altexps call sets them to NULL and integer(0).
-    main <- .per_cell_qc_metrics(assay(x, exprs_values), subsets=subsets, percent_top=percent_top, flatten=FALSE, ...)
-    use_altexps <- .get_altexps_to_use(x, use_altexps)
+    main <- .per_cell_qc_metrics(assay(x, assay.type), subsets=subsets, percent.top=percent.top, flatten=FALSE, ...)
+    use.altexps <- .get_altexps_to_use(x, use.altexps)
 
     alt <- list()
     total <- main$sum
-    for (i in seq_along(use_altexps)) {
-        y <- assay(altExp(x, use_altexps[i]), exprs_values)
-        current <- .per_cell_qc_metrics(y, subsets=NULL, percent_top=integer(0), ...)
-        current$percent_top <- current$subsets <- NULL
+    for (i in seq_along(use.altexps)) {
+        y <- assay(altExp(x, use.altexps[i]), assay.type)
+        current <- .per_cell_qc_metrics(y, subsets=NULL, percent.top=integer(0), ...)
+        current$percent.top <- current$subsets <- NULL
         total <- total + current$sum
         alt[[i]] <- current
     }
@@ -212,7 +228,7 @@ setMethod("perCellQCMetrics", "SingleCellExperiment", function(x,
 
     if (length(alt)) {
         main$altexps <- do.call(DataFrame, lapply(alt, I))
-        names(main$altexps) <- altExpNames(x)[use_altexps]
+        names(main$altexps) <- altExpNames(x)[use.altexps]
     } else {
         main$altexps <- make_zero_col_DFrame(ncol(x))
     }

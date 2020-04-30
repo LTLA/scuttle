@@ -2,26 +2,18 @@
 #'
 #' Compute per-feature quality control metrics for a count matrix or a \linkS4class{SummarizedExperiment}.
 #'
-#' @param x A numeric matrix of counts with cells in columns and features in rows.
-#' 
-#' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
 #' @param subsets A named list containing one or more vectors 
 #' (a character vector of cell names, a logical vector, or a numeric vector of indices),
 #' used to identify interesting sample subsets such as negative control wells.
-#' @param detection_limit A numeric scalar specifying the lower detection_limit for expression.
-#' @param BPPARAM A BiocParallelParam object specifying whether the QC calculations should be parallelized. 
-#' @param ... For the generic, further arguments to pass to specific methods.
-#' 
-#' For the SummarizedExperiment and SingleCellExperiment methods, further arguments to pass to the ANY method.
-#' @param exprs_values A string or integer scalar indicating which \code{assays} in the \code{x} contains the count matrix.
-#' @param flatten Logical scalar indicating whether the nested \linkS4class{DataFrame}s in the output should be flattened.
+#' @inheritParams perCellQCMetrics
+#' @param detection_limit,exprs_values Soft deprecated equivalents to the arguments described above.
 #'
 #' @return
 #' A \linkS4class{DataFrame} of QC statistics where each row corresponds to a row in \code{x}.
 #' This contains the following fields:
 #' \itemize{
 #' \item \code{mean}: numeric, the mean counts for each feature.
-#' \item \code{detected}: numeric, the percentage of observations above \code{detection_limit}.
+#' \item \code{detected}: numeric, the percentage of observations above \code{threshold}.
 #' }
 #'
 #' If \code{flatten=FALSE}, the output DataFrame also contains the \code{subsets} field.
@@ -76,7 +68,11 @@ NULL
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bplapply SerialParam
 #' @importClassesFrom S4Vectors DFrame 
-.per_feature_qc_metrics <- function(x, subsets = NULL, detection_limit = 0, BPPARAM=SerialParam(), flatten=TRUE) {
+.per_feature_qc_metrics <- function(x, subsets = NULL, threshold = 0, BPPARAM=SerialParam(), flatten=TRUE,
+    detection_limit=NULL) 
+{
+    threshold <- .replace(threshold, detection_limit)
+
     if (length(subsets) && is.null(names(subsets))){ 
         stop("'subsets' must be named")
     }
@@ -117,11 +113,16 @@ NULL
 
 #' @export
 #' @rdname perFeatureQCMetrics
+setGeneric("perFeatureQCMetrics", function(x, ...) standardGeneric("perFeatureQCMetrics"))
+
+#' @export
+#' @rdname perFeatureQCMetrics
 setMethod("perFeatureQCMetrics", "ANY", .per_feature_qc_metrics)
 
 #' @export
 #' @rdname perFeatureQCMetrics
 #' @importFrom SummarizedExperiment assay
-setMethod("perFeatureQCMetrics", "SummarizedExperiment", function(x, ..., exprs_values="counts") {
-    .per_feature_qc_metrics(assay(x, exprs_values), ...)
+setMethod("perFeatureQCMetrics", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    .per_feature_qc_metrics(assay(x, assay.type), ...)
 })

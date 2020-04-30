@@ -10,14 +10,17 @@
 #' If \code{NULL}, all values are used.
 #' @param batch Factor of length equal to \code{metric}, specifying the batch to which each observation belongs. 
 #' A median/MAD is calculated for each batch, and outliers are then identified within each batch.
-#' @param share_medians Logical scalar indicating whether the median calculation should be shared across batches.
+#' @param share.medians Logical scalar indicating whether the median calculation should be shared across batches.
 #' Only used if \code{batch} is specified.
-#' @param share_mads Logical scalar indicating whether the MAD calculation should be shared across batches.
+#' @param share.mads Logical scalar indicating whether the MAD calculation should be shared across batches.
 #' Only used if \code{batch} is specified.
-#' @param share_missing Logical scalar indicating whether values should be shared across batches if they cannot be computed for a batch,
-#' e.g., due to subsetting.
-#' @param min_diff A numeric scalar indicating the minimum difference from the median to consider as an outlier. 
+#' @param share.missing Logical scalar indicating whether a common MAD/median should be used 
+#' for any batch that has no values left after subsetting.
+#' Only relevant when both \code{batch} and \code{subset} are specified.
+#' @param min.diff A numeric scalar indicating the minimum difference from the median to consider as an outlier. 
 #' Ignored if \code{NA}.
+#' @param share_medians,share_mads,share_missing,min_diff
+#' Soft-deprecated equivalents of the arguments above.
 #' 
 #' @return A logical vector of the same length as the \code{metric} argument, specifying the observations that are considered as outliers.
 #'
@@ -26,7 +29,7 @@
 #' By default, this is a numeric vector of length 2 for the threshold on each side.
 #' If \code{type="lower"}, the higher limit is \code{Inf}, while if \code{type="higher"}, the lower limit is \code{-Inf}.
 #' 
-#' If \code{min_diff} is not \code{NA}, the minimum distance from the median required to define an outlier is set as the larger of \code{nmads} MADs and \code{min_diff}.
+#' If \code{min.diff} is not \code{NA}, the minimum distance from the median required to define an outlier is set as the larger of \code{nmads} MADs and \code{min.diff}.
 #' This aims to avoid calling many outliers when the MAD is very small, e.g., due to discreteness of the metric.
 #' If \code{log=TRUE}, this difference is defined on the log2 scale.
 #' 
@@ -41,15 +44,16 @@
 #' This gives the same results as if the input metrics were subsetted by batch and \code{isOutlier} was run on each subset,
 #' and is often useful when batches are known \emph{a priori} to have technical differences (e.g., in sequencing depth).
 #' 
-#' If \code{share_medians=TRUE}, a shared median is computed across all cells.
-#' If \code{shared_mads=TRUE}, a shared MAD is computed using all cells (from either a batch-specific or shared median, depending on \code{share_medians}).
-#' These settings are useful to enforce a common location or spread across batches, e.g., we might set \code{shared_mads=TRUE} for log-library sizes if coverage varies across batches but the variance across cells is expected to be consistent across batches.
+#' If \code{share.medians=TRUE}, a shared median is computed across all cells.
+#' If \code{share.mads=TRUE}, a shared MAD is computed using all cells 
+#' (based on either a batch-specific or shared median, depending on \code{share.medians}).
+#' These settings are useful to enforce a common location or spread across batches, e.g., we might set \code{share.mads=TRUE} for log-library sizes if coverage varies across batches but the variance across cells is expected to be consistent across batches.
 #'
 #' If a batch does not have sufficient cells to compute the median or MAD (e.g., after applying \code{subset}),
-#' the default setting of \code{share_missing=TRUE} will set these values to the shared median and MAD.
+#' the default setting of \code{share.missing=TRUE} will set these values to the shared median and MAD.
 #' This allows us to define thresholds for low-quality batches based on information in the rest of the dataset.
-#' (Note that the use of shared values only affects this batch and not others unless \code{share_medians} and \code{share_mads} are also set.)
-#' Otherwise, if \code{share_missing=FALSE}, all cells in that batch will have \code{NA} in the output.
+#' (Note that the use of shared values only affects this batch and not others unless \code{share.medians} and \code{share.mads} are also set.)
+#' Otherwise, if \code{share.missing=FALSE}, all cells in that batch will have \code{NA} in the output.
 #' 
 #' If \code{batch} is specified, the \code{"threshold"} attribute in the returned vector is a matrix with one named column per level of \code{batch} and two rows (one per threshold).
 #' 
@@ -73,10 +77,10 @@
 #'
 #' \code{\link{perCellQCMetrics}}, to compute potential QC metrics.
 #' @export
-#' @importFrom stats mad median
 isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"), 
-    log = FALSE, subset = NULL, batch = NULL, share_medians=FALSE, 
-    share_mads=FALSE, share_missing=TRUE, min_diff = NA) 
+    log = FALSE, subset = NULL, batch = NULL, share.medians=FALSE, 
+    share.mads=FALSE, share.missing=TRUE, min.diff = NA,
+    share_medians=NULL, share_mads=NULL, share_missing=NULL, min_diff=NULL)
 {
     if (log) {
         metric <- log2(metric)
@@ -91,8 +95,38 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
         }
         batch <- as.character(batch)
     }
-    all_batches <- sort(unique(batch))
 
+    stats <- .get_med_and_mad(metric, 
+        batch=batch, 
+        subset=subset, 
+        share.medians=share.medians, 
+        share.mads=share.mads,
+        share.missing=share.missing)
+
+    output <- .apply_filters(metric, 
+        batch=batch, 
+        cur.med=stats$med, 
+        cur.mad=stats$mad,
+        type=match.arg(type), 
+        nmads=nmads, 
+        min.diff=min.diff
+    )
+
+    thresholds <- output$thresholds
+    if (nobatch) {
+        thresholds <- drop(thresholds)
+    }
+    if (log) { 
+        thresholds <- 2^thresholds
+    }
+
+    outliers <- output$outliers 
+    attr(outliers, "thresholds") <- thresholds
+    outliers 
+}
+
+#' @importFrom stats mad median
+.get_med_and_mad <- function(metric, batch, subset, share.medians, share.mads, share.missing) {
     # Subsetting by user-specific factor or by non-NA.
     if (!is.null(subset)) { 
         M <- metric[subset]
@@ -106,36 +140,39 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
         B <- B[!na.drop]
         warning("missing values ignored during outlier detection")
     }
-    
+
     # Defining the mad or median, possibly by sharing information across batches.
     by.batch <- split(M, B)
+    all_batches <- sort(unique(batch))
     empty <- rep(NA_real_, length(all_batches))
     names(empty) <- all_batches
 
     cur.med <- empty
-    if (!share_medians) {
-        cur.med[names(by.batch)] <- unlist(lapply(by.batch, median, 0)) # handles no-batch input better than vapply.
+    if (!share.medians) {
+        cur.med[names(by.batch)] <- unlist(lapply(by.batch, median)) # handles no-batch input better than vapply.
     }
-    replace <- .determine_sharingness(share_medians, share_missing, all_batches, names(by.batch))
+    replace <- .determine_sharingness(share.medians, share.missing, all_batches, names(by.batch))
     if (length(replace)) {
         cur.med[replace] <- median(M)
     }
 
     cur.mad <- empty
-    if (!share_mads) {
+    if (!share.mads) {
         cur.mad[names(by.batch)] <- unlist(mapply(mad, x=by.batch, center=cur.med[names(by.batch)], SIMPLIFY=FALSE))
     }
-    replace <- .determine_sharingness(share_mads, share_missing, all_batches, names(by.batch))
+    replace <- .determine_sharingness(share.mads, share.missing, all_batches, names(by.batch))
     if (length(replace)) {
         cur.mad[replace] <- median(abs(M - cur.med[B])) * formals(mad)$constant
     }
 
-    # Defining the thresholds.
-    diff.val <- pmax(min_diff, nmads * cur.mad, na.rm = TRUE)
+    list(med=cur.med, mad=cur.mad)
+}
+
+.apply_filters <- function(metric, batch, cur.med, cur.mad, type, nmads, min.diff) {
+    diff.val <- pmax(min.diff, nmads * cur.mad, na.rm = TRUE)
     upper.limit <- cur.med + diff.val 
     lower.limit <- cur.med - diff.val 
-    
-    type <- match.arg(type)
+
     if (type == "lower") {
         upper.limit[] <- Inf
     } else if (type == "higher") {
@@ -145,24 +182,16 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
     collected <- (metric < lower.limit[batch] | upper.limit[batch] < metric)
     names(collected) <- names(metric)
 
-    # Formatting output.
     all.threshold <- rbind(lower=lower.limit, higher=upper.limit)
-    if (nobatch) {
-        all.threshold <- drop(all.threshold)
-    }
-    if (log) { 
-        all.threshold <- 2^all.threshold
-    }
-    attr(collected, "thresholds") <- all.threshold
-    collected 
+    list(outliers=collected, thresholds=all.threshold)
 }
 
-.determine_sharingness <- function(shared_value, shared_missing, all_batches, valid_batches) {
-    if (shared_value && shared_missing) {
+.determine_sharingness <- function(share.value, share.missing, all_batches, valid_batches) {
+    if (share.value && share.missing) {
         all_batches
-    } else if (shared_missing) {
+    } else if (share.missing) {
         setdiff(all_batches, valid_batches)
-    } else if (shared_value) {
+    } else if (share.value) {
         valid_batches
     } else {
         character(0)
