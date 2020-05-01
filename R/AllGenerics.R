@@ -35,26 +35,3 @@ setGeneric("calculateNMF", function(x, ...) standardGeneric("calculateNMF"))
 #' @export
 #' @rdname runDiffusionMap
 setGeneric("calculateDiffusionMap", function(x, ...) standardGeneric("calculateDiffusionMap"))
-
-#################################
-# Aggregation-related generics.
-
-#' @export
-#' @rdname sumCountsAcrossFeatures
-setGeneric("sumCountsAcrossFeatures", function(x, ...) standardGeneric("sumCountsAcrossFeatures"))
-
-#' @export
-#' @rdname sumCountsAcrossCells
-setGeneric("sumCountsAcrossCells", function(x, ...) standardGeneric("sumCountsAcrossCells"))
-
-#' @export
-#' @rdname sumCountsAcrossCells
-setGeneric("aggregateAcrossCells", function(x, ...) standardGeneric("aggregateAcrossCells"))
-
-#' @export
-#' @rdname numDetectedAcrossCells
-setGeneric("numDetectedAcrossCells", function(x, ...) standardGeneric("numDetectedAcrossCells"))
-
-#' @export
-#' @rdname numDetectedAcrossFeatures
-setGeneric("numDetectedAcrossFeatures", function(x, ...) standardGeneric("numDetectedAcrossFeatures"))

@@ -1,6 +1,7 @@
 #' Number of detected expression values per group of cells
 #' 
-#' Computes the number of detected expression values (default defined as non-zero counts) for each feature in each group of cells.
+#' Computes the number of detected expression values (by default, defined as non-zero counts) 
+#' for each feature in each group of cells.
 #'
 #' @param x A numeric matrix of counts containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a count matrix.
@@ -9,15 +10,14 @@
 #' @param ... For the generic, further arguments to pass to specific methods.
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
-#' 
-#' For the ANY method, further arguments to pass to the \code{\link{nexprs}} function.
 #' @inheritParams nexprs
 #' 
 #' @return 
 #' A SummarizedExperiment is returned containing a count matrix in the first assay.
 #' Each column corresponds to group as defined by a unique level or combination of levels in \code{ids}.
-#' Each entry of the matrix contains the number or proportion of cells with detected expression for a feature and group.
+#' Each entry of the matrix contains the number of cells with detected expression for a feature and group.
 #' The identities of the levels for each column are reported in the \code{\link{colData}}.
+#' If \code{average=TRUE}, the assay is instead a numeric matrix containing the proportion of detected values.
 #'
 #' @author Aaron Lun
 #' @seealso
@@ -37,15 +37,23 @@ NULL
 
 #' @importFrom BiocParallel SerialParam 
 #' @importClassesFrom BiocParallel MulticoreParam
-.nexprs_across_cells <- function(x, ids, subset_row=NULL, subset_col=NULL, average=FALSE, 
-    store_number="ncells", detection_limit=0, BPPARAM=SerialParam()) 
+.nexprs_across_cells <- function(x, ids, subset.row=NULL, subset.col=NULL, 
+    store.number="ncells", average=FALSE, threshold=0, BPPARAM=SerialParam(),
+    subset_row=NULL, subset_col=NULL, store_number=NULL, detection_limit=NULL)
 {
-    aboveFUN <- function(x) {
-        (x > detection_limit) + 0L
-    }
-    .sum_counts_across_cells(x=x, ids=ids, subset_row=subset_row, subset_col=subset_col, average=average, 
-        store_number=store_number, BPPARAM=BPPARAM, modifier=aboveFUN)
+    subset.row <- .replace(subset.row, subset_row)
+    subset.col <- .replace(subset.col, subset_col)
+    store.number <- .replace(store.number, store_number)
+    threshold <- .replace(threshold, detection_limit)
+
+    .sum_counts_across_cells(x=x, ids=ids,subset.row=subset.row, subset.col=subset.col, 
+        average=average, store.number=store.number, BPPARAM=BPPARAM, 
+        modifier=function(x) (x > threshold) + 0L) # coercing to numeric to make life easier.
 } 
+
+#' @export
+#' @rdname numDetectedAcrossCells
+setGeneric("numDetectedAcrossCells", function(x, ...) standardGeneric("numDetectedAcrossCells"))
 
 #' @export
 #' @rdname numDetectedAcrossCells
@@ -55,6 +63,7 @@ setMethod("numDetectedAcrossCells", "ANY", .nexprs_across_cells)
 #' @rdname numDetectedAcrossCells
 #' @importFrom SummarizedExperiment assay
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("numDetectedAcrossCells", "SummarizedExperiment", function(x, ..., exprs_values="counts") {
-    .nexprs_across_cells(assay(x, exprs_values), ...)
+setMethod("numDetectedAcrossCells", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
+    assay.type <- .replace(assay.type, exprs_values)
+    .nexprs_across_cells(assay(x, assay.type), ...)
 })
