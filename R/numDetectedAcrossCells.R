@@ -10,7 +10,7 @@
 #' @param ... For the generic, further arguments to pass to specific methods.
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
-#' @inheritParams nexprs
+#' @param threshold A numeric scalar specifying the threshold above which a gene is considered to be detected.
 #' 
 #' @return 
 #' A SummarizedExperiment is returned containing a count matrix in the first assay.
@@ -21,8 +21,6 @@
 #'
 #' @author Aaron Lun
 #' @seealso
-#' \code{\link{nexprs}}, on which this function is based.
-#'
 #' \code{\link{sumCountsAcrossCells}}, which computes the sum of counts within a group.
 #' 
 #' @examples

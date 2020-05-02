@@ -10,14 +10,14 @@
 #' @param ... For the generic, further arguments to pass to specific methods.
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
-#' @inheritParams nexprs
+#' @param threshold A numeric scalar specifying the threshold above which a gene is considered to be detected.
 #' 
 #' @return An integer matrix containing the number of detected expression values in each group of features (row) and cell (column).
 #' If \code{average=TRUE}, this is instead a numeric matrix containing the proportion of detected values.
 #'
 #' @author Aaron Lun
 #' @seealso
-#' \code{\link{nexprs}}, on which this function is based.
+#' \code{\link{sumCountsAcrossFeatures}}, on which this function is based.
 #' 
 #' @examples
 #' example_sce <- mockSCE()
