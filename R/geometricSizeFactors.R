@@ -50,8 +50,8 @@ NULL
 #' @importFrom BiocParallel SerialParam
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .geometric_size_factors <- function(x, subset.row=NULL, geometric=FALSE, pseudo.count=1, BPPARAM=SerialParam()) {
-    if (!is.null(subset_row)) {
-       x <- x[subset_row,,drop=FALSE]
+    if (!is.null(subset.row)) {
+       x <- x[subset.row,,drop=FALSE]
     }
 
     oldBP <- getAutoBPPARAM()
