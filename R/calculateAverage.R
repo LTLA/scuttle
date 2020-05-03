@@ -66,7 +66,7 @@ NULL
     setAutoBPPARAM(BPPARAM)
     on.exit(setAutoBPPARAM(oldbp))
 
-    rowMeans(normalizeCounts(x, size_factors, subset_row=subset_row, log=FALSE))
+    rowMeans(normalizeCounts(x, size.factors, subset.row=subset.row, log=FALSE))
 }
 
 #' @export
@@ -92,8 +92,8 @@ setMethod("calculateAverage", "SummarizedExperiment", function(x, ..., assay.typ
 #' @importFrom SingleCellExperiment altExp
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
 setMethod("calculateAverage", "SingleCellExperiment", function(x, size.factors=NULL, ...) { 
-    if (is.null(size_factors)) {
-        size_factors <- sizeFactors(x)
+    if (is.null(size.factors)) {
+        size.factors <- sizeFactors(x)
     }
     callNextMethod(x, size.factors=size.factors, ...)
 })
