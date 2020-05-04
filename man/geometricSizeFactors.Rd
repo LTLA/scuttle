@@ -7,10 +7,11 @@
 \alias{computeGeometricFactors}
 \title{Compute geometric size factors}
 \usage{
+geometricSizeFactors(x, ...)
+
 \S4method{geometricSizeFactors}{ANY}(
   x,
   subset.row = NULL,
-  geometric = FALSE,
   pseudo.count = 1,
   BPPARAM = SerialParam()
 )
@@ -25,17 +26,17 @@ Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellEx
 
 For \code{computeGeometricFactors}, only a \linkS4class{SingleCellExperiment} containing a count matrix is accepted.}
 
+\item{...}{For the \code{geometricSizeFactors} generic, arguments to pass to specific methods.
+For the SummarizedExperiment method, further arguments to pass to the ANY method.
+
+For \code{computeGeometricFactors}, further arguments to pass to \code{geometricSizeFactors}.}
+
 \item{subset.row}{A vector specifying whether the size factors should be computed from a subset of rows of \code{x}.}
 
 \item{pseudo.count}{Numeric scalar specifying the pseudo-count to add during log-transformation.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object indicating how calculations are to be parallelized.
 Only relevant when \code{x} is a \linkS4class{DelayedArray} object.}
-
-\item{...}{For the \code{geometricSizeFactors} generic, arguments to pass to specific methods.
-For the SummarizedExperiment method, further arguments to pass to the ANY method.
-
-For \code{computeGeometricFactors}, further arguments to pass to \code{geometricSizeFactors}.}
 
 \item{assay.type}{String or integer scalar indicating the assay of \code{x} containing the counts.}
 }

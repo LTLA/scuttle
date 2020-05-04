@@ -16,7 +16,7 @@
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #'
 #' For the SingleCellExperiment method, further arguments to pass to the SummarizedExperiment method.
-#' @param size_factors,subset_row Soft-deprecated counterparts to the arguments above.
+#' @param size_factors,subset_row,exprs_values Soft-deprecated counterparts to the arguments above.
 #'
 #' @details 
 #' The size factor-adjusted average count is defined by dividing each count by the size factor and taking the average across cells.

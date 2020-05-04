@@ -5,11 +5,11 @@
 #' @param x A numeric matrix of counts where features are rows and cells are columns.
 #'
 #' Alternatively, a \linkS4class{SummarizedExperiment} or a \linkS4class{SingleCellExperiment} containing such counts.
-#' @param size_factors A numeric vector containing size factors to adjust the library sizes.
+#' @param size.factors A numeric vector containing size factors to adjust the library sizes.
 #' If \code{NULL}, the library sizes are used directly. 
 #' @param lengths Numeric vector providing the effective length for each feature in \code{x}.
 #' Alternatively \code{NULL}, see Details.
-#' @param exprs_values A string specifying the assay of \code{x} containing the count matrix.
+#' @param assay.type A string specifying the assay of \code{x} containing the count matrix.
 #' @param ... For the generic, arguments to pass to specific methods.
 #'
 #' For the ANY method, further arguments to pass to \code{\link{calculateCPM}}.
@@ -17,6 +17,7 @@
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #'
 #' For the SingleCellExperiment method, further arguments to pass to the SummarizedExperiment method.
+#' @param exprs_values Soft-deprecated equivalents to the arguments above.
 #'
 #' @details
 #' For read count data, this function assumes uniform coverage along the (effective) length of the transcript.

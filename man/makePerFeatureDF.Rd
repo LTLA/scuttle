@@ -28,7 +28,7 @@ Alternatively, a character or integer vector specifying the row metadata fields 
 
 \item{check.names}{Logical scalar indicating whether column names of the output should be made syntactically valid and unique.}
 
-\item{use_exprs_values, check_names}{Soft-deprecated equivalents to the arguments above.}
+\item{exprs_values, check_names}{Soft-deprecated equivalents to the arguments above.}
 }
 \value{
 A data.frame containing one field per aspect of data in \code{x} - see Details.

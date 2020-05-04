@@ -228,7 +228,7 @@ head(assay(agg.n))
 ## Reading in sparse matrices
 
 Normally, sparse matrices are provided in the MatrixMarket (`.mtx`) format,
-where they can be read efficiently into memory using the `readMM()` function from the `r Biocpkg("Matrix")` package.
+where they can be read efficiently into memory using the `readMM()` function from the `r CRANpkg("Matrix")` package.
 However, for some reason, it has been popular to save these files in dense form as tab- or comma-separate files.
 This is an inefficient and inconvenient approach, requiring users to read in the entire dataset in dense form with functions like `read.delim()` or `read.csv()` (and hope that they have enough memory on their machines to do so).
 

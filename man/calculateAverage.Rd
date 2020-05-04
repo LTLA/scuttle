@@ -41,7 +41,7 @@ If \code{NULL}, these are calculated or extracted from \code{x}.}
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether the calculations should be parallelized.
 Only relevant for parallelized \code{\link{rowSums}(x)}, e.g., for \linkS4class{DelayedMatrix} inputs.}
 
-\item{size_factors, subset_row}{Soft-deprecated counterparts to the arguments above.}
+\item{size_factors, subset_row, exprs_values}{Soft-deprecated counterparts to the arguments above.}
 
 \item{assay.type}{A string specifying the assay of \code{x} containing the count matrix.}
 }

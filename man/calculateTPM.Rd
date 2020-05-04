@@ -31,9 +31,11 @@ For the SingleCellExperiment method, further arguments to pass to the Summarized
 \item{lengths}{Numeric vector providing the effective length for each feature in \code{x}.
 Alternatively \code{NULL}, see Details.}
 
-\item{exprs_values}{A string specifying the assay of \code{x} containing the count matrix.}
+\item{assay.type}{A string specifying the assay of \code{x} containing the count matrix.}
 
-\item{size_factors}{A numeric vector containing size factors to adjust the library sizes.
+\item{exprs_values}{Soft-deprecated equivalents to the arguments above.}
+
+\item{size.factors}{A numeric vector containing size factors to adjust the library sizes.
 If \code{NULL}, the library sizes are used directly.}
 }
 \value{

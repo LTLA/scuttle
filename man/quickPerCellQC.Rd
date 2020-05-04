@@ -26,7 +26,7 @@ quickPerCellQC(
 
 \item{...}{Further arguments to pass to \code{\link{isOutlier}}.}
 
-\item{lib_size, n_features, percent_subset}{Soft-deprecated equivalents of the arguments above.}
+\item{lib_size, n_features, percent_subsets}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
 A \linkS4class{DataFrame} with one row per cell and containing columns of logical vectors.

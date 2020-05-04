@@ -4,7 +4,13 @@
 \alias{aggregateAcrossFeatures}
 \title{Aggregate feature sets in a SummarizedExperiment}
 \usage{
-aggregateAcrossFeatures(x, ids, ..., use.assay.type = "counts")
+aggregateAcrossFeatures(
+  x,
+  ids,
+  ...,
+  use.assay.type = "counts",
+  use_exprs_values = NULL
+)
 }
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} containing a count matrix.}

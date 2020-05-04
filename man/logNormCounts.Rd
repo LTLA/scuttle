@@ -74,7 +74,13 @@ Only used if \code{size.factors} is not specified.}
 
 \item{exprs_values}{Soft-deprecated equivalents to the arguments described previously.}
 
-\item{use.altexps}{Soft-deprecated equivalent to the argument above.}
+\item{use.altexps}{Logical scalar indicating whether normalization should be performed for alternative experiments in \code{x}.
+
+Alternatively, a character vector specifying the names of the alternative experiments to be normalized.
+
+Alternatively \code{NULL}, in which case no calculations are performed on the alternative experiments.}
+
+\item{use_altexps}{Soft-deprecated equivalent to the argument above.}
 }
 \value{
 \code{x} is returned containing the (log-)normalized expression values in an additional assay named as \code{name}.
@@ -107,21 +113,21 @@ example_sce <- mockSCE()
 # Standard library size normalization:
 example_sce2 <- logNormCounts(example_sce)
 assayNames(example_sce2)
-logcounts(example_sce2)[1:5,1;5]
+logcounts(example_sce2)[1:5,1:5]
 
 # Without logging, the assay is 'normcounts':
 example_sce2 <- logNormCounts(example_sce, log=FALSE)
-assayNames(example_sce)
-normcounts(example_sce)[1:5,1;5]
+assayNames(example_sce2)
+normcounts(example_sce2)[1:5,1:5]
 
 # Pre-loading with size factors:
 example_sce2 <- computeMedianFactors(example_sce)
 example_sce2 <- logNormCounts(example_sce2)
-logcounts(example_sce2)[1:5,1;5]
+logcounts(example_sce2)[1:5,1:5]
 
 # Also normalizing the alternative experiments:
 example_sce2 <- logNormCounts(example_sce, use.altexps="Spikes")
-logcounts(altExp(example_sce2))[1:5,1;5]
+logcounts(altExp(example_sce2))[1:5,1:5]
 
 }
 \seealso{

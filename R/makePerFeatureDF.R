@@ -11,8 +11,7 @@
 #' @param assay.type String or integer scalar indicating the assay to use to obtain expression values.
 #' Must refer to a matrix-like object with integer or numeric values.
 #' @param check.names Logical scalar indicating whether column names of the output should be made syntactically valid and unique.
-#' @param use_exprs_values,check_names 
-#' Soft-deprecated equivalents to the arguments above.
+#' @param exprs_values,check_names Soft-deprecated equivalents to the arguments above.
 #'
 #' @return A data.frame containing one field per aspect of data in \code{x} - see Details.
 #' Each row corresponds to a feature (i.e., row) of \code{x}.

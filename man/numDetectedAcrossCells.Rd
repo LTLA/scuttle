@@ -63,7 +63,7 @@ If \code{NULL}, nothing is stored.}
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the matrix of counts
 (or any other expression quantity that can be meaningfully summed).}
 
-\item{exprs_values}{Soft-deprecated equivalents to the arguments described above.}
+\item{exprs_values, detection_limit}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
 A SummarizedExperiment is returned containing a count matrix in the first assay.

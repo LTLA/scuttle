@@ -16,7 +16,7 @@
 #' Defaults to \code{"logcounts"} when \code{log=TRUE} and \code{"normcounts"} otherwise.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 #' Only used if \code{size.factors} is not specified.
-#' @param use.altexps Soft-deprecated equivalent to the argument above.
+#' @param use_altexps Soft-deprecated equivalent to the argument above.
 #'
 #' @details
 #' This function is a convenience wrapper around \code{\link{normalizeCounts}}.
@@ -50,21 +50,21 @@
 #' # Standard library size normalization:
 #' example_sce2 <- logNormCounts(example_sce)
 #' assayNames(example_sce2)
-#' logcounts(example_sce2)[1:5,1;5]
+#' logcounts(example_sce2)[1:5,1:5]
 #'
 #' # Without logging, the assay is 'normcounts':
 #' example_sce2 <- logNormCounts(example_sce, log=FALSE)
-#' assayNames(example_sce)
-#' normcounts(example_sce)[1:5,1;5]
+#' assayNames(example_sce2)
+#' normcounts(example_sce2)[1:5,1:5]
 #'
 #' # Pre-loading with size factors:
 #' example_sce2 <- computeMedianFactors(example_sce)
 #' example_sce2 <- logNormCounts(example_sce2)
-#' logcounts(example_sce2)[1:5,1;5]
+#' logcounts(example_sce2)[1:5,1:5]
 #'
 #' # Also normalizing the alternative experiments:
 #' example_sce2 <- logNormCounts(example_sce, use.altexps="Spikes")
-#' logcounts(altExp(example_sce2))[1:5,1;5]
+#' logcounts(altExp(example_sce2))[1:5,1:5]
 #'
 #' @name logNormCounts
 NULL

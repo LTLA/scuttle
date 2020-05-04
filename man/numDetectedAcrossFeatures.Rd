@@ -54,7 +54,7 @@ Defaults to all cells with non-\code{NA} entries of \code{ids}.}
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the matrix of counts
 (or any other expression quantity that can be meaningfully summed).}
 
-\item{exprs_values}{Soft-deprecated equivalents of the arguments described above.}
+\item{exprs_values, detection_limit}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
 An integer matrix containing the number of detected expression values in each group of features (row) and cell (column).

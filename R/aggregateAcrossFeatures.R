@@ -27,7 +27,9 @@
 #'
 #' @export
 #' @importFrom SummarizedExperiment assays<-
-aggregateAcrossFeatures <- function(x, ids, ..., use.assay.type="counts") {
+aggregateAcrossFeatures <- function(x, ids, ..., use.assay.type="counts", use_exprs_values=NULL) {
+    use.assay.type <- .replace(use.assay.type, use_exprs_values)
+
     collected <- list()
     for (i in seq_along(use.assay.type)) {
         collected[[i]] <- sumCountsAcrossFeatures(x, ids=ids, ..., exprs_values=use.assay.type[i])

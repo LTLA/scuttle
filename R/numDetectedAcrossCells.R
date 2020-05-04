@@ -11,6 +11,7 @@
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #' @param threshold A numeric scalar specifying the threshold above which a gene is considered to be detected.
+#' @param exprs_values,detection_limit Soft-deprecated equivalents of the arguments above.
 #' 
 #' @return 
 #' A SummarizedExperiment is returned containing a count matrix in the first assay.
