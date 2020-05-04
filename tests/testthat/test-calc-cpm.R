@@ -1,5 +1,5 @@
-## Test CPM calculations and related functions.
-## library(scater); library(testthat); source("setup-sce.R"); source("test-calc-cpm.R")
+# Test CPM calculations and related functions.
+# library(scuttle); library(testthat); source("setup.R"); source("test-calc-cpm.R")
 
 library(Matrix)
 original <- sce
@@ -12,15 +12,15 @@ test_that("we can calculate CPM from counts", {
     expect_identical(cpm_out, calculateCPM(counts(original)))
 
     ## Repeating with subsets.
-    sub1 <- calculateCPM(counts(original), subset_row=1:10)
+    sub1 <- calculateCPM(counts(original), subset.row=1:10)
     expect_identical(sub1, calculateCPM(counts(original)[1:10,]))
 
     logi <- rbinom(nrow(original), 1, 0.5)==1
-    sub2 <- calculateCPM(counts(original), subset_row=logi)
+    sub2 <- calculateCPM(counts(original), subset.row=logi)
     expect_identical(sub2, calculateCPM(counts(original)[logi,]))
 
     chosen <- sample(rownames(original), 20)
-    sub3 <- calculateCPM(counts(original), subset_row=chosen)
+    sub3 <- calculateCPM(counts(original), subset.row=chosen)
     expect_identical(sub3, calculateCPM(counts(original)[chosen,]))
 })
 
@@ -46,6 +46,11 @@ test_that("calculateCPM works with alternative inputs", {
     cpm_out <- calculateCPM(sparsified)
     expect_equal(as.matrix(cpm_out), calculateCPM(original))
 
+    # Works on other assays.
+    assay(original, "alt") <- counts(original)[,sample(ncol(original))]
+    cpm_out <- calculateCPM(original, assay.type="alt")
+    expect_equal(cpm_out, calculateCPM(assay(original, "alt")))
+
     # Checking that it works when there are no columns or rows.
     cpm_out <- calculateCPM(original[0,])
     expect_identical(dim(cpm_out), c(0L, ncol(original)))
@@ -62,7 +67,7 @@ test_that("we can calculate FPKM from counts", {
     expect_equal(fpkms, ref)
 
     # Repeating with subsets.
-    out <- calculateFPKM(original, effective_length, subset_row=1:10)
+    out <- calculateFPKM(original, effective_length, subset.row=1:10)
     sub <- calculateFPKM(original[1:10,], effective_length[1:10])
     expect_equal(out, sub)
 
@@ -84,7 +89,7 @@ test_that("we can calculate TPM from counts", {
     expect_equal(calculateTPM(original, NULL), calculateCPM(original))
 
     # Repeating with subsets.
-    out <- calculateTPM(original, effective_length, subset_row=1:10)
+    out <- calculateTPM(original, effective_length, subset.row=1:10)
     sub <- calculateTPM(original[1:10,], effective_length[1:10])
     expect_equal(out, sub)
 

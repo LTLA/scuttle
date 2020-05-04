@@ -1,9 +1,5 @@
 # tests for feature pre-processing functions.
-# library(scater); library(testthat); source("setup-sce.R"); source("test-feat-proc.R")
-
-context("test feature pre-processing functions")
-
-##########################################################
+# library(scuttle); library(testthat); source("setup.R"); source("test-feat-proc.R")
 
 test_that("we can uniquify the feature names", {
     all.genes <- sample(c(LETTERS, LETTERS[1:5], NA, NA))

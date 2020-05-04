@@ -1,7 +1,5 @@
 # Tests for various data input methods
-# library(scater); library(testthat); source("test-load-data.R")
-
-context("test expected usage")
+# library(scuttle); library(testthat); source("test-load-data.R")
 
 a <- matrix(rpois(10000, lambda=1), ncol=50)
 rownames(a) <- paste0("Gene", seq_len(nrow(a)))
