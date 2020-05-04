@@ -2,16 +2,22 @@
 % Please edit documentation in R/makePerCellDF.R
 \name{makePerCellDF}
 \alias{makePerCellDF}
-\title{Create a per-cell data.frame from a SingleCellDataFrame}
+\title{Create a per-cell data.frame}
 \usage{
 makePerCellDF(
   x,
   features = NULL,
-  exprs_values = "logcounts",
-  use_dimred = TRUE,
-  use_altexps = FALSE,
-  prefix_altexps = FALSE,
-  check_names = FALSE
+  assay.type = "logcounts",
+  use.coldata = TRUE,
+  use.dimred = TRUE,
+  use.altexps = TRUE,
+  prefix.altexps = FALSE,
+  check.names = FALSE,
+  exprs_values = NULL,
+  use_dimred = NULL,
+  use_altexps = NULL,
+  prefix_altexps = NULL,
+  check_names = NULL
 )
 }
 \arguments{
@@ -21,18 +27,23 @@ This is expected to have non-\code{NULL} row names.}
 \item{features}{Character vector specifying the features for which to extract expression profiles across cells.
 May also include features in alternative Experiments if permitted by \code{use_altexps}.}
 
-\item{exprs_values}{String or integer scalar indicating the assay to use to obtain expression values.
+\item{assay.type}{String or integer scalar indicating the assay to use to obtain expression values.
 Must refer to a matrix-like object with integer or numeric values.}
 
-\item{use_dimred}{Logical scalar indicating whether data should be extracted for dimensionality reduction results in \code{x}.
+\item{use.coldata}{Logical scalar indicating whether column metadata of \code{x} should be included.
+Alternatively, a character or integer vector specifying the column metadata fields to use.}
+
+\item{use.dimred}{Logical scalar indicating whether data should be extracted for dimensionality reduction results in \code{x}.
 Alternatively, a character or integer vector specifying the dimensionality reduction results to use.}
 
-\item{use_altexps}{Logical scalar indicating whether (meta)data should be extracted for alternative experiments in \code{x}.
+\item{use.altexps}{Logical scalar indicating whether (meta)data should be extracted for alternative experiments in \code{x}.
 Alternatively, a character or integer vector specifying the alternative experiments to use.}
 
-\item{prefix_altexps}{Logical scalar indicating whether \code{\link{altExp}}-derived fields should be prefixed with the name of the alternative Experiment.}
+\item{prefix.altexps}{Logical scalar indicating whether \code{\link{altExp}}-derived fields should be prefixed with the name of the alternative Experiment.}
 
-\item{check_names}{Logical scalar indicating whether the column names of the output data.frame should be made syntactically valid and unique.}
+\item{check.names}{Logical scalar indicating whether column names of the output should be made syntactically valid and unique.}
+
+\item{exprs_values, use_dimred, use_altexps, prefix_altexps, check_names}{Soft-deprecated equivalents of the arguments described above.}
 }
 \value{
 A data.frame containing one field per aspect of data in \code{x} - see Details.
@@ -46,38 +57,37 @@ most typically for creating custom \pkg{ggplot2} plots.
 This function enables us to conveniently create a per-feature data.frame from a \linkS4class{SingleCellExperiment}.
 Each row of the returned data.frame corresponds to a column in \code{x},
 while each column of the data.frame corresponds to one aspect of the (meta)data in \code{x}.
+
 Columns are provided in the following order:
 \enumerate{
-\item Columns named according to the values in \code{features} represent the expression values across cells for the specified feature in the \code{exprs_values} assay.
-\item Columns named according to the columns of \code{rowData(x)} represent the row metadata variables.
-\item If \code{use_dimred=TRUE}, columns named in the format of \code{<DIM>.<NUM>} represent the \code{<NUM>}th dimension of the dimensionality reduction result \code{<DIM>}.
-\item If \code{use_altexps=TRUE}, columns are named according to the row names and column metadata fields of successive alternative Experiments,
-representing the assay data and metadata respectively in these objects.
-The names of these columns are prefixed with the name of the alternative Experiment if \code{prefix_altexps=TRUE}.
-Note that alternative Experiment rows will only be present if they are specified in \code{features}.
+\item Columns named according to the entries of \code{features} represent the expression values across cells for the specified feature in the \code{assay.type} assay.
+\item Columns named according to the columns of \code{colData(x)} represent column metadata variables.
+This consists of all variables if \code{use.coldata=TRUE}, no variables if \code{use.coldata=FALSE},
+and only the specified variables if \code{use.coldata} is set to an integer or character vector.
+\item Columns named in the format of \code{<DIM>.<NUM>} represent the \code{<NUM>}th dimension of the dimensionality reduction result \code{<DIM>}.
+This is generated for all dimensionality reduction results if \code{use.dimred=TRUE}, none if \code{use.dimred=FALSE},
+and only the specified results if \code{use.dimred}is set to an integer or character vector.
+\item Columns named according to the row names of successive alternative Experiments,
+representing the assay data in these objects.
+These columns are only included if they are specified in \code{features} and if \code{use.altexps} is set.
+Column names are prefixed with the name of the alternative Experiment if \code{prefix.altexps=TRUE}.
 }
 
-By default, nothing is done to resolve syntactically invalid or duplicated column names;
-this will often lead (correctly) to an error in downstream functions like \code{\link{ggplot}}.
-If \code{check_names=TRUE}, this is resolved by passing the column names through \code{\link{make.names}}.
+By default, nothing is done to resolve syntactically invalid or duplicated column names.
+\code{check_names=TRUE}, this is resolved by passing the column names through \code{\link{make.names}}.
 Of course, as a result, some columns may not have the same names as the original fields in \code{x}.
 }
 \examples{
-example_sce <- mockSCE()
-example_sce <- logNormCounts(example_sce)
-example_sce <- runPCA(example_sce)
+sce <- mockSCE()
+sce <- logNormCounts(sce)
+reducedDim(sce, "PCA") <- matrix(rnorm(ncol(sce)*10), ncol=10) # made-up PCA.
 
-df <- makePerCellDF(example_sce, features="Gene_0001")
-head(colnames(df))
-tail(colnames(df))
-
-df$Gene_0001
-df$Mutation_Status
-df$PCA.1
+df <- makePerCellDF(sce, features="Gene_0001")
+head(df)
 
 }
 \seealso{
-\code{\link{ggcells}}, which uses this function under the hood.
+\code{\link{makePerFeatureDF}}, for the feature-level equivalent.
 }
 \author{
 Aaron Lun

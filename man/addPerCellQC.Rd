@@ -3,7 +3,7 @@
 \name{addPerCellQC}
 \alias{addPerCellQC}
 \alias{addPerFeatureQC}
-\title{Add QC to an SE}
+\title{Add QC metrics to a SummarizedExperiment}
 \usage{
 addPerCellQC(x, ...)
 
@@ -17,15 +17,15 @@ addPerFeatureQC(x, ...)
 For \code{addPerFeatureQC}, further arguments to pass to \code{\link{perFeatureQCMetrics}}.}
 }
 \value{
-An object like \code{x} but with the QC metrics added to the row or column metadata.
+\code{x} is returned with the QC metrics added to the row or column metadata.
 }
 \description{
-Convenient utilities to compute QC metrics and add them to a \linkS4class{SummarizedExperiment}'s metadata.
+Convenient utilities to compute QC metrics and add them to a \linkS4class{SummarizedExperiment}'s row or column metadata.
 }
 \details{
 These functions are simply wrappers around \code{\link{perCellQCMetrics}} and \code{\link{perFeatureQCMetrics}}, respectively.
 The computed QC metrics are automatically appended onto the existing \code{\link{colData}} or \code{\link{rowData}}.
-No protection is provided to avoid duplicated column names.
+No protection is provided against duplicated column names.
 }
 \examples{
 example_sce <- mockSCE()

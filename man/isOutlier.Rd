@@ -11,10 +11,14 @@ isOutlier(
   log = FALSE,
   subset = NULL,
   batch = NULL,
-  share_medians = FALSE,
-  share_mads = FALSE,
-  share_missing = TRUE,
-  min_diff = NA
+  share.medians = FALSE,
+  share.mads = FALSE,
+  share.missing = TRUE,
+  min.diff = NA,
+  share_medians = NULL,
+  share_mads = NULL,
+  share_missing = NULL,
+  min_diff = NULL
 )
 }
 \arguments{
@@ -32,17 +36,20 @@ If \code{NULL}, all values are used.}
 \item{batch}{Factor of length equal to \code{metric}, specifying the batch to which each observation belongs. 
 A median/MAD is calculated for each batch, and outliers are then identified within each batch.}
 
-\item{share_medians}{Logical scalar indicating whether the median calculation should be shared across batches.
+\item{share.medians}{Logical scalar indicating whether the median calculation should be shared across batches.
 Only used if \code{batch} is specified.}
 
-\item{share_mads}{Logical scalar indicating whether the MAD calculation should be shared across batches.
+\item{share.mads}{Logical scalar indicating whether the MAD calculation should be shared across batches.
 Only used if \code{batch} is specified.}
 
-\item{share_missing}{Logical scalar indicating whether values should be shared across batches if they cannot be computed for a batch,
-e.g., due to subsetting.}
+\item{share.missing}{Logical scalar indicating whether a common MAD/median should be used 
+for any batch that has no values left after subsetting.
+Only relevant when both \code{batch} and \code{subset} are specified.}
 
-\item{min_diff}{A numeric scalar indicating the minimum difference from the median to consider as an outlier. 
+\item{min.diff}{A numeric scalar indicating the minimum difference from the median to consider as an outlier. 
 Ignored if \code{NA}.}
+
+\item{share_medians, share_mads, share_missing, min_diff}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
 A logical vector of the same length as the \code{metric} argument, specifying the observations that are considered as outliers.
@@ -55,7 +62,7 @@ Lower and upper thresholds are stored in the \code{"threshold"} attribute of the
 By default, this is a numeric vector of length 2 for the threshold on each side.
 If \code{type="lower"}, the higher limit is \code{Inf}, while if \code{type="higher"}, the lower limit is \code{-Inf}.
 
-If \code{min_diff} is not \code{NA}, the minimum distance from the median required to define an outlier is set as the larger of \code{nmads} MADs and \code{min_diff}.
+If \code{min.diff} is not \code{NA}, the minimum distance from the median required to define an outlier is set as the larger of \code{nmads} MADs and \code{min.diff}.
 This aims to avoid calling many outliers when the MAD is very small, e.g., due to discreteness of the metric.
 If \code{log=TRUE}, this difference is defined on the log2 scale.
 
@@ -71,15 +78,16 @@ If \code{batch} is specified, outliers are defined within each batch separately 
 This gives the same results as if the input metrics were subsetted by batch and \code{isOutlier} was run on each subset,
 and is often useful when batches are known \emph{a priori} to have technical differences (e.g., in sequencing depth).
 
-If \code{share_medians=TRUE}, a shared median is computed across all cells.
-If \code{shared_mads=TRUE}, a shared MAD is computed using all cells (from either a batch-specific or shared median, depending on \code{share_medians}).
-These settings are useful to enforce a common location or spread across batches, e.g., we might set \code{shared_mads=TRUE} for log-library sizes if coverage varies across batches but the variance across cells is expected to be consistent across batches.
+If \code{share.medians=TRUE}, a shared median is computed across all cells.
+If \code{share.mads=TRUE}, a shared MAD is computed using all cells 
+(based on either a batch-specific or shared median, depending on \code{share.medians}).
+These settings are useful to enforce a common location or spread across batches, e.g., we might set \code{share.mads=TRUE} for log-library sizes if coverage varies across batches but the variance across cells is expected to be consistent across batches.
 
 If a batch does not have sufficient cells to compute the median or MAD (e.g., after applying \code{subset}),
-the default setting of \code{share_missing=TRUE} will set these values to the shared median and MAD.
+the default setting of \code{share.missing=TRUE} will set these values to the shared median and MAD.
 This allows us to define thresholds for low-quality batches based on information in the rest of the dataset.
-(Note that the use of shared values only affects this batch and not others unless \code{share_medians} and \code{share_mads} are also set.)
-Otherwise, if \code{share_missing=FALSE}, all cells in that batch will have \code{NA} in the output.
+(Note that the use of shared values only affects this batch and not others unless \code{share.medians} and \code{share.mads} are also set.)
+Otherwise, if \code{share.missing=FALSE}, all cells in that batch will have \code{NA} in the output.
 
 If \code{batch} is specified, the \code{"threshold"} attribute in the returned vector is a matrix with one named column per level of \code{batch} and two rows (one per threshold).
 }

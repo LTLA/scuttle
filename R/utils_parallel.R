@@ -16,25 +16,25 @@ NULL
 
 #' @export
 #' @importFrom BiocParallel bpnworkers
-.splitRowsByWorkers <- function(x, BPPARAM, subset_row=NULL, subset_col=NULL, assignments=NULL) {
+.splitRowsByWorkers <- function(x, BPPARAM, subset.row=NULL, subset.col=NULL, assignments=NULL) {
     if (bpnworkers(BPPARAM)==1L) {
-        if (!.noOpSubset(subset_row, nrow(x))) {
-            x <- x[subset_row,,drop=FALSE]
+        if (!.noOpSubset(subset.row, nrow(x))) {
+            x <- x[subset.row,,drop=FALSE]
         }
-        if (!.noOpSubset(subset_col, ncol(x))) {
-            x <- x[,subset_col,drop=FALSE]
+        if (!.noOpSubset(subset.col, ncol(x))) {
+            x <- x[,subset.col,drop=FALSE]
         }
 
         list(x)
     } else {
         if (is.null(assignments)) {
-            assignments <- .assignIndicesToWorkers(nrow(x), BPPARAM, subset=subset_row)
+            assignments <- .assignIndicesToWorkers(nrow(x), BPPARAM, subset=subset.row)
         }
 
         for (i in seq_along(assignments)) {
             current <- x[assignments[[i]],,drop=FALSE]
-            if (!.noOpSubset(subset_col, ncol(x))) {
-                current <- current[,subset_col,drop=FALSE]
+            if (!.noOpSubset(subset.col, ncol(x))) {
+                current <- current[,subset.col,drop=FALSE]
             }
             assignments[[i]] <- current
         }
@@ -45,25 +45,25 @@ NULL
 
 #' @export
 #' @importFrom BiocParallel bpnworkers
-.splitColsByWorkers <- function(x, BPPARAM, subset_row=NULL, subset_col=NULL, assignments=NULL) {
+.splitColsByWorkers <- function(x, BPPARAM, subset.row=NULL, subset.col=NULL, assignments=NULL) {
     if (bpnworkers(BPPARAM)==1L) {
-        if (!.noOpSubset(subset_row, nrow(x))) {
-            x <- x[subset_row,,drop=FALSE]
+        if (!.noOpSubset(subset.row, nrow(x))) {
+            x <- x[subset.row,,drop=FALSE]
         }
-        if (!.noOpSubset(subset_col, ncol(x))) {
-            x <- x[,subset_col,drop=FALSE]
+        if (!.noOpSubset(subset.col, ncol(x))) {
+            x <- x[,subset.col,drop=FALSE]
         }
 
         list(x)
     } else {
         if (is.null(assignments)) {
-            assignments <- .assignIndicesToWorkers(ncol(x), BPPARAM, subset=subset_col)
+            assignments <- .assignIndicesToWorkers(ncol(x), BPPARAM, subset=subset.col)
         }
 
         for (i in seq_along(assignments)) {
             current <- x[,assignments[[i]],drop=FALSE]
-            if (!.noOpSubset(subset_row, nrow(x))) {
-                current <- current[subset_row,,drop=FALSE]
+            if (!.noOpSubset(subset.row, nrow(x))) {
+                current <- current[subset.row,,drop=FALSE]
             }
             assignments[[i]] <- current
         }

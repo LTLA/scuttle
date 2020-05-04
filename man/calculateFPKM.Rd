@@ -4,7 +4,7 @@
 \alias{calculateFPKM}
 \title{Calculate FPKMs}
 \usage{
-calculateFPKM(x, lengths, ..., subset_row = NULL)
+calculateFPKM(x, lengths, ..., subset.row = NULL, subset_row = NULL)
 }
 \arguments{
 \item{x}{A numeric matrix of counts where features are rows and cells are columns.
@@ -15,13 +15,20 @@ Alternatively, a \linkS4class{SummarizedExperiment} or a \linkS4class{SingleCell
 
 \item{...}{Further arguments to pass to \code{\link{calculateCPM}}.}
 
-\item{subset_row}{A vector specifying the subset of rows of \code{x} for which to return a result.}
+\item{subset.row}{A vector specifying the subset of rows of \code{x} for which to return a result.}
+
+\item{subset_row}{Soft-deprecated equivalent to the argument above.}
 }
 \value{
-A numeric matrix of FPKM values.
+A numeric matrix of FPKM values with the same dimensions as \code{x} (unless \code{subset.row} is specified).
 }
 \description{
 Calculate fragments per kilobase of exon per million reads mapped (FPKM) values from the feature-level counts.
+}
+\details{
+FPKMs are computed by dividing the CPMs by the effective length of each gene in kilobases.
+For RNA-seq datasets, the effective length is best set to the sum of lengths of all exons;
+for nucleus sequencing datasets, the effective length may instead be the entire width of the gene body.
 }
 \examples{
 example_sce <- mockSCE()
