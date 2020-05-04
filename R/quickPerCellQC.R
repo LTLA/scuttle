@@ -7,7 +7,7 @@
 #' @param detected.field String specifying the column of \code{df} containing the number of detected features per cell.
 #' @param subset.fields Character vector specifying the column(s) of \code{df} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.
 #' @param ... Further arguments to pass to \code{\link{isOutlier}}.
-#' @param lib_size,n_detected,percent_subset Soft-deprecated equivalents of the arguments above. 
+#' @param lib_size,n_features,percent_subset Soft-deprecated equivalents of the arguments above. 
 #'
 #' @return
 #' A \linkS4class{DataFrame} with one row per cell and containing columns of logical vectors.
@@ -53,7 +53,7 @@ quickPerCellQC <- function(df, sum.field="sum", detected.field="detected", subse
     ..., lib_size=NULL, n_features=NULL, percent_subsets=NULL)
 {
     sum.field <- .replace(sum.field, lib_size)
-    detected.field <- .replace(detected.field, n_detected)
+    detected.field <- .replace(detected.field, n_features)
     subset.fields <- .replace(subset.fields, percent_subsets)
 
     output <- DataFrame(
