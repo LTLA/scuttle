@@ -25,7 +25,7 @@ test_that("geometric size factors work as expected", {
     X <- computeGeometricFactors(X)
     expect_identical(sf, sizeFactors(X))
 
-    sf <- geometricSizeFactors(X, subset.row=100:200, geometric=TRUE)
+    sf <- geometricSizeFactors(X, subset.row=100:200)
     expect_identical(mean(sf), 1)
     expect_true(sd(sf/exp(colMeans(log1p(dummy[100:200,])))) < 1e-8)
 })

@@ -47,7 +47,7 @@ test_that("calculateCPM works with alternative inputs", {
     expect_equal(as.matrix(cpm_out), calculateCPM(original))
 
     # Works on other assays.
-    assay(original, "alt") <- counts(original)[,sample(ncol(original))]
+    assay(original, "alt", withDimnames=FALSE) <- counts(original)[,sample(ncol(original))]
     cpm_out <- calculateCPM(original, assay.type="alt")
     expect_equal(cpm_out, calculateCPM(assay(original, "alt")))
 

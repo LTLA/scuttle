@@ -1,5 +1,3 @@
-Sys.setenv("R_TESTS" = "")
 library(testthat)
-library(scater)
-
-test_check("scater")
+library(scuttle)
+test_check("scuttle")
