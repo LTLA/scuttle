@@ -1,5 +1,5 @@
 # tests for feature pre-processing functions.
-# library(scater); library(testthat); source("setup-sce.R"); source("test-sum-across-feat.R")
+# library(scuttle); library(testthat); source("setup.R"); source("test-sum-across-feat.R")
 
 library(Matrix)
 library(DelayedArray)
@@ -20,10 +20,10 @@ test_that("we can summarise counts at feature set level", {
     out2 <- sumCountsAcrossFeatures(sce, ids, average=TRUE)
     expect_identical(out2, rowsum(counts(sce), ids)/as.integer(table(ids)))
 
-    # exprs_values= works correctly.
+    # assay.type= works correctly.
     alt <- sce
     assayNames(alt) <- "whee"
-    out2 <- sumCountsAcrossFeatures(alt, ids, exprs_values="whee")
+    out2 <- sumCountsAcrossFeatures(alt, ids, assay.type="whee")
     expect_identical(out, out2)
 
     # Respects levels properly.
@@ -71,12 +71,12 @@ test_that("by-feature count summarization responds to subsetting", {
 
     keep <- rbinom(nrow(sce), 1, 0.5)>0
     ref <- sumCountsAcrossFeatures(sce[keep,], ids[keep])
-    out <- sumCountsAcrossFeatures(sce, ids, subset_row=keep)
+    out <- sumCountsAcrossFeatures(sce, ids, subset.row=keep)
     expect_identical(out, ref)
 
     keep2 <- rbinom(ncol(sce), 1, 0.5)>0
     ref <- sumCountsAcrossFeatures(sce[,keep2], ids)
-    out <- sumCountsAcrossFeatures(sce, ids, subset_col=keep2)
+    out <- sumCountsAcrossFeatures(sce, ids, subset.col=keep2)
     expect_identical(out, ref)
 })
 
@@ -134,9 +134,9 @@ test_that("Aggregation across features works correctly", {
     alt2 <- aggregateAcrossFeatures(sce, ids)
     expect_identical(alt, alt2)
 
-    alt3 <- aggregateAcrossFeatures(sce, ids, use_exprs_values=c("counts", "normcounts"))
+    alt3 <- aggregateAcrossFeatures(sce, ids, use.assay.type=c("counts", "normcounts"))
     expect_identical(counts(alt), counts(alt3))
-    expect_identical(normcounts(alt3), sumCountsAcrossFeatures(sce, ids, exprs_values="normcounts"))
+    expect_identical(normcounts(alt3), sumCountsAcrossFeatures(sce, ids, assay.type="normcounts"))
 })
 
 ############################################
@@ -156,10 +156,10 @@ test_that("numDetectedAcrossFeatures works as expected", {
         numDetectedAcrossFeatures(sce, ids, average=TRUE))
 
     # Checking that subsetting works.
-    expect_identical(numDetectedAcrossFeatures(counts(sce), ids, subset_col=10:1),
+    expect_identical(numDetectedAcrossFeatures(counts(sce), ids, subset.col=10:1),
         numDetectedAcrossFeatures(counts(sce), ids)[,10:1])
 
-    expect_identical(numDetectedAcrossFeatures(counts(sce), ids, subset_row=2:15),
+    expect_identical(numDetectedAcrossFeatures(counts(sce), ids, subset.row=2:15),
         numDetectedAcrossFeatures(counts(sce)[2:15,], ids[2:15]))
 
     ids[c(1,3,5,6)] <- NA

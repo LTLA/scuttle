@@ -1,5 +1,5 @@
 # This tests the various internal utilities.
-# library(testthat); library(scater); source("setup.R"); source("test-utils.R")
+# library(testthat); library(scuttle); source("setup.R"); source("test-utils.R")
 
 test_that("converting subset vectors to indices is correct", {
     M <- matrix(rnorm(1000), ncol=20)
@@ -113,24 +113,24 @@ test_that("splitting a matrix by row is correct", {
     # Behaves with subsetting by row:
     i <- 1:50
     expect_identical(
-        .splitRowsByWorkers(M, safeBPParam(7), subset_row=i),
+        .splitRowsByWorkers(M, safeBPParam(7), subset.row=i),
         .splitRowsByWorkers(M[i,], safeBPParam(7))
     )
 
     expect_identical(
-        .splitRowsByWorkers(M, safeBPParam(1), subset_row=i),
+        .splitRowsByWorkers(M, safeBPParam(1), subset.row=i),
         .splitRowsByWorkers(M[i,], safeBPParam(1))
     )
 
     # Behaves with column subsetting:
     i <- 5:1
     expect_identical(
-        .splitRowsByWorkers(M, safeBPParam(7), subset_col=i),
+        .splitRowsByWorkers(M, safeBPParam(7), subset.col=i),
         .splitRowsByWorkers(M[,i], safeBPParam(7))
     )
 
     expect_identical(
-        .splitRowsByWorkers(M, safeBPParam(1), subset_col=i),
+        .splitRowsByWorkers(M, safeBPParam(1), subset.col=i),
         .splitRowsByWorkers(M[,i], safeBPParam(1))
     )
 })
@@ -149,24 +149,24 @@ test_that("splitting a matrix by column is correct", {
     # Behaves with subsetting by row:
     i <- 1:10
     expect_identical(
-        .splitColsByWorkers(M, safeBPParam(4), subset_row=i),
+        .splitColsByWorkers(M, safeBPParam(4), subset.row=i),
         .splitColsByWorkers(M[i,], safeBPParam(4))
     )
 
     expect_identical(
-        .splitColsByWorkers(M, safeBPParam(1), subset_row=i),
+        .splitColsByWorkers(M, safeBPParam(1), subset.row=i),
         .splitColsByWorkers(M[i,], safeBPParam(1))
     )
 
     # Behaves with column subsetting:
     i <- sample(ncol(M), 20)
     expect_identical(
-        .splitColsByWorkers(M, safeBPParam(4), subset_col=i),
+        .splitColsByWorkers(M, safeBPParam(4), subset.col=i),
         .splitColsByWorkers(M[,i], safeBPParam(4))
     )
 
     expect_identical(
-        .splitColsByWorkers(M, safeBPParam(1), subset_col=i),
+        .splitColsByWorkers(M, safeBPParam(1), subset.col=i),
         .splitColsByWorkers(M[,i], safeBPParam(1))
     )
 })
