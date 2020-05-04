@@ -25,7 +25,7 @@
 #' 
 #' @details
 #' This function calculates useful QC metrics for features, including the mean across all cells
-#' and the number of expressed features (i.e., counts above the detection_limit).
+#' and the number of expressed features (i.e., counts above the detection limit).
 #' 
 #' If \code{subsets} is specified, the same statistics are computed for each subset of cells.
 #' This is useful for obtaining statistics for cell sets of interest, e.g., negative control wells.
@@ -81,8 +81,7 @@ NULL
     # Computing all QC metrics, with cells split across workers.
     by.core <- .splitRowsByWorkers(x, BPPARAM)
     bp.out <- bplapply(by.core, FUN=per_feature_qc,
-        cellcon=subsets, limit=detection_limit,
-        BPPARAM=BPPARAM)
+        cellcon=subsets, limit=threshold, BPPARAM=BPPARAM)
 
     # Aggregating across cores.
     full.info <- DataFrame(

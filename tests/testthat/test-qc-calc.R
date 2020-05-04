@@ -1,5 +1,5 @@
-## Test functions for QC calculation.
-## library(scater); library(testthat); source("setup-sce.R"); source("test-qc-calc.R")
+# Test functions for QC calculation.
+# library(scuttle); library(testthat); source("setup.R"); source("test-qc-calc.R")
 
 original <- sce
 
@@ -12,15 +12,24 @@ test_that("we can compute standard per-cell QC metrics", {
     expect_equal(df$detected, unname(colSums(counts(original) > 0)))
 
     # Testing percentage metrics for cells.
+    N <- c(50, 100, 200, 500)
+    df <- perCellQCMetrics(original, percent.top=N, flatten=FALSE)
+
     for (i in seq_len(ncol(original))) { 
         cur_counts <- counts(original)[,i]
         o <- order(cur_counts, decreasing=TRUE)
         lib_size <- sum(cur_counts)
 
-        for (x in c(50, 100, 200, 500)) { 
+        for (x in N) { 
             chosen <- o[seq_len(x)]
-            expect_equivalent(df$percent_top[i,as.character(x)], sum(cur_counts[chosen])/lib_size * 100) 
+            expect_equivalent(df$percent.top[i,as.character(x)], sum(cur_counts[chosen])/lib_size * 100) 
         }
+    }
+
+    # Flattening works as expected.
+    flat <- perCellQCMetrics(original, percent.top=N)
+    for (x in N) {
+        expect_identical(flat[,paste0("percent.top_", x)], df$percent.top[,as.character(x)])
     }
 })
 
@@ -45,7 +54,6 @@ test_that("we can compute standard QC metrics with subsets", {
     # Flattening works as expected.
     flat <- perCellQCMetrics(original, subsets = list(set1=1:20))
     expect_identical(flat$subsets_set1_sum, df$subsets$set1$sum)
-    expect_identical(flat$percent_top_50, df$percent_top[,"50"])
 })
 
 test_that("perCellQCMetrics works with alternative experiments", {
@@ -85,17 +93,17 @@ test_that("perCellQCMetrics handles silly inputs", {
     expect_identical(colnames(thing), colnames(thing2))
 
     # Percentage holds at the limit.
-    df <- perCellQCMetrics(original[1:10,], flatten=FALSE)
-    expect_true(all(df$percent_top==100))
+    df <- perCellQCMetrics(original[1:10,], percent.top=c(50, 100, 200, 500), flatten=FALSE)
+    expect_true(all(df$percent.top==100))
 
-    df <- perCellQCMetrics(original, percent_top=integer(0), flatten=FALSE)
-    expect_identical(ncol(df$percent_top), 0L)
+    df <- perCellQCMetrics(original, percent.top=integer(0), flatten=FALSE)
+    expect_identical(ncol(df$percent.top), 0L)
 
     # Responds to alternative inputs.
     blah <- sce
     assayNames(blah) <- "whee"
     expect_error(perCellQCMetrics(blah, flatten=FALSE), "counts")
-    expect_error(perCellQCMetrics(blah, exprs_values="whee", flatten=FALSE), NA)
+    expect_error(perCellQCMetrics(blah, assay.type="whee", flatten=FALSE), NA)
 })
 
 #######################################################################
@@ -147,7 +155,7 @@ test_that("perFeatureQCmetrics handles silly inputs", {
     blah <- sce
     assayNames(blah) <- "whee"
     expect_error(perFeatureQCMetrics(blah, flatten=FALSE), "counts")
-    expect_error(perFeatureQCMetrics(blah, exprs_values="whee", flatten=FALSE), NA)
+    expect_error(perFeatureQCMetrics(blah, assay.type="whee", flatten=FALSE), NA)
 })
 
 #######################################################################
