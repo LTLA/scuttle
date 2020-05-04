@@ -268,12 +268,26 @@ rownames(sce.ens) <- uniquifyFeatureNames(
 head(rownames(sce.ens)) 
 ```
 
-## Developer utilities
+## Creating a `data.frame`
 
-`r Biocpkg("scuttle")` provides some useful utilities for developers of downstream packages.
-This includes `.subset2index()` to convert a row/column indexing vector into an integer vector for safer downstream use;
-`.splitRowsByWorkers()` and `.splitColsByWorkers()`, to split a dataset into submatrices that will be sent to each worker;
-and `.bpNotSharedOrUp()`, which indicates whether a `r Biocpkg("BiocParallel")` backend should be re-started.
+The `makePerCellDF()` and `makePerFeatureDF()` functions create `data.frame`s from the `SingleCellExperiment` object.
+In the `makePerCellDF()` case, each row of the output `data.frame` corresponds to a cell and each column represents the expression of a specified feature across cells, a field of the column metadata, or reduced dimensions (if any are available).
+
+```{r}
+out <- makePerCellDF(sce, features="Tspan12")
+colnames(out)
+```
+
+In the `makePerFeatureDF()` case, each row of the output `data.frame` corresponds to a gene and each column represents the expression profile of a specified cell or the values of a row metadata field.
+
+```{r}
+out2 <- makePerFeatureDF(sce, cells=c("1772063062_D05",
+    "1772063061_D01", "1772060240_F02", "1772062114_F05"))
+colnames(out2)
+```
+
+The aim is to enable the data in a `SingleCellExperiment` to be easilybe used in functions like `model.matrix()` or in `ggplot()`,
+without requiring users to manually extract the desired fields from the `SingleCellExperiment` to construct their own `data.frame`.
 
 # Session information {.unnumbered}
 
