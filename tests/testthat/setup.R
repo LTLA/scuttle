@@ -18,9 +18,6 @@ safeBPParam <- function(nworkers) {
     }
 }
 
-# Using an exact algorithm to avoid needing to set the seed for reproducibility.
-options(BiocSingularParam.default=BiocSingular::ExactParam())
-
 # Adding a test to flush out any uncontrolled parallelization.
 library(BiocParallel)
 failgen <- setRefClass("FailParam",
