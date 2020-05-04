@@ -82,6 +82,11 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
     share.mads=FALSE, share.missing=TRUE, min.diff = NA,
     share_medians=NULL, share_mads=NULL, share_missing=NULL, min_diff=NULL)
 {
+    min.diff <- .replace(min.diff, min_diff)
+    share.medians <- .replace(share.medians, share_medians)
+    share.mads <- .replace(share.mads, share_mads)
+    share.missing <- .replace(share.missing, share_missing)
+
     if (log) {
         metric <- log2(metric)
     }

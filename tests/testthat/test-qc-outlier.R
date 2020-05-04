@@ -1,5 +1,5 @@
 # This tests the behaviour of the isOutlier() function.
-# library(testthat); library(scater); source("test-qc-outlier.R")
+# library(testthat); library(scuttle); source("test-qc-outlier.R")
 
 set.seed(1000)
 test_that("isOutlier works correctly with vanilla applications", {
@@ -33,7 +33,7 @@ set.seed(1001)
 test_that("isOutlier responds to the minimum difference", {
     vals <- c(rnorm(10000), rnorm(100, sd=10))
     for (min.diff in c(1, 5, 10)) {
-        out <- isOutlier(vals, min_diff=min.diff)
+        out <- isOutlier(vals, min.diff=min.diff)
        
         # Checking that thresholds are correctly computed.
         relative.threshold <- max(min.diff, mad(vals) * 3)
@@ -132,20 +132,20 @@ test_that("isOutlier thresholds are computed correctly with sharingness", {
     vals <- rnorm(1000)
     batches <- gl(2, length(vals)/2)
 
-    out <- isOutlier(vals, batch=batches, share_medians=TRUE, share_mads=TRUE)
+    out <- isOutlier(vals, batch=batches, share.medians=TRUE, share.mads=TRUE)
     ref <- isOutlier(vals)
     expect_identical(as.logical(out), as.logical(ref))
     expect_identical(attr(out, "thresholds")[,1], attr(ref, "thresholds"))
     expect_identical(attr(out, "thresholds")[,2], attr(ref, "thresholds"))
 
-    out <- isOutlier(vals, batch=batches, share_medians=TRUE)
+    out <- isOutlier(vals, batch=batches, share.medians=TRUE)
     common.med <- median(vals)
     mad1 <- mad(vals[batches==1], center=common.med)
     mad2 <- mad(vals[batches==2], center=common.med)
     expect_equivalent(attr(out, "thresholds")[,1], common.med + c(-1, 1) * 3 * mad1)
     expect_equivalent(attr(out, "thresholds")[,2], common.med + c(-1, 1) * 3 * mad2)
 
-    out <- isOutlier(vals, batch=batches, share_mads=TRUE)
+    out <- isOutlier(vals, batch=batches, share.mads=TRUE)
     med1 <- median(vals[batches==1])
     med2 <- median(vals[batches==2])
     common.mad <- median(abs(vals - c(med1, med2)[batches])) * formals(mad)$constant
@@ -163,7 +163,7 @@ test_that("isOutlier thresholds correctly recover missing batches", {
     expect_identical(attr(out, "thresholds")[,1], attr(ref, "thresholds"))
     expect_identical(attr(out, "thresholds")[,2], attr(ref, "thresholds"))
 
-    out <- isOutlier(vals, batch=batches, subset=batches==1, share_missing=FALSE)
+    out <- isOutlier(vals, batch=batches, subset=batches==1, share.missing=FALSE)
     expect_equivalent(out[batches==1], ref)
     expect_true(all(is.na(out[batches==2])))
 })    
