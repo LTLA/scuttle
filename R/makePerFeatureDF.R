@@ -54,6 +54,7 @@ makePerFeatureDF <- function(x, cells=NULL, assay.type="logcounts", use.rowdata=
     exprs_values=NULL, check_names=NULL)
 {
     assay.type <- .replace(assay.type, exprs_values)
+    check.names <- .replace(check.names, check_names)
 
     # Collecting the assay values.
     keep <- colnames(x) %in% cells

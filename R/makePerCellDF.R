@@ -70,6 +70,7 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
     use.altexps <- .replace(use.altexps, use_altexps)
     assay.type <- .replace(assay.type, exprs_values)
     prefix.altexps <- .replace(prefix.altexps, prefix_altexps)
+    check.names <- .replace(check.names, check_names)
 
     output <- list(.harvest_se_by_column(x, features=features, assay.type=assay.type))
 
