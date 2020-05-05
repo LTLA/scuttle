@@ -40,13 +40,13 @@
 #' sce2 <- mockSCE()
 #'
 #' # Downsampling for multiple batches in a single matrix:
-#' combined <- cbind(sce10x, sce10x2)
-#' batches <- rep(1:2, c(ncol(sce10x), ncol(sce10x2)))
+#' combined <- cbind(sce1, sce2)
+#' batches <- rep(1:2, c(ncol(sce1), ncol(sce2)))
 #' downsampled <- downsampleBatches(counts(combined), batch=batches)
 #' downsampled[1:10,1:10]
 #' 
 #' # Downsampling for multiple matrices:
-#' downsampled2 <- downsampleBatches(counts(sce10x), counts(sce10x2))
+#' downsampled2 <- downsampleBatches(counts(sce1), counts(sce2))
 #' downsampled2
 #'
 #' @export
