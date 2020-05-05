@@ -17,34 +17,31 @@ typedef std::uint64_t bigint_t;
  * freqIt: An iterator pointing to the start of the frequency vector.
  * freqEnd: An interator pointing to the end of the frequency vector.
  * freqOut: An iterator pointing to an output vector, indicating how many instances of each event have been sampled.
- * num_total: An integer scalar specifying the total number of all events.
- * num_sample: An integer scalar specifying the number of events to sample without replacement.
- * num_processed: An integer scalar specifying the number of events that have already been considered for selection.
- * num_selected: An integer scalar specifying the number of events that have already been selected.
+ * remaining_total: An integer scalar specifying the remaining number of instances yet to be considered for sampling.
+ * remaining_required: An integer scalar specifying the number of events that still need to be sampled.
  * 
- * Note that num_total may not be simply a sum of all values from [freqIt, freqEnd).
+ * Note that remaining_total's initial value may not be simply a sum of all values from [freqIt, freqEnd).
  * This is because we allow multiple applications of this function to sample without replacement from a series of vectors.
- * We keep track of 'num_processed' and 'num_selected' to ensure correct sampling when moving from one vector to another.
+ * We keep track of 'remaining_total' and 'remaining_required' to ensure correct sampling when moving from one vector to another.
  */
 template<class IN, class OUT> 
-void downsample(IN freqIt, IN freqEnd, OUT freqOut, const bigint_t num_total, 
-    const bigint_t num_sample, bigint_t& num_processed, bigint_t& num_selected) 
+void downsample(IN freqIt, IN freqEnd, OUT freqOut, bigint_t& remaining_total, bigint_t& remaining_required) 
 {        
-    while (freqIt!=freqEnd && num_selected < num_sample) {
+    while (freqIt!=freqEnd && remaining_required) {
         // It is allowed for this function to modify in place,
         // so *freqIt must be read before *freqOut is modified. 
         const int full_count=*freqIt;
         auto& downsampled=(*freqOut=0);
 
-        for (int i=0; i<full_count && num_sample > num_selected; ++i) {
+        for (int i=0; i<full_count && remaining_required; ++i) {
             // Deciding whether or not to keep this instance of this event.
             // This is a safe way of computing NUM_YET_TO_SELECT/NUM_YET_TO_PROCESS > runif(1), 
             // avoiding issues with integer division.
-            if ( (num_total - num_processed)*R::unif_rand() < num_sample - num_selected) {
+            if ( remaining_total*R::unif_rand() < remaining_required) {
                 ++downsampled;
-                ++num_selected;
+                --remaining_required;
             }
-            ++num_processed;
+            --remaining_total;
         }
      
         ++freqIt;
@@ -76,12 +73,9 @@ void downsample_vector(IN freqIt, IN freqEnd, OUT freqOut, double prop) {
         }
     }
 
-    bigint_t num_total=std::round(total);
-    bigint_t num_sample=std::round(prop*total);
-    bigint_t num_processed=0;
-    bigint_t num_selected=0;
-
-    downsample(freqIt, freqEnd, freqOut, num_total, num_sample, num_processed, num_selected);
+    bigint_t remaining_total=std::round(total);
+    bigint_t remaining_required=std::round(std::min(1.0, prop)*total);
+    downsample(freqIt, freqEnd, freqOut, remaining_total, remaining_required);
     return;
 }
 
@@ -89,16 +83,17 @@ void downsample_vector(IN freqIt, IN freqEnd, OUT freqOut, double prop) {
 
 class downsample_vector_part {
 public:
-    downsample_vector_part(double total, double prop) : num_total(std::round(total)), num_sample(std::round(prop * total)) {}
+    downsample_vector_part(double total, double prop) : 
+        remaining_total(std::round(total)), 
+        remaining_required(std::round(std::min(1.0, prop) * total)) {}
 
     template<class IN, class OUT> 
     void operator()(IN freqIt, IN freqEnd, OUT freqOut) { 
-        downsample(freqIt, freqEnd, freqOut, num_total, num_sample, num_processed, num_selected);
+        downsample(freqIt, freqEnd, freqOut, remaining_total, remaining_required);
         return;
     }
 private:
-    const bigint_t num_total=0, num_sample=0;
-    bigint_t num_processed=0, num_selected=0;
+    bigint_t remaining_total, remaining_required;
 };
 
 }
