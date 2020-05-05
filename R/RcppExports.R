@@ -13,6 +13,14 @@ top_cumprop <- function(matrix, top) {
     .Call(`_scuttle_top_cumprop`, matrix, top)
 }
 
+downsample_column <- function(input, prop) {
+    .Call(`_scuttle_downsample_column`, input, prop)
+}
+
+downsample_matrix <- function(rmat, total, prop) {
+    .Call(`_scuttle_downsample_matrix`, rmat, total, prop)
+}
+
 sum_row_counts <- function(counts, genes, runs) {
     .Call(`_scuttle_sum_row_counts`, counts, genes, runs)
 }

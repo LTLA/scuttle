@@ -41,6 +41,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// downsample_column
+Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop);
+RcppExport SEXP _scuttle_downsample_column(SEXP inputSEXP, SEXP propSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type prop(propSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample_column(input, prop));
+    return rcpp_result_gen;
+END_RCPP
+}
+// downsample_matrix
+Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double prop);
+RcppExport SEXP _scuttle_downsample_matrix(SEXP rmatSEXP, SEXP totalSEXP, SEXP propSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type rmat(rmatSEXP);
+    Rcpp::traits::input_parameter< double >::type total(totalSEXP);
+    Rcpp::traits::input_parameter< double >::type prop(propSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample_matrix(rmat, total, prop));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -58,6 +83,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_per_cell_qc", (DL_FUNC) &_scuttle_per_cell_qc, 4},
     {"_scuttle_per_feature_qc", (DL_FUNC) &_scuttle_per_feature_qc, 3},
     {"_scuttle_top_cumprop", (DL_FUNC) &_scuttle_top_cumprop, 2},
+    {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
+    {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };
