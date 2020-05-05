@@ -1,8 +1,11 @@
 Package: scuttle
 Type: Package
-Authors@R: c(person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"))
+Authors@R: c(
+        person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
+        person("Davis", "McCarthy", role="aut")
+    )
 Version: 0.98.0
-Date: 2020-02-19
+Date: 2020-05-03
 License: GPL-3
 Title: Single-Cell RNA-Seq Analysis Utilities
 Description: 
