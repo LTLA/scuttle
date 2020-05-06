@@ -12,6 +12,7 @@
 #' .assignIndicesToWorkers 
 #' .subset2index
 #' .bpNotSharedOrUp
+#' .ranksafeQR
 NULL
 
 #' @export
