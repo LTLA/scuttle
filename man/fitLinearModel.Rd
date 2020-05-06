@@ -42,7 +42,7 @@ Otherwise, if \code{get.coefs=FALSE}, the same list is returned without \code{co
 No-frills fitting of a linear model to the rows of any matrix-like object with numeric values.
 }
 \details{
-This function is basically a stripped-down version of \linkS4class{lm.fit},
+This function is basically a stripped-down version of \code{\link{lm.fit}},
 made to operate on any matrix representation (ordinary, sparse, whatever).
 It is generally intended for use inside other functions that require 
 robust and efficient linear model fitting.
