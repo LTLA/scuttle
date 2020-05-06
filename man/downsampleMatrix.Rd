@@ -48,7 +48,7 @@ downsampled <- downsampleMatrix(counts(sce), prop = 0.5, bycol=FALSE)
 sum(downsampled)
 }
 \seealso{
-\code{downsampleReads} in the \pkg{DropletUtils} package, 
+\code{\link[DropletUtils]{downsampleReads}} in the \pkg{DropletUtils} package, 
 which downsamples reads rather than observed counts.
 
 \code{\link{normalizeCounts}}, where downsampling can be used as an alternative to scaling normalization.

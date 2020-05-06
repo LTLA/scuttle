@@ -66,6 +66,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_linear_model
+Rcpp::RObject fit_linear_model(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, Rcpp::RObject exprs, bool get_coefs);
+RcppExport SEXP _scuttle_fit_linear_model(SEXP qrSEXP, SEXP qrauxSEXP, SEXP exprsSEXP, SEXP get_coefsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type qraux(qrauxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type exprs(exprsSEXP);
+    Rcpp::traits::input_parameter< bool >::type get_coefs(get_coefsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_linear_model(qr, qraux, exprs, get_coefs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -85,6 +98,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_top_cumprop", (DL_FUNC) &_scuttle_top_cumprop, 2},
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
     {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
+    {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };

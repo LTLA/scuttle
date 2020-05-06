@@ -9,6 +9,7 @@
 \alias{.assignIndicesToWorkers}
 \alias{.subset2index}
 \alias{.bpNotSharedOrUp}
+\alias{.ranksafeQR}
 \title{Developer utilities}
 \description{
 Various utilities for re-use in packages that happen to depend on \pkg{scater}.
