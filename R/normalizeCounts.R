@@ -77,7 +77,7 @@
 #'
 #' \code{\link{librarySizeFactors}}, to compute the default size factors.
 #'
-#' \code{\link[DropletUtils]{downsampleMatrix}}, to perform the downsampling.
+#' \code{\link{downsampleMatrix}}, to perform the downsampling.
 #' @examples
 #' example_sce <- mockSCE()
 #'
@@ -166,7 +166,7 @@ setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL,
         warning("'down.target' defined as the 1st percentile of size factors")
     }
     down_rate <- pmin(1, down.target/size.factors)
-    x <- DropletUtils::downsampleMatrix(x, down_rate, bycol=TRUE)
+    x <- downsampleMatrix(x, down_rate, bycol=TRUE)
     size.factors <- size.factors * down_rate/down.target
     list(x=x, size.factors=size.factors)
 }

@@ -146,7 +146,7 @@ normed[1:5,1:5]
 
 \code{\link{librarySizeFactors}}, to compute the default size factors.
 
-\code{\link[DropletUtils]{downsampleMatrix}}, to perform the downsampling.
+\code{\link{downsampleMatrix}}, to perform the downsampling.
 }
 \author{
 Aaron Lun
