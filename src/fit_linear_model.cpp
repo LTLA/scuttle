@@ -53,7 +53,7 @@ Rcpp::List fit_linear_model_internal (Rcpp::NumericMatrix qr, Rcpp::NumericVecto
     if (get_coefs) {
         return Rcpp::List::create(coefs, means, vars);
     } else {
-        return Rcpp::List::create(means, vars);
+        return Rcpp::List::create(R_NilValue, means, vars);
     }
 }
 

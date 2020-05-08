@@ -49,12 +49,13 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=S
 
     all.means <- unlist(lapply(bp.out, "[[", i=2))
     all.vars <- unlist(lapply(bp.out, "[[", i=3))
-    names(all.means) <- names(all.vars) <- rownames(x)
+    names(all.means) <- names(all.vars) <- rownames(x)[subset.row]
     output <- list(mean=all.means, variance=all.vars)
 
     if (get.coefs) {
         all.coefs <- do.call(cbind, lapply(bp.out, "[[", i=1))
-        dimnames(all.coefs) <- list(colnames(design), rownames(x))
+        all.coefs[QR$pivot,] <- all.coefs
+        dimnames(all.coefs) <- list(colnames(design), rownames(x)[subset.row])
         output <- c(list(coefficients=t(all.coefs)), output)
     }
 
