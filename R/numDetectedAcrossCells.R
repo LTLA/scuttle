@@ -45,7 +45,7 @@ NULL
     store.number <- .replace(store.number, store_number)
     threshold <- .replace(threshold, detection_limit)
 
-    .sum_counts_across_cells(x=x, ids=ids,subset.row=subset.row, subset.col=subset.col, 
+    .sum_across_cells_to_se(x=x, ids=ids,subset.row=subset.row, subset.col=subset.col, 
         average=average, store.number=store.number, BPPARAM=BPPARAM, 
         modifier=function(x) (x > threshold) + 0L) # coercing to numeric to make life easier.
 } 

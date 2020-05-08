@@ -74,9 +74,23 @@
 NULL
 
 #' @importFrom BiocParallel SerialParam 
-#' @importFrom SummarizedExperiment SummarizedExperiment
 .sum_counts_across_cells <- function(x, ids, subset.row=NULL, subset.col=NULL,
-    store.number="ncells", average=FALSE, BPPARAM=SerialParam(), raw=FALSE, modifier=NULL) 
+    store.number="ncells", average=FALSE, BPPARAM=SerialParam(), 
+    subset_row=NULL, subset_col=NULL, store_number=NULL)
+{
+    subset.row <- .replace(subset.row, subset_row)
+    subset.col <- .replace(subset.col, subset_col)
+    store.number <- .replace(store.number, store_number)
+
+    .sum_across_cells_to_se(x, ids=ids, subset.row=subset.row, subset.col=subset.col,
+        store.number=store.number, average=average, BPPARAM=BPPARAM)
+}
+
+
+#' @importFrom BiocParallel SerialParam 
+#' @importFrom SummarizedExperiment SummarizedExperiment
+.sum_across_cells_to_se <- function(x, ids, subset.row=NULL, subset.col=NULL,
+    store.number="ncells", average=FALSE, BPPARAM=SerialParam(), modifier=NULL) 
 {
     new.ids <- .process_ids(x, ids, subset.col)
     sum.out <- .sum_across_cells(x, ids=new.ids, subset.row=subset.row,
@@ -142,6 +156,9 @@ NULL
     list(mat=out, freq=freq)
 }
 
+##########################
+##########################
+
 #' @importFrom S4Vectors selfmatch
 .df_to_factor <- function(ids) {
     o <- order(ids)
@@ -188,24 +205,14 @@ setGeneric("sumCountsAcrossCells", function(x, ...) standardGeneric("sumCountsAc
 #' @export
 #' @rdname sumCountsAcrossCells
 #' @importFrom BiocParallel SerialParam
-setMethod("sumCountsAcrossCells", "ANY", function(x, ids, subset.row=NULL, subset.col=NULL,
-    store.number="ncells", average=FALSE, BPPARAM=SerialParam(),
-    subset_row=NULL, subset_col=NULL, store_number=NULL)
-{
-    subset.row <- .replace(subset.row, subset_row)
-    subset.col <- .replace(subset.col, subset_col)
-    store.number <- .replace(store.number, store_number)
-
-    .sum_counts_across_cells(x, ids=ids, subset.row=subset.row, subset.col=subset.col,
-        store.number=store.number, average=average, BPPARAM=BPPARAM)
-})
+setMethod("sumCountsAcrossCells", "ANY", .sum_counts_across_cells)
 
 #' @export
 #' @rdname sumCountsAcrossCells
 #' @importFrom SummarizedExperiment assay
 setMethod("sumCountsAcrossCells", "SummarizedExperiment", function(x, ..., assay.type="counts", exprs_values=NULL) {
     assay.type <- .replace(assay.type, exprs_values)
-    .sum_counts_across_cells(assay(x, assay.type), ..., modifier=NULL)
+    .sum_counts_across_cells(assay(x, assay.type), ...)
 })
 
 ##########################
