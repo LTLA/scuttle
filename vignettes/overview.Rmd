@@ -26,7 +26,11 @@ set.seed(10918)
 focusing on basic normalization, quality control and transformation of expression values.
 These functions are intended for use by analysts, usually at the start of the analysis workflow;
 or by developers of other packages, to assemble more complex functions in downstream analysis steps.
-To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package:
+
+To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package.
+In this case, the dataset is provided as a `SingleCellExperiment` object.
+However, most `r Biocpkg("scuttle")` functions can also be used with raw expression matrices 
+or instances of the more general `SummarizedExperiment` class.
 
 ```{r}
 library(scRNAseq)
@@ -34,9 +38,8 @@ sce <- ZeiselBrainData()
 sce
 ```
 
-In this case, the dataset is provided as a `SingleCellExperiment` object.
-However, most `r Biocpkg("scuttle")` functions can also be used with raw expression matrices 
-or instances of the more general `SummarizedExperiment` class.
+**Note:** A more comprehensive description of the use of `r Biocpkg("scuttle")` functions
+(along with other packages) in a scRNA-seq analysis workflow is available at https://osca.bioconductor.org.
 
 # Cell-level quality control 
 
