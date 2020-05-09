@@ -34,6 +34,7 @@ and one column per column of \code{design}.
 Computed as a courtesy to avoid iterating over the matrix twice.
 \item \code{variance}, a numeric vector of residual variances per row of \code{x}.
 Computed by summing the residual effects from the fitted model.
+\item \code{residual.df}, a numeric scalar containing the residual degrees of freedom for \code{design}.
 }
 
 Otherwise, if \code{get.coefs=FALSE}, the same list is returned without \code{coefficients}.

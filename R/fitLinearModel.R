@@ -19,6 +19,7 @@
 #' Computed as a courtesy to avoid iterating over the matrix twice.
 #' \item \code{variance}, a numeric vector of residual variances per row of \code{x}.
 #' Computed by summing the residual effects from the fitted model.
+#' \item \code{residual.df}, a numeric scalar containing the residual degrees of freedom for \code{design}.
 #' }
 #' 
 #' Otherwise, if \code{get.coefs=FALSE}, the same list is returned without \code{coefficients}.
@@ -42,6 +43,7 @@
 #' @importFrom BiocParallel bplapply SerialParam
 fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=SerialParam()) {
     QR <- .ranksafeQR(design)
+    resid.df <- nrow(design) - ncol(design) # guaranteed to be full rank at this point.
 
     subset.row <- .subset2index(subset.row, x)
     by.rows <- .splitRowsByWorkers(x, BPPARAM=BPPARAM, subset.row=subset.row)
@@ -50,7 +52,7 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=S
     all.means <- unlist(lapply(bp.out, "[[", i=2))
     all.vars <- unlist(lapply(bp.out, "[[", i=3))
     names(all.means) <- names(all.vars) <- rownames(x)[subset.row]
-    output <- list(mean=all.means, variance=all.vars)
+    output <- list(mean=all.means, variance=all.vars, residual.df=resid.df)
 
     if (get.coefs) {
         all.coefs <- do.call(cbind, lapply(bp.out, "[[", i=1))

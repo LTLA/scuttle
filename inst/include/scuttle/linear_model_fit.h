@@ -9,10 +9,10 @@
 
 namespace scuttle {
 
-class linear_model_fit { 
+class QR_multiplier {
 public:
-    linear_model_fit(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, const char tr='T') :
-        QR(qr), AUX(qraux), qrptr(QR.begin()), qxptr(AUX.begin()), nobs(QR.nrow()), ncoef(QR.ncol()), trans(tr)
+    QR_multiplier(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, const char tr='T') :
+        QR(qr), AUX(qraux), qrptr(QR.begin()), qxptr(AUX.begin()), nobs(QR.nrow()), ncoef(QR.ncol()), trans(tr) 
     {
         if (AUX.size()!=ncoef) { 
             throw std::runtime_error("QR auxiliary vector should be of length 'ncol(Q)'"); 
@@ -30,23 +30,13 @@ public:
         lwork=int(tmpwork+0.5);
         work.resize(lwork);
         return;
-    } 
+    }
 
     void multiply(double* rhs) {
         F77_CALL(dormqr)(&side, &trans, &nobs, &ncol, &ncoef, qrptr, &nobs, 
             qxptr, rhs, &nobs, work.data(), &lwork, &info); 
         if (info) { 
             throw std::runtime_error("residual calculations failed for 'dormqr'");
-        }
-        return;
-    }
-
-    void solve(double* rhs) {
-        F77_CALL(dtrtrs)(&uplo, &xtrans, &diag, &ncoef, &ncol, qrptr, &nobs, 
-            rhs, &nobs, &info);
-
-        if (info) { 
-            throw std::runtime_error("coefficient calculations failed for 'dtrtrs'");
         }
         return;
     }
@@ -58,7 +48,7 @@ public:
     int get_ncoefs() const {
         return ncoef;
     }
-private:
+protected:
     Rcpp::NumericMatrix QR;
     Rcpp::NumericVector AUX;
     const double* qrptr, * qxptr;
@@ -70,6 +60,22 @@ private:
 
     const int ncol=1;
     const char side='L';
+};
+
+class linear_model_fit : public QR_multiplier { 
+public:
+    linear_model_fit(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux) : QR_multiplier(qr, qraux, 'T') {}
+
+    void solve(double* rhs) {
+        F77_CALL(dtrtrs)(&uplo, &xtrans, &diag, &(this->ncoef), &(this->ncol), this->qrptr, &(this->nobs), 
+            rhs, &(this->nobs), &(this->info));
+
+        if (this->info) { 
+            throw std::runtime_error("coefficient calculations failed for 'dtrtrs'");
+        }
+        return;
+    }
+private:
     const char uplo='U', xtrans='N', diag='N';
 };
 
