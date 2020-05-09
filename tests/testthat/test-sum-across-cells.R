@@ -65,6 +65,34 @@ test_that("internal .colsum method respects factor level ordering", {
     setAutoBPPARAM(oldBP)
 })
 
+test_that("internal .colmed method works correctly", {
+    thing <- matrix(rnorm(2000), ncol=100, nrow=20)
+    ids <- sample(LETTERS[1:5], ncol(thing), replace=TRUE)
+
+    # Vanilla check.
+    meds <- scuttle:::.colmed(thing, ids)
+    expect_false(is.unsorted(colnames(ids)))
+
+    for (i in levels(ids)) {
+        ref <- apply(thing[,ids==i], 1, median)
+        expect_equal(meds[,i], ref)
+    }  
+
+    # Check that it respects ordering of levels.
+    forward <- rep(LETTERS[1:3], length.out=ncol(thing))
+    backward <- factor(forward, levels=LETTERS[3:1])
+    fmeds <- scuttle:::.colmed(thing, forward)
+    bmeds <- scuttle:::.colmed(thing, backward)
+    expect_identical(colnames(fmeds), rev(colnames(bmeds)))
+    expect_identical(fmeds, bmeds[,colnames(fmeds)])
+
+    # Handles sparse matrices.
+    Y <- Matrix::rsparsematrix(100, 20, density=0.6)
+    ids <- sample(LETTERS[1:5], ncol(Y), replace=TRUE)
+    M <- scuttle:::.colmed(Y, ids)
+    expect_identical(M, scuttle:::.colmed(as.matrix(Y), ids))
+})
+
 ##########################################################
 
 set.seed(10003)
@@ -83,11 +111,6 @@ test_that("we can summarise counts at cell cluster level", {
     copy <- sce
     colnames(copy) <- paste0("CELL", seq_len(ncol(copy)))
     expect_identical(sumCountsAcrossCells(copy, ids), out)
-
-    # Handles averaging correctly.
-    out2 <- sumCountsAcrossCells(sce, ids, average=TRUE)
-    expect_identical(assay(out2), t(t(colsum(counts(sce), ids))/as.integer(table(ids))))
-    expect_identical(colData(out2), colData(out))
 
     # assay.type= works correctly.
     alt <- sce
@@ -157,6 +180,27 @@ test_that("by-cell count summarization behaves with subsetting", {
 
     expect_identical(sumCountsAcrossCells(counts(sce), ids, subset.col=2:15),
         sumCountsAcrossCells(counts(sce)[,2:15], ids[2:15]))
+})
+
+set.seed(100040002)
+test_that("by-cell count summarization works with various average types", {
+    ids <- sample(LETTERS[1:5], ncol(sce), replace=TRUE)
+    ref <- sumCountsAcrossCells(sce, ids)
+
+    # Handles vanilla averaging:
+    out2 <- sumCountsAcrossCells(sce, ids, average=TRUE)
+    expect_identical(assay(out2), t(t(colsum(counts(sce), ids))/as.integer(table(ids))))
+    expect_identical(colData(out2), colData(ref))
+
+    out3 <- sumCountsAcrossCells(sce, ids, average="mean")
+    expect_identical(out2, out3)
+
+    # Handles medianizing.
+    out4 <- sumCountsAcrossCells(sce, ids, average="median")
+    expect_false(identical(out2, out4))
+
+    # 'none' is the same as FALSE.
+    expect_identical(ref, sumCountsAcrossCells(sce, ids, average="none"))
 })
 
 set.seed(1000401)
@@ -291,13 +335,21 @@ test_that("Aggregation across cells works correctly with reducedDims", {
     reducedDim(copy, "PCA") <- t(assay(sce)[1:3,])
     reducedDim(copy, "TSNE") <- t(assay(sce)[1:10,])
 
+    # Responds to the average settings.
     agg <- aggregateAcrossCells(copy, ids, average=TRUE)
     expect_identical(reducedDim(agg, "PCA"), t(assay(agg)[1:3,]))
     expect_identical(reducedDim(agg, "TSNE"), t(assay(agg)[1:10,]))
 
-    agg0 <- aggregateAcrossCells(sce, ids, average=TRUE, use.dimred=FALSE)
-    expect_identical(counts(agg0), counts(agg))
-    expect_identical(reducedDimNames(agg0), character(0))
+    agg2 <- aggregateAcrossCells(copy, ids, average=FALSE)
+    expect_identical(reducedDims(agg2), reducedDims(agg))
+
+    agg3 <- aggregateAcrossCells(copy, ids, average="median")
+    expect_identical(reducedDim(agg3, "PCA"), t(assay(agg3)[1:3,]))
+    expect_identical(reducedDim(agg3, "TSNE"), t(assay(agg3)[1:10,]))
+    expect_false(identical(agg3, agg))
+
+    agg4 <- aggregateAcrossCells(copy, ids, average="mean")
+    expect_true(identical(agg4, agg))
 
     # Behaves with NAs.
     ids2 <- ids
@@ -312,13 +364,13 @@ test_that("Aggregation across cells works correctly with reducedDims", {
     agg1 <- aggregateAcrossCells(copy, ids, use.dimred=1)
     expect_identical(reducedDimNames(agg1), "PCA")
     expect_error(aggregateAcrossCells(copy, ids, use.dimred=10), 'use.dimred')
+
     agg2 <- aggregateAcrossCells(copy, ids, use.dimred="TSNE")
     expect_identical(reducedDimNames(agg2), "TSNE")
     expect_error(aggregateAcrossCells(copy, ids, use.dimred="WHEE"), 'use.dimred')
 
-    # Setting average=FALSE has no effect.
-    agg3 <- aggregateAcrossCells(copy, ids, average=FALSE)
-    expect_identical(reducedDims(agg), reducedDims(agg3))
+    agg0 <- aggregateAcrossCells(sce, ids, use.dimred=FALSE)
+    expect_identical(reducedDimNames(agg0), character(0))
 })
 
 set.seed(1000411)
