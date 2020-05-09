@@ -16,6 +16,8 @@
 #' @param assay.type A string or integer scalar specifying the assay of \code{x} containing the matrix of counts
 #' (or any other expression quantity that can be meaningfully summed).
 #' @param average Logical scalar indicating whether the average should be computed instead of the sum.
+#' Alternatively, a string containing \code{"mean"}, \code{"median"} or \code{"none"}, specifying the type of average.
+#' (\code{"none"} is equivalent to \code{FALSE}.)
 #' @param store.number String specifying the field of the output \code{\link{colData}} to store the number of cells in each group.
 #' If \code{NULL}, nothing is stored.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying whether summation should be parallelized.
@@ -46,6 +48,8 @@
 #' Setting \code{average=TRUE} will compute the average in each set rather than the sum.
 #' This is particularly useful if \code{x} contains expression values that have already been normalized in some manner,
 #' as computing the average avoids another round of normalization to account for differences in the size of each set.
+#' The same effect is obtained by setting \code{average="mean"},
+#' while setting \code{average="median"} will instead compute the median across all cells.
 #'
 #' Note that, prior to version 1.16.0, \code{sumCountsAcrossCells} would return a raw matrix.
 #' This has now been wrapped in a \linkS4class{SummarizedExperiment} for consistency and to include per-group statistics.
@@ -110,12 +114,17 @@ NULL
     }
 
     output <- list(mat)
-    names(output) <- if(average) {
-        "average" 
-    } else { 
-        "sum" 
-    }
+    names(output) <- sum.out$name
     SummarizedExperiment(output, colData=coldata)
+}
+
+.standardize_average_arg <- function(average) {
+    if (isTRUE(average)) {
+        average <- "mean"
+    } else if (isFALSE(average)) {
+        average <- "none"
+    }
+    match.arg(average, c("none", "mean", "median"))
 }
 
 #' @importFrom Matrix t 
@@ -123,6 +132,13 @@ NULL
 #' @importFrom BiocParallel SerialParam bplapply 
 #' @importClassesFrom BiocParallel BiocParallelParam
 .sum_across_cells <- function(x, ids, subset.row=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
+    average <- .standardize_average_arg(average)
+    if (average=="median") {
+        FUN <- .colmed
+    } else {
+        FUN <- .colsum
+    }
+
     lost <- is.na(ids)
     subset.col <- if (any(lost)) which(!lost)
     by.core <- .splitRowsByWorkers(x, BPPARAM=BPPARAM, 
@@ -144,16 +160,22 @@ NULL
     }
 
     sub.ids <- ids[!lost]
-    out <- bplapply(by.core, FUN=.colsum, group=sub.ids, BPPARAM=BPPARAM)
+    out <- bplapply(by.core, FUN=FUN, group=sub.ids, BPPARAM=BPPARAM)
     out <- do.call(rbind, out)
 
     freq <- table(sub.ids)
     freq <- as.integer(freq[colnames(out)])
-    if (average) {
+    if (average=="mean") {
         out <- t(t(out)/freq)
     }
 
-    list(mat=out, freq=freq)
+    if (average=="none") {
+        name <- "sum" 
+    } else { 
+        name <- "average" 
+    }
+
+    list(mat=out, freq=freq, name=name)
 }
 
 ##########################
@@ -236,3 +258,17 @@ setMethod(".colsum", "matrix", function(x, group) {
 setMethod(".colsum", "DelayedMatrix", function(x, group) {
     colsum(x, group)
 })
+
+#' @importFrom DelayedMatrixStats rowMedians
+.colmed <- function(x, group) {
+    by.group <- split(seq_along(group), group)
+    output <- matrix(0, nrow(x), length(by.group))
+    colnames(output) <- names(by.group)
+
+    for (i in names(by.group)) {
+        current <- x[,by.group[[i]],drop=FALSE]
+        current <- DelayedArray(current)
+        output[,i] <- rowMedians(current)
+    }
+    output
+}
