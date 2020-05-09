@@ -105,13 +105,8 @@ NULL
     coldata <- .create_coldata(original.ids=ids, mapping=mapping, 
         freq=sum.out$freq, store.number=store.number)
 
-    # non-NULL coldata determines the output SE column names,
-    # so we make sure they're sync'd to something sensible.
-    if (.has_multi_ids(ids)) {
-        rownames(coldata) <- colnames(mat) <- NULL
-    } else {
-        rownames(coldata) <- colnames(mat)
-    }
+    # Sync'ing the names as coldata is the source of truth.
+    colnames(mat) <- rownames(coldata)
 
     output <- list(mat)
     names(output) <- sum.out$name
@@ -210,9 +205,12 @@ NULL
 .create_coldata <- function(original.ids, mapping, freq, store.number) {
     if (.has_multi_ids(original.ids)) {
         coldata <- original.ids[mapping,,drop=FALSE]
+        rownames(coldata) <- NULL
     } else {
         coldata <- DataFrame(ids=original.ids[mapping])
+        rownames(coldata) <- coldata$ids
     }
+
     coldata[[store.number]] <- freq
     coldata
 }
@@ -262,8 +260,8 @@ setMethod(".colsum", "DelayedMatrix", function(x, group) {
 #' @importFrom DelayedMatrixStats rowMedians
 .colmed <- function(x, group) {
     by.group <- split(seq_along(group), group)
-    output <- matrix(0, nrow(x), length(by.group))
-    colnames(output) <- names(by.group)
+    output <- matrix(0, nrow(x), length(by.group),
+        dimnames=list(rownames(x), names(by.group)))
 
     for (i in names(by.group)) {
         current <- x[,by.group[[i]],drop=FALSE]

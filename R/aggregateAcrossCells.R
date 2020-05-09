@@ -146,13 +146,9 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ...,
     if (!is.null(subset.row)) {
         shell <- shell[subset.row,]
     }
-   
-    assays(shell) <- collected
-    colData(shell) <- coldata
 
-    if (.has_multi_ids(ids)) {
-        colnames(shell) <- NULL
-    }
+    assays(shell, withDimnames=FALSE) <- collected
+    colData(shell) <- coldata
     shell
 })
 
