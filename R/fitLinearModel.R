@@ -47,7 +47,7 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=S
 
     subset.row <- .subset2index(subset.row, x)
     by.rows <- .splitRowsByWorkers(x, BPPARAM=BPPARAM, subset.row=subset.row)
-    bp.out <- bplapply(by.rows, FUN=fit_linear_model, qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs)
+    bp.out <- bplapply(by.rows, FUN=fit_linear_model, qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, BPPARAM=BPPARAM)
 
     all.means <- unlist(lapply(bp.out, "[[", i=2))
     all.vars <- unlist(lapply(bp.out, "[[", i=3))
