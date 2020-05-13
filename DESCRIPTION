@@ -4,8 +4,8 @@ Authors@R: c(
         person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
         person("Davis", "McCarthy", role="aut")
     )
-Version: 0.99.5
-Date: 2020-05-09
+Version: 0.99.6
+Date: 2020-05-12
 License: GPL-3
 Title: Single-Cell RNA-Seq Analysis Utilities
 Description: 
@@ -15,17 +15,18 @@ Description:
 Depends: 
     SingleCellExperiment
 Imports: 
-    BiocGenerics, 
-    SummarizedExperiment, 
-    Matrix, 
-    DelayedArray, 
-    DelayedMatrixStats, 
     methods, 
-    S4Vectors, 
-    stats, 
     utils, 
+    stats, 
+    Matrix, 
     Rcpp, 
-    BiocParallel
+    BiocGenerics, 
+    S4Vectors, 
+    IRanges,
+    BiocParallel,
+    SummarizedExperiment,
+    DelayedArray,
+    DelayedMatrixStats
 Suggests: 
     BiocStyle, 
     beachmat, 
