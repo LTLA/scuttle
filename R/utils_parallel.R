@@ -1,10 +1,10 @@
 #' Developer utilities
 #'
-#' Various utilities for re-use in packages that happen to depend on \pkg{scater}.
+#' Various utilities for re-use in packages that happen to depend on \pkg{scuttle}.
 #' These are exported simply to avoid re-writing them in downstream packages, and should not be touched by end-users.
 #'
 #' @author Aaron Lun
-#' @name scater-utils
+#' @name scuttle-utils
 #' @docType class
 #' @aliases .splitRowsByWorkers
 #' .splitColsByWorkers
@@ -13,6 +13,7 @@
 #' .subset2index
 #' .bpNotSharedOrUp
 #' .ranksafeQR
+#' .checkCountMatrix
 NULL
 
 #' @export
