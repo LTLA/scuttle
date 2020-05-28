@@ -447,6 +447,14 @@ test_that("Aggregation across cells works correctly with custom coldata acquisit
     expect_identical(alt$thing, NULL)
 })
 
+set.seed(1000413)
+test_that("Aggregation across cells doesn't choke on syntactically invalid names", {
+    ids <- paste0("CLUSTER_", sample(ncol(sce)/2, ncol(sce), replace=TRUE))
+    sce$`batman and robin` <- 2
+    alt <- aggregateAcrossCells(sce, ids)
+    expect_identical(sum(alt$`batman and robin`==2), ncol(alt))
+})
+
 set.seed(100042)
 test_that("Aggregation across cells works correctly for SEs", {
     ids <- paste0("CLUSTER_", sample(ncol(sce)/2, ncol(sce), replace=TRUE))

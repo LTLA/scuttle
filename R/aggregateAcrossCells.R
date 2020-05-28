@@ -136,8 +136,7 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ...,
 
     new.cd <- .merge_DF_rows(colData(x), ids=new.ids.char, final=cn, mergeFUN=coldata.merge)
     if (length(new.cd)) {
-        new.cd <- do.call(DataFrame, new.cd)
-        rownames(new.cd) <- rownames(coldata)
+        new.cd <- do.call(DataFrame, c(new.cd, list(check.names=FALSE, row.names=rownames(coldata))))
         coldata <- cbind(new.cd, coldata)
     }
 
