@@ -13,7 +13,7 @@
 \alias{.checkCountMatrix}
 \title{Developer utilities}
 \description{
-Various utilities for re-use in packages that happen to depend on \pkg{scater}.
+Various utilities for re-use in packages that happen to depend on \pkg{scuttle}.
 These are exported simply to avoid re-writing them in downstream packages, and should not be touched by end-users.
 }
 \author{
