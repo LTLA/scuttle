@@ -54,7 +54,7 @@ NULL
 #' @importFrom BiocParallel SerialParam
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .library_size_factors <- function(x, subset.row=NULL, geometric=FALSE, BPPARAM=SerialParam(),
-    subset_row=NULL, pseudo_count=NULL) 
+    subset_row=NULL, pseudo_count=1) 
 {
     subset.row <- .replace(subset.row, subset_row)
 

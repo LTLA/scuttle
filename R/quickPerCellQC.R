@@ -5,7 +5,7 @@
 #' @param df A \linkS4class{DataFrame} containing per-cell QC statistics, as computed by \code{\link{perCellQCMetrics}}.
 #' @param sum.field String specifying the column of \code{df} containing the library size for each cell.
 #' @param detected.field String specifying the column of \code{df} containing the number of detected features per cell.
-#' @param subset.fields Character vector specifying the column(s) of \code{df} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.
+#' @param sub.fields Character vector specifying the column(s) of \code{df} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.
 #' @param ... Further arguments to pass to \code{\link{isOutlier}}.
 #' @param lib_size,n_features,percent_subsets Soft-deprecated equivalents of the arguments above. 
 #'
@@ -24,7 +24,7 @@
 #' These are considered to represent low-quality cells with low-complexity libraries. 
 #' Detection is performed on the log-scale to adjust for a heavy right tail.
 #' This is done on the log-scale to adjust for a heavy right tail and to improve resolution at zero.
-#' \item For each column specified by \code{subset.fields}, large outliers are detected.
+#' \item For each column specified by \code{sub.fields}, large outliers are detected.
 #' This aims to remove cells with high spike-in or mitochondrial content, usually corresponding to damaged cells.
 #' While these distributions often have heavy right tails, the putative low-quality cells are often present in this tail;
 #' thus, transformation is not performed to ensure maintain resolution of the filter.
@@ -49,19 +49,19 @@
 #' \code{\link{isOutlier}}, to identify outliers with a MAD-based approach.
 #' @export
 #' @importFrom S4Vectors DataFrame
-quickPerCellQC <- function(df, sum.field="sum", detected.field="detected", subset.fields=NULL, 
+quickPerCellQC <- function(df, sum.field="sum", detected.field="detected", sub.fields=NULL, 
     ..., lib_size=NULL, n_features=NULL, percent_subsets=NULL)
 {
     sum.field <- .replace(sum.field, lib_size)
     detected.field <- .replace(detected.field, n_features)
-    subset.fields <- .replace(subset.fields, percent_subsets)
+    sub.fields <- .replace(sub.fields, percent_subsets)
 
     output <- DataFrame(
         low_lib_size=isOutlier(df[[sum.field]], log=TRUE, type="lower", ...),
         low_n_features=isOutlier(df[[detected.field]], log=TRUE, type="lower", ...)
     )
 
-    for (i in subset.fields) {
+    for (i in sub.fields) {
         output[[paste0("high_", i)]] <- isOutlier(df[[i]], type="higher", ...)
     }
 

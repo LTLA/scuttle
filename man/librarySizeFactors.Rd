@@ -15,7 +15,7 @@ librarySizeFactors(x, ...)
   geometric = FALSE,
   BPPARAM = SerialParam(),
   subset_row = NULL,
-  pseudo_count = NULL
+  pseudo_count = 1
 )
 
 \S4method{librarySizeFactors}{SummarizedExperiment}(x, ..., assay.type = "counts", exprs_values = NULL)

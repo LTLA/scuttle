@@ -8,7 +8,7 @@ quickPerCellQC(
   df,
   sum.field = "sum",
   detected.field = "detected",
-  subset.fields = NULL,
+  sub.fields = NULL,
   ...,
   lib_size = NULL,
   n_features = NULL,
@@ -22,7 +22,7 @@ quickPerCellQC(
 
 \item{detected.field}{String specifying the column of \code{df} containing the number of detected features per cell.}
 
-\item{subset.fields}{Character vector specifying the column(s) of \code{df} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.}
+\item{sub.fields}{Character vector specifying the column(s) of \code{df} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.}
 
 \item{...}{Further arguments to pass to \code{\link{isOutlier}}.}
 
@@ -46,7 +46,7 @@ Detection is performed on the log-scale to adjust for a heavy right tail and to 
 These are considered to represent low-quality cells with low-complexity libraries. 
 Detection is performed on the log-scale to adjust for a heavy right tail.
 This is done on the log-scale to adjust for a heavy right tail and to improve resolution at zero.
-\item For each column specified by \code{subset.fields}, large outliers are detected.
+\item For each column specified by \code{sub.fields}, large outliers are detected.
 This aims to remove cells with high spike-in or mitochondrial content, usually corresponding to damaged cells.
 While these distributions often have heavy right tails, the putative low-quality cells are often present in this tail;
 thus, transformation is not performed to ensure maintain resolution of the filter.
