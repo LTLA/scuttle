@@ -260,6 +260,8 @@ setMethod("perCellQCMetrics", "SingleCellExperiment",
             name <- paste0(name, "_")
         }
         names <- sprintf("%s%s", name, colnames(x))
+        rn <- rownames(x)
+
         df <- vector("list", ncol(x))
         for (i in seq_along(df)) {
             df[[i]] <- .flatten_nested_dims(x[,i], names[i])
@@ -269,6 +271,8 @@ setMethod("perCellQCMetrics", "SingleCellExperiment",
         } else {
             df <- DataFrame(x[,0])
         }
+
+        rownames(df) <- rn
     } else {
         df <- DataFrame(x)
         colnames(df) <- name

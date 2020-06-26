@@ -31,6 +31,7 @@ test_that("we can compute standard per-cell QC metrics", {
     for (x in N) {
         expect_identical(flat[,paste0("percent.top_", x)], df$percent.top[,as.character(x)])
     }
+    expect_identical(rownames(flat), colnames(original))
 })
 
 test_that("we can compute standard QC metrics with subsets", {
@@ -111,6 +112,7 @@ test_that("perCellQCMetrics handles silly inputs", {
 
 test_that("perFeatureQCMetrics works correctly", {
     out <- perFeatureQCMetrics(original, flatten=FALSE)
+    expect_identical(rownames(out), rownames(original))
     expect_equal(out$mean, unname(rowMeans(counts(original))))
     expect_equal(out$detected, unname(rowMeans(counts(original) > 0))*100)
 })
@@ -135,6 +137,7 @@ test_that("we can compute standard QC metrics with cell controls", {
 
     # Flattening works as expected.
     flat <- perFeatureQCMetrics(original, subsets = list(set1 = 1:20))
+    expect_identical(rownames(flat), rownames(original))
     expect_identical(flat$subsets_set1_mean, df$subsets$set1$mean)
     expect_identical(flat$subsets_set1_ratio, df$subsets$set1$ratio)
 })
