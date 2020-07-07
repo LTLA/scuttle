@@ -5,7 +5,6 @@
 \alias{whichNonZero,dgTMatrix-method}
 \alias{whichNonZero,dgCMatrix-method}
 \alias{whichNonZero,ANY-method}
-\alias{whichNonZero,DelayedArray-method}
 \title{Find non-zero entries of a matrix}
 \usage{
 whichNonZero(x, ...)
@@ -14,9 +13,7 @@ whichNonZero(x, ...)
 
 \S4method{whichNonZero}{dgCMatrix}(x, ...)
 
-\S4method{whichNonZero}{ANY}(x, ...)
-
-\S4method{whichNonZero}{DelayedArray}(x, BPPARAM = SerialParam(), ...)
+\S4method{whichNonZero}{ANY}(x, BPPARAM = SerialParam(), ...)
 }
 \arguments{
 \item{x}{A numeric matrix-like object, usually sparse in content if not in representation.}

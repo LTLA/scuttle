@@ -40,41 +40,21 @@ setMethod("whichNonZero", "dgTMatrix", function(x, ...) {
 setMethod("whichNonZero", "dgCMatrix", function(x, ...) {
     i <- x@i + 1L
     d <- diff(x@p)
-    j <- rep(seq_along(d), d)
+    j <- rep.int(seq_along(d), d)
     list(i=i, j=j, x=x@x)
 })
 
 #' @export
 #' @rdname whichNonZero
-#' @importFrom Matrix which
-setMethod("whichNonZero", "ANY", function(x, ...) {
-    keep <- which(x!=0, arr.ind=TRUE)
-    list(i=keep[,1], j=keep[,2], x=x[keep])
-})
-
-#' @export
-#' @rdname whichNonZero
-#' @importFrom DelayedArray blockApply getAutoBPPARAM setAutoBPPARAM
+#' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM nzindex nzdata
+#' @importClassesFrom DelayedArray SparseArraySeed
 #' @importFrom BiocParallel SerialParam
-setMethod("whichNonZero", "DelayedArray", function(x, BPPARAM=SerialParam(), ...) {
+setMethod("whichNonZero", "ANY", function(x, BPPARAM=SerialParam(), ...) {
     oldBP <- getAutoBPPARAM()
     setAutoBPPARAM(BPPARAM)
     on.exit(setAutoBPPARAM(oldBP))
 
-    output <- blockApply(x, FUN=.find_blocked_nzero)
-    do.call(mapply, c(list(FUN=c), output, list(SIMPLIFY=FALSE)))
+    out <- as(x, "SparseArraySeed")
+    idx <- nzindex(out)
+    list(i=idx[,1], j=idx[,2], x=nzdata(out))
 })
-
-#' @importFrom Matrix which
-#' @importFrom IRanges start
-.find_blocked_nzero <- function(block) {
-    grid <- attr(block, "from_grid")
-    bid <- attr(block, "block_id") 
-    viewport <- grid[[bid]]
-
-    basic <- which(block!=0, arr.ind=TRUE) # guaranteed to be ordinary, no need for Matrix::which.
-    i <- unname(basic[,1]) + as.integer(start(viewport)[1]) - 1L
-    j <- unname(basic[,2]) + as.integer(start(viewport)[2]) - 1L
-
-    list(i=i, j=j, x=block[basic])
-}
