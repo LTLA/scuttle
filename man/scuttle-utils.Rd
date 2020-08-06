@@ -11,6 +11,7 @@
 \alias{.bpNotSharedOrUp}
 \alias{.ranksafeQR}
 \alias{.checkCountMatrix}
+\alias{.unpackLists}
 \title{Developer utilities}
 \description{
 Various utilities for re-use in packages that happen to depend on \pkg{scuttle}.

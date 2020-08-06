@@ -14,6 +14,7 @@
 #' .bpNotSharedOrUp
 #' .ranksafeQR
 #' .checkCountMatrix
+#' .unpackLists
 NULL
 
 #' @export

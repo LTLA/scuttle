@@ -19,3 +19,21 @@
     }
     use
 }
+
+#' @export
+#' @importClassesFrom S4Vectors List DataFrame
+.unpackLists <- function(...) {
+    objects <- list(...)
+    for (i in seq_along(objects)) {
+        current <- objects[[i]]
+        if (!is.list(current)) {
+            if (is(current, "List") && !is(current, "DataFrame")) {
+                current <- as.list(current)
+            } else {
+                current <- list(current)
+            }
+            objects[[i]] <- current
+        }
+    }
+    do.call(c, objects)
+}

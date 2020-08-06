@@ -170,3 +170,29 @@ test_that("splitting a matrix by column is correct", {
         .splitColsByWorkers(M[,i], safeBPParam(1))
     )
 })
+
+test_that("unpacking lists is correct", {
+    expect_identical(.unpackLists(1, 2, 3), list(1,2,3))
+
+    expect_identical(.unpackLists(1, list(2, 3)), list(1,2,3))
+
+    expect_identical(.unpackLists(list(1, 2, 3)), list(1,2,3))
+
+    # Works with the DataFrame special case.
+    df1 <- DataFrame(X=1)
+    df2 <- DataFrame(Y=2)
+    df3 <- DataFrame(Z=2)
+
+    expect_identical(.unpackLists(df1, df2, df3), list(df1,df2,df3))
+
+    expect_identical(.unpackLists(df1, list(df2, df3)), list(df1,df2,df3))
+
+    expect_identical(.unpackLists(list(df1, df2, df3)), list(df1,df2,df3))
+
+    # Works with names.
+    expect_identical(.unpackLists(A=1, B=2, C=3), list(A=1, B=2, C=3))
+
+    expect_identical(.unpackLists(A=1, list(B=2, C=3)), list(A=1, B=2, C=3))
+
+    expect_identical(.unpackLists(list(A=1, B=2, C=3)), list(A=1, B=2, C=3))
+})
