@@ -17,18 +17,21 @@
 #' .unpackLists
 NULL
 
+.single_worker_matrix <- function(x, subset.row, subset.col) {
+    if (!.noOpSubset(subset.row, nrow(x))) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+    if (!.noOpSubset(subset.col, ncol(x))) {
+        x <- x[,subset.col,drop=FALSE]
+    }
+    list(x)
+}
+
 #' @export
 #' @importFrom BiocParallel bpnworkers
 .splitRowsByWorkers <- function(x, BPPARAM, subset.row=NULL, subset.col=NULL, assignments=NULL) {
     if (bpnworkers(BPPARAM)==1L) {
-        if (!.noOpSubset(subset.row, nrow(x))) {
-            x <- x[subset.row,,drop=FALSE]
-        }
-        if (!.noOpSubset(subset.col, ncol(x))) {
-            x <- x[,subset.col,drop=FALSE]
-        }
-
-        list(x)
+        .single_worker_matrix(x, subset.row=subset.row, subset.col=subset.col)
     } else {
         if (is.null(assignments)) {
             assignments <- .assignIndicesToWorkers(nrow(x), BPPARAM, subset=subset.row)
@@ -50,14 +53,7 @@ NULL
 #' @importFrom BiocParallel bpnworkers
 .splitColsByWorkers <- function(x, BPPARAM, subset.row=NULL, subset.col=NULL, assignments=NULL) {
     if (bpnworkers(BPPARAM)==1L) {
-        if (!.noOpSubset(subset.row, nrow(x))) {
-            x <- x[subset.row,,drop=FALSE]
-        }
-        if (!.noOpSubset(subset.col, ncol(x))) {
-            x <- x[,subset.col,drop=FALSE]
-        }
-
-        list(x)
+        .single_worker_matrix(x, subset.row=subset.row, subset.col=subset.col)
     } else {
         if (is.null(assignments)) {
             assignments <- .assignIndicesToWorkers(ncol(x), BPPARAM, subset=subset.col)
