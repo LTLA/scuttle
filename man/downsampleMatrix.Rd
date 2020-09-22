@@ -4,7 +4,7 @@
 \alias{downsampleMatrix}
 \title{Downsample a count matrix}
 \usage{
-downsampleMatrix(x, prop, bycol = TRUE)
+downsampleMatrix(x, prop, bycol = TRUE, sink = NULL)
 }
 \arguments{
 \item{x}{An integer or numeric matrix-like object containing counts.}
@@ -46,6 +46,7 @@ sum(counts(sce))
 
 downsampled <- downsampleMatrix(counts(sce), prop = 0.5, bycol=FALSE)
 sum(downsampled)
+
 }
 \seealso{
 \code{\link[DropletUtils]{downsampleReads}} in the \pkg{DropletUtils} package, 

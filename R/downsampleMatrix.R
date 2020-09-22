@@ -44,15 +44,58 @@
 #' 
 #' downsampled <- downsampleMatrix(counts(sce), prop = 0.5, bycol=FALSE)
 #' sum(downsampled)
+#'
+#' downsampled2 <- downsampleMatrix(counts(sce), prop = 0.5, bycol=TRUE)
+#' sum(downsampled2)
+#'
 #' @export
-downsampleMatrix <- function(x, prop, bycol=TRUE) {
+#' @importFrom DelayedArray makeNindexFromArrayViewport
+downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
     if (bycol) {
         prop <- rep(prop, length.out = ncol(x))
-        out <- downsample_column(x, prop)
+        FUN <- function(block) {
+            vp <- attr(block, "from_grid")[[attr(block, "block_id")]]
+            cols <- makeNindexFromArrayViewport(vp, expand.RangeNSBS=TRUE)[[2]]
+            if (!is.null(cols)) {
+                prop <- prop[cols]
+            }
+
+            downed <- downsample_column(block, prop)
+
+            if (!is.null(sink)) {
+                write_block(sink, vp, as.matrix(downed))
+            } else {
+                downed
+            }
+        }
     } else {
-        out <- downsample_matrix(x, sum(x), prop)
+        total <- sum(x)
+        FUN <- function(block) {
+            out <- downsample_matrix(block, total, prop)
+            downed <- out[[1]]
+            total <<- total - out[[2]]
+
+            if (!is.null(sink)) {
+                vp <- attr(block, "from_grid")[[attr(block, "block_id")]]
+                write_block(sink, vp, as.matrix(downed))
+            } else {
+                downed
+            }
+        }
     }
 
-    dimnames(out) <- dimnames(x)
+    # This MUST be excuted in serial, given the <<- and the correct behavior of
+    # the random stream (can't be bothered to use dqrng here).
+    out <- colBlockApply(x, FUN=FUN, BPPARAM=NULL) 
+
+    if (length(out)!=1L) {
+        out <- do.call(cbind, out)
+    } else {
+        out <- out[[1]]
+    }
+
+    if (!is.null(out)) {
+        dimnames(out) <- dimnames(x)
+    }
     out
 }

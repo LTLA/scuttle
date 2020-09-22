@@ -5,42 +5,6 @@
 
 using namespace Rcpp;
 
-// per_cell_qc
-Rcpp::RObject per_cell_qc(Rcpp::RObject matrix, Rcpp::List featcon, Rcpp::IntegerVector top, SEXP limit);
-RcppExport SEXP _scuttle_per_cell_qc(SEXP matrixSEXP, SEXP featconSEXP, SEXP topSEXP, SEXP limitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type featcon(featconSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type top(topSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type limit(limitSEXP);
-    rcpp_result_gen = Rcpp::wrap(per_cell_qc(matrix, featcon, top, limit));
-    return rcpp_result_gen;
-END_RCPP
-}
-// per_feature_qc
-Rcpp::RObject per_feature_qc(Rcpp::RObject matrix, Rcpp::List cellcon, SEXP limit);
-RcppExport SEXP _scuttle_per_feature_qc(SEXP matrixSEXP, SEXP cellconSEXP, SEXP limitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type cellcon(cellconSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type limit(limitSEXP);
-    rcpp_result_gen = Rcpp::wrap(per_feature_qc(matrix, cellcon, limit));
-    return rcpp_result_gen;
-END_RCPP
-}
-// top_cumprop
-Rcpp::NumericMatrix top_cumprop(Rcpp::RObject matrix, Rcpp::IntegerVector top);
-RcppExport SEXP _scuttle_top_cumprop(SEXP matrixSEXP, SEXP topSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type matrix(matrixSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type top(topSEXP);
-    rcpp_result_gen = Rcpp::wrap(top_cumprop(matrix, top));
-    return rcpp_result_gen;
-END_RCPP
-}
 // downsample_column
 Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop);
 RcppExport SEXP _scuttle_downsample_column(SEXP inputSEXP, SEXP propSEXP) {
@@ -93,9 +57,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scuttle_per_cell_qc", (DL_FUNC) &_scuttle_per_cell_qc, 4},
-    {"_scuttle_per_feature_qc", (DL_FUNC) &_scuttle_per_feature_qc, 3},
-    {"_scuttle_top_cumprop", (DL_FUNC) &_scuttle_top_cumprop, 2},
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
     {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},

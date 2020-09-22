@@ -72,14 +72,12 @@ NULL
     .sum_across_features(x, ids, subset.row=subset.row, subset.col=subset.col, average=average, BPPARAM=BPPARAM)
 }
 
-#' @importFrom BiocParallel SerialParam bplapply
-.sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, 
-    average=FALSE, BPPARAM=SerialParam(), modifier=NULL) 
-{
+#' @importFrom BiocParallel SerialParam
+#' @importFrom beachmat colBlockApply
+.sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
     if (is.list(ids)) {
-        ids <- lapply(ids, .subset2index, target=x, byrow=TRUE)
         runs <- lengths(ids)
-        genes <- unlist(ids)
+        genes <- .subset2index(unlist(ids), target=x, byrow=TRUE)
         names <- names(ids)
     } else {
         if (length(ids)!=nrow(x)) {
@@ -99,15 +97,18 @@ NULL
         runs <- tabulate(kept+1L, nbins=length(runs))
     }
 
-    by.core <- .splitColsByWorkers(x, BPPARAM=BPPARAM, subset.col=subset.col)
-    if (!is.null(modifier)) {
-        by.core <- lapply(by.core, modifier)
+    if (!is.null(subset.col)) {
+        x <- x[,subset.col,drop=FALSE]
     }
-    out_list <- bplapply(by.core, FUN=sum_row_counts, genes=genes, runs=runs, BPPARAM=BPPARAM)
+    if (!is.null(modifier)) {
+        x <- modifier(x)
+    }
 
+    out_list <- colBlockApply(x, BPPARAM=BPPARAM, FUN=sum_row_counts, genes=genes, runs=runs)
     out <- do.call(cbind, out_list)
     rownames(out) <- names
-    colnames(out) <- unlist(lapply(by.core, colnames))
+    colnames(out) <- colnames(x)
+
     if (average) {
         out <- out/runs
     }
