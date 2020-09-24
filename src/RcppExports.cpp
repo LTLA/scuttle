@@ -5,6 +5,17 @@
 
 using namespace Rcpp;
 
+// cumulative_prop
+Rcpp::NumericMatrix cumulative_prop(Rcpp::RObject input, Rcpp::IntegerVector top);
+RcppExport SEXP _scuttle_cumulative_prop(SEXP inputSEXP, SEXP topSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type top(topSEXP);
+    rcpp_result_gen = Rcpp::wrap(cumulative_prop(input, top));
+    return rcpp_result_gen;
+END_RCPP
+}
 // downsample_column
 Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop);
 RcppExport SEXP _scuttle_downsample_column(SEXP inputSEXP, SEXP propSEXP) {
@@ -57,6 +68,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
     {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},
