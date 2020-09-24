@@ -185,16 +185,16 @@ NULL
     detected <- x > limit
 
     full <- list(
-        sum=colSums(x),
-        detected=colSums(detected),
+        sum=unname(colSums(x)),
+        detected=unname(colSums(detected)),
         prop=cumulative_prop(x, top)
     )
 
     featcons <- lapply(featcon, function(i) {
         # TODO: switch to MatrixGenerics when that finally becomes available.
         list(
-            sum=colSums(x[i,,drop=FALSE]),
-            detected=colSums(detected[i,,drop=FALSE])
+            sum=unname(colSums(x[i,,drop=FALSE])),
+            detected=unname(colSums(detected[i,,drop=FALSE]))
         )
     })
 

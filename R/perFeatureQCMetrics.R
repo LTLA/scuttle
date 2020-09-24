@@ -120,15 +120,15 @@ NULL
     detected <- x > limit
 
     full <- list(
-        sum=rowMeans(x),
-        detected=rowMeans(detected)
+        sum=unname(rowMeans(x)),
+        detected=unname(rowMeans(detected))
     )
 
     cellcons <- lapply(cellcon, function(i) {
         # TODO: switch to MatrixGenerics when that finally becomes available.
         list(
-            sum=rowMeans(x[,i,drop=FALSE]),
-            detected=rowMeans(detected[,i,drop=FALSE])
+            sum=unname(rowMeans(x[,i,drop=FALSE])),
+            detected=unname(rowMeans(detected[,i,drop=FALSE]))
         )
     })
 
