@@ -65,6 +65,7 @@
 #' @name perFeatureQCMetrics
 NULL
 
+#' @importFrom beachmat rowBlockApply
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bplapply SerialParam
 #' @importClassesFrom S4Vectors DFrame 
@@ -79,9 +80,7 @@ NULL
     subsets <- lapply(subsets, FUN = .subset2index, target = x, byrow = FALSE)
 
     # Computing all QC metrics, with cells split across workers.
-    by.core <- .splitRowsByWorkers(x, BPPARAM)
-    bp.out <- bplapply(by.core, FUN=per_feature_qc,
-        cellcon=subsets, limit=threshold, BPPARAM=BPPARAM)
+    bp.out <- rowBlockApply(x, FUN=.per_feature_qc, cellcon=subsets, limit=threshold, BPPARAM=BPPARAM)
 
     # Aggregating across cores.
     full.info <- DataFrame(
@@ -108,6 +107,32 @@ NULL
         full.info <- .flatten_nested_dims(full.info)
     }
     full.info
+}
+
+#' @importFrom Matrix rowMeans
+#' @importClassesFrom Matrix sparseMatrix
+#' @importClassesFrom DelayedArray SparseArraySeed
+.per_feature_qc <- function(x, cellcon, limit) {
+    if (is(x, "SparseArraySeed")) {
+        x <- as(x, "sparseMatrix")
+    }
+
+    detected <- x > limit
+
+    full <- list(
+        sum=rowMeans(x),
+        detected=rowMeans(detected)
+    )
+
+    cellcons <- lapply(cellcon, function(i) {
+        # TODO: switch to MatrixGenerics when that finally becomes available.
+        list(
+            sum=rowMeans(x[,i,drop=FALSE]),
+            detected=rowMeans(detected[,i,drop=FALSE])
+        )
+    })
+
+    list(full, cellcons)
 }
 
 #' @export
