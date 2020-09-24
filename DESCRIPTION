@@ -29,7 +29,6 @@ Imports:
     beachmat
 Suggests: 
     BiocStyle, 
-    beachmat, 
     knitr,
     scRNAseq,
     rmarkdown,
