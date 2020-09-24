@@ -6,8 +6,10 @@
 #' @param prop A numeric scalar or, if \code{bycol=TRUE}, a vector of length \code{ncol(x)}.
 #' All values should lie in [0, 1] specifying the downsampling proportion for the matrix or for each cell.
 #' @param bycol A logical scalar indicating whether downsampling should be performed on a column-by-column basis.
+#' @param sink A \linkS4class{RealizationSink} object specifying the format of the downsampled matrix should be returned.
 #' 
-#' @return An integer or numeric matrix-like object of downsampled counts, usually of the same class as \code{x}.
+#' @return An numeric matrix-like object of downsampled counts.
+#' This is usually of the same class as \code{x}, unless \code{sink} is set in which case it is a \linkS4class{DelayedMatrix}.
 #' 
 #' @details
 #' Given multiple batches of very different sequencing depths, 
@@ -24,6 +26,11 @@
 #' This yields a new matrix where the total count across all cells is equal to \code{prop} times the original total.
 #' The new total count for each cell may not be exactly equal to \code{prop} times the original value,
 #' which may or may not be more appropriate than \code{bycol=TRUE} for particular applications.
+#' 
+#' By default, the output format will be a dense matrix for an ordinary matrix \code{x},
+#' and a sparse matrix for any sparse format (i.e., if \code{is_sparse(x)} returns \code{TRUE}).
+#' This can be overridden to specify custom formats with \code{sink}, e.g., for HDF5-backed matrices,
+#' which may be helpful for dealing with large matrices where the downsampled result may not fit in memory.
 #' 
 #' Note that this function was originally implemented in the \pkg{scater} package as \code{downsampleCounts},
 #' was moved to the \pkg{DropletUtils} package as \code{downsampleMatrix},
@@ -49,7 +56,8 @@
 #' sum(downsampled2)
 #'
 #' @export
-#' @importFrom DelayedArray makeNindexFromArrayViewport
+#' @importFrom DelayedArray makeNindexFromArrayViewport write_block
+#' @importClassesFrom DelayedArray DelayedArray
 downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
     if (bycol) {
         prop <- rep(prop, length.out = ncol(x))
@@ -69,15 +77,21 @@ downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
             }
         }
     } else {
-        total <- sum(x)
+        # Mimic the downsample_vector_part constructor 
+        # in inst/include/scuttle/downsample_vector.h 
+        total <- round(sum(x))
+        required <- round(total * min(1, prop))
+
         FUN <- function(block) {
-            out <- downsample_matrix(block, total, prop)
+            out <- downsample_matrix(block, total, required)
             downed <- out[[1]]
             total <<- total - out[[2]]
+            required <<- required - sum(out[[1]])
 
             if (!is.null(sink)) {
                 vp <- attr(block, "from_grid")[[attr(block, "block_id")]]
                 write_block(sink, vp, as.matrix(downed))
+                NULL
             } else {
                 downed
             }
@@ -88,10 +102,14 @@ downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
     # the random stream (can't be bothered to use dqrng here).
     out <- colBlockApply(x, FUN=FUN, BPPARAM=NULL) 
 
-    if (length(out)!=1L) {
-        out <- do.call(cbind, out)
+    if (is.null(sink)) {
+        if (length(out)!=1L) {
+            out <- do.call(cbind, out)
+        } else {
+            out <- out[[1]]
+        }
     } else {
-        out <- out[[1]]
+        out <- as(sink, "DelayedArray")
     }
 
     if (!is.null(out)) {

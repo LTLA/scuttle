@@ -83,9 +83,9 @@ void downsample_vector(IN freqIt, IN freqEnd, OUT freqOut, double prop) {
 
 class downsample_vector_part {
 public:
-    downsample_vector_part(double total, double prop) : 
+    downsample_vector_part(double total, double required, bool as_prop=true) : 
         remaining_total(std::round(total)), 
-        remaining_required(std::round(std::min(1.0, prop) * total)) {}
+        remaining_required(as_prop ? std::round(std::min(1.0, required) * total) : required) {}
 
     template<class IN, class OUT> 
     void operator()(IN freqIt, IN freqEnd, OUT freqOut) { 

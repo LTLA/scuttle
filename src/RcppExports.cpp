@@ -29,15 +29,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // downsample_matrix
-Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double prop);
-RcppExport SEXP _scuttle_downsample_matrix(SEXP rmatSEXP, SEXP totalSEXP, SEXP propSEXP) {
+Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double required);
+RcppExport SEXP _scuttle_downsample_matrix(SEXP rmatSEXP, SEXP totalSEXP, SEXP requiredSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type rmat(rmatSEXP);
     Rcpp::traits::input_parameter< double >::type total(totalSEXP);
-    Rcpp::traits::input_parameter< double >::type prop(propSEXP);
-    rcpp_result_gen = Rcpp::wrap(downsample_matrix(rmat, total, prop));
+    Rcpp::traits::input_parameter< double >::type required(requiredSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample_matrix(rmat, total, required));
     return rcpp_result_gen;
 END_RCPP
 }

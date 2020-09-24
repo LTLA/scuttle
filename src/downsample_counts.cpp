@@ -43,13 +43,13 @@ Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop) {
 }
 
 // [[Rcpp::export]]
-Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double prop) {
+Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double required) {
     auto mat = beachmat::read_lin_block(rmat);
     const size_t ngenes=mat->get_nrow();
     const size_t ncells=mat->get_ncol();
 
     Rcpp::RNGScope _rng; 
-    scuttle::downsample_vector_part downsampler(total, prop);
+    scuttle::downsample_vector_part downsampler(total, required, false);
     Rcpp::RObject output;
     double subtotal = 0;
 

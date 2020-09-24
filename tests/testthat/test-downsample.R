@@ -142,6 +142,45 @@ test_that("different matrix representations yield the same result", {
     expect_equivalent(downsampleMatrix(w1[0,0,drop=FALSE], prop=0.5), u1[0,0,drop=FALSE])
 })
 
+set.seed(510)
+test_that("downsampleMatrix responds to various DelayedArray options", {
+    ncells <- 100
+    u1 <- matrix(rpois(20000, 5), ncol=ncells)
+    prop <- runif(ncol(u1))
+
+    set.seed(504)
+    refF <- downsampleMatrix(u1, 0.211, bycol=FALSE)
+    set.seed(504)
+    refT <- downsampleMatrix(u1, prop, bycol=TRUE)
+
+    D1 <- DelayedArray(u1)
+    old <- getAutoBlockSize()
+    for (block.size in c(1000, 10000, 100000)) {
+        setAutoBlockSize(block.size)
+
+        set.seed(504)
+        obsF <- downsampleMatrix(D1, 0.211, bycol=FALSE)
+        expect_identical(refF, obsF)
+
+        set.seed(504)
+        obsT <- downsampleMatrix(D1, prop, bycol=TRUE)
+        expect_identical(refT, obsT)
+    }
+
+    setAutoBlockSize(old)
+
+    # Setting the realization sink.
+    sink <- RealizationSink(dim(u1)) 
+    set.seed(504)
+    sunkF <- downsampleMatrix(u1, 0.211, bycol=FALSE, sink=sink)
+    expect_identical(refF, as.matrix(sunkF))
+
+    sink <- RealizationSink(dim(u1)) 
+    set.seed(504)
+    sunkT <- downsampleMatrix(u1, prop, bycol=TRUE, sink=sink)
+    expect_identical(refT, as.matrix(sunkT))
+})
+
 set.seed(500)
 test_that("downsampling from a count matrix gives expected margins", {
     # Checking that the sampling scheme is correct (as much as possible).
@@ -198,8 +237,9 @@ test_that("downsampling batches gives consistent results", {
     # Checking that the output is actually random.
     expect_false(identical(downsampleBatches(u1, u2), downsampleBatches(u1, u2)))
 
-    # Checking that it's a no-op when the coverage is the same.
-    expect_identical(downsampleBatches(u1, u1), List(u1, u1))
+    # Checking that it's a no-op when the coverage is the same
+    # (aside from the type conversion).
+    expect_equal(downsampleBatches(u1, u1), List(u1, u1))
 
     # Checking that the downsampling actually equalizes coverage.
     output <- downsampleBatches(u1, u1*10)

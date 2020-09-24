@@ -9,8 +9,8 @@ downsample_column <- function(input, prop) {
     .Call(`_scuttle_downsample_column`, input, prop)
 }
 
-downsample_matrix <- function(rmat, total, prop) {
-    .Call(`_scuttle_downsample_matrix`, rmat, total, prop)
+downsample_matrix <- function(rmat, total, required) {
+    .Call(`_scuttle_downsample_matrix`, rmat, total, required)
 }
 
 fit_linear_model <- function(qr, qraux, exprs, get_coefs) {
