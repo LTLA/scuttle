@@ -123,6 +123,7 @@
 #' @name perCellQCMetrics
 NULL
 
+#' @importFrom beachmat colBlockApply
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bpmapply SerialParam
 #' @importClassesFrom S4Vectors DataFrame
@@ -140,10 +141,7 @@ NULL
     percent.top <- sort(as.integer(percent.top))
 
     # Computing all QC metrics, with cells split across workers. 
-    by.core <- .splitColsByWorkers(x, BPPARAM)
-    bp.out <- bplapply(by.core, FUN=per_cell_qc, 
-        featcon=subsets, top=percent.top, limit=threshold,
-        BPPARAM=BPPARAM)
+    bp.out <- colBlockApply(x, FUN=.per_cell_qc, featcon=subsets, top=percent.top, limit=threshold, BPPARAM=BPPARAM)
 
     # Aggregating across cores.
     full.info <- DataFrame(
@@ -154,7 +152,7 @@ NULL
 
     pct <- do.call(cbind, lapply(bp.out, FUN=function(x) x[[1]][[3]]))
     rownames(pct) <- percent.top
-    full.info$percent.top <- t(pct)
+    full.info$percent.top <- t(pct)/full.info$sum * 100
 
     # Collecting subset information.
     if (!is.null(subsets)) {
@@ -174,6 +172,33 @@ NULL
         full.info <- .flatten_nested_dims(full.info)
     }
     full.info
+}
+
+#' @importFrom Matrix colSums 
+#' @importClassesFrom Matrix sparseMatrix
+#' @importClassesFrom DelayedArray SparseArraySeed
+.per_cell_qc <- function(x, featcon, top, limit) {
+    if (is(x, "SparseArraySeed")) {
+        x <- as(x, "sparseMatrix")
+    }
+
+    detected <- x > limit
+
+    full <- list(
+        sum=unname(colSums(x)),
+        detected=unname(colSums(detected)),
+        prop=cumulative_prop(x, top)
+    )
+
+    featcons <- lapply(featcon, function(i) {
+        # TODO: switch to MatrixGenerics when that finally becomes available.
+        list(
+            sum=unname(colSums(x[i,,drop=FALSE])),
+            detected=unname(colSums(detected[i,,drop=FALSE]))
+        )
+    })
+
+    list(full, featcons)
 }
 
 ##################################################

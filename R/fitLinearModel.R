@@ -41,23 +41,25 @@
 #' @author Aaron Lun
 #' @export
 #' @importFrom BiocParallel bplapply SerialParam
+#' @importFrom beachmat rowBlockApply
 fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=SerialParam()) {
     QR <- .ranksafeQR(design)
     resid.df <- nrow(design) - ncol(design) # guaranteed to be full rank at this point.
 
-    subset.row <- .subset2index(subset.row, x)
-    by.rows <- .splitRowsByWorkers(x, BPPARAM=BPPARAM, subset.row=subset.row)
-    bp.out <- bplapply(by.rows, FUN=fit_linear_model, qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, BPPARAM=BPPARAM)
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+    bp.out <- rowBlockApply(x, FUN=fit_linear_model, qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, BPPARAM=BPPARAM)
 
     all.means <- unlist(lapply(bp.out, "[[", i=2))
     all.vars <- unlist(lapply(bp.out, "[[", i=3))
-    names(all.means) <- names(all.vars) <- rownames(x)[subset.row]
+    names(all.means) <- names(all.vars) <- rownames(x)
     output <- list(mean=all.means, variance=all.vars, residual.df=resid.df)
 
     if (get.coefs) {
         all.coefs <- do.call(cbind, lapply(bp.out, "[[", i=1))
         all.coefs[QR$pivot,] <- all.coefs
-        dimnames(all.coefs) <- list(colnames(design), rownames(x)[subset.row])
+        dimnames(all.coefs) <- list(colnames(design), rownames(x))
         output <- c(list(coefficients=t(all.coefs)), output)
     }
 

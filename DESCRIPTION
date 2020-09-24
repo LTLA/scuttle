@@ -25,10 +25,10 @@ Imports:
     BiocParallel,
     SummarizedExperiment,
     DelayedArray,
-    DelayedMatrixStats
+    DelayedMatrixStats,
+    beachmat
 Suggests: 
     BiocStyle, 
-    beachmat, 
     knitr,
     scRNAseq,
     rmarkdown,
