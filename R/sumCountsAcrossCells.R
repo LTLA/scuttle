@@ -211,7 +211,9 @@ NULL
         rownames(coldata) <- coldata$ids
     }
 
-    coldata[[store.number]] <- freq
+    if (!is.null(store.number)) {
+        coldata[[store.number]] <- freq
+    }
     coldata
 }
 

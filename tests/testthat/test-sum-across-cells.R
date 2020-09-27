@@ -134,6 +134,10 @@ test_that("we can summarise counts at cell cluster level", {
     out3 <- sumCountsAcrossCells(sce, ids3)
 
     expect_identical(out2[,setdiff(colnames(out2), "A")], out3)
+
+    # Doesn't store numbers fi we don't ask.
+    out <- sumCountsAcrossCells(sce, ids, store.number=NULL)
+    expect_null(out$ncells)
 })
 
 set.seed(10004)
