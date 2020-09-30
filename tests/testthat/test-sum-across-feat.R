@@ -61,6 +61,8 @@ test_that("by-feature count summarization behaves with lists", {
     expect_identical(outl, do.call(rbind, manual))
 
     expect_identical(outl, sumCountsAcrossFeatures(sce, lapply(idl, function(i) rownames(sce)[i])))
+
+    expect_identical(outl, sumCountsAcrossFeatures(sce, lapply(idl, function(i) seq_len(nrow(sce)) %in% i)))
     
     expect_identical(outl/lengths(idl), sumCountsAcrossFeatures(sce, idl, average=TRUE))
 })

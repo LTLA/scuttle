@@ -7,6 +7,7 @@
 #' @param ids A factor of length \code{nrow(x)}, specifying the set to which each feature in \code{x} belongs.
 #'
 #' Alternatively, a list of integer or character vectors, where each vector specifies the indices or names of features in a set.
+#' Logical vectors are also supported.
 #' @param average Logical scalar indicating whether the average should be computed instead of the sum.
 #' @param subset.row An integer, logical or character vector specifying the features to use.
 #' Defaults to all features.
@@ -76,8 +77,9 @@ NULL
 #' @importFrom beachmat colBlockApply
 .sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
     if (is.list(ids)) {
+        ids <- lapply(ids, FUN=.subset2index, target=x, byrow=TRUE)
         runs <- lengths(ids)
-        genes <- .subset2index(unlist(ids), target=x, byrow=TRUE)
+        genes <- unlist(ids)
         names <- names(ids)
     } else {
         if (length(ids)!=nrow(x)) {

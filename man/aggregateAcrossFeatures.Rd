@@ -17,7 +17,8 @@ aggregateAcrossFeatures(
 
 \item{ids}{A factor of length \code{nrow(x)}, specifying the set to which each feature in \code{x} belongs.
 
-Alternatively, a list of integer or character vectors, where each vector specifies the indices or names of features in a set.}
+Alternatively, a list of integer or character vectors, where each vector specifies the indices or names of features in a set.
+Logical vectors are also supported.}
 
 \item{...}{Further arguments to be passed to \code{sumCountsAcrossFeatures}.}
 

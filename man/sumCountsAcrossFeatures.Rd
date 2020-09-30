@@ -31,7 +31,8 @@ For the SummarizedExperiment method, further arguments to be passed to the ANY m
 
 \item{ids}{A factor of length \code{nrow(x)}, specifying the set to which each feature in \code{x} belongs.
 
-Alternatively, a list of integer or character vectors, where each vector specifies the indices or names of features in a set.}
+Alternatively, a list of integer or character vectors, where each vector specifies the indices or names of features in a set.
+Logical vectors are also supported.}
 
 \item{subset.row}{An integer, logical or character vector specifying the features to use.
 Defaults to all features.}
