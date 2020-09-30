@@ -56,13 +56,13 @@
 #' sum(downsampled2)
 #'
 #' @export
-#' @importFrom DelayedArray makeNindexFromArrayViewport write_block
+#' @importFrom DelayedArray makeNindexFromArrayViewport write_block currentViewport
 #' @importClassesFrom DelayedArray DelayedArray
 downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
     if (bycol) {
         prop <- rep(prop, length.out = ncol(x))
         FUN <- function(block) {
-            vp <- attr(block, "from_grid")[[attr(block, "block_id")]]
+            vp <- currentViewport()
             cols <- makeNindexFromArrayViewport(vp, expand.RangeNSBS=TRUE)[[2]]
             if (!is.null(cols)) {
                 prop <- prop[cols]
@@ -89,7 +89,7 @@ downsampleMatrix <- function(x, prop, bycol=TRUE, sink=NULL) {
             required <<- required - sum(out[[1]])
 
             if (!is.null(sink)) {
-                vp <- attr(block, "from_grid")[[attr(block, "block_id")]]
+                vp <- currentViewport()
                 write_block(sink, vp, as.matrix(downed))
                 NULL
             } else {
