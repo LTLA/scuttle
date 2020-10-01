@@ -124,8 +124,8 @@ NULL
 
 #' @importFrom Matrix t 
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
-#' @importFrom BiocParallel SerialParam bplapply 
-#' @importClassesFrom BiocParallel BiocParallelParam
+#' @importFrom BiocParallel SerialParam 
+#' @importFrom beachmat rowBlockApply
 .sum_across_cells <- function(x, ids, subset.row=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
     average <- .standardize_average_arg(average)
     if (average=="median") {
@@ -134,13 +134,18 @@ NULL
         FUN <- .colsum
     }
 
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+
     lost <- is.na(ids)
-    subset.col <- if (any(lost)) which(!lost)
-    by.core <- .splitRowsByWorkers(x, BPPARAM=BPPARAM, 
-        subset.row=subset.row, subset.col=subset.col)
+    ids <- ids[!lost]
+    if (any(lost)) {
+        x <- x[,!lost,drop=FALSE]
+    }
 
     if (!is.null(modifier)) { # used by numDetectedAcrossCells.
-        by.core <- lapply(by.core, modifier)
+        x <- modifier(x)
     }
 
     # Avoid additional parallelization from DA methods.
@@ -150,15 +155,14 @@ NULL
     # function is called via a SnowParam.
     oldBP <- getAutoBPPARAM()
     setAutoBPPARAM(SerialParam()) 
-    if (is(oldBP, "BiocParallelParam")) {
+    if (!is.null(oldBP)) {
         on.exit(setAutoBPPARAM(oldBP))
     }
 
-    sub.ids <- ids[!lost]
-    out <- bplapply(by.core, FUN=FUN, group=sub.ids, BPPARAM=BPPARAM)
+    out <- rowBlockApply(x, FUN=FUN, group=ids, BPPARAM=BPPARAM)
     out <- do.call(rbind, out)
 
-    freq <- table(sub.ids)
+    freq <- table(ids)
     freq <- as.integer(freq[colnames(out)])
     if (average=="mean") {
         out <- t(t(out)/freq)
