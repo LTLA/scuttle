@@ -69,16 +69,25 @@ test_that("downsampling from a count matrix gives expected sums", {
     ref <- downsampleMatrix(cbind(as.vector(u1)), prop=0.111, bycol=TRUE)
     dim(ref) <- dim(out1)
     expect_identical(ref, out1)
+})
 
-    # Checking silly inputs.
-    expect_equal(downsampleMatrix(u1[0,,drop=FALSE], prop=0.5), u1[0,,drop=FALSE])
-    expect_equal(downsampleMatrix(v1[0,,drop=FALSE], prop=0.5), v1[0,,drop=FALSE])
+test_that("downsampling from a count matrix worsk with silly inputs", {
+    ncells <- 100
+    u1 <- matrix(rpois(20000, 5), ncol=ncells)
+    expect_equivalent(as.matrix(downsampleMatrix(u1[0,,drop=FALSE], prop=0.5)), u1[0,,drop=FALSE])
+    expect_equivalent(as.matrix(downsampleMatrix(u1[,0,drop=FALSE], prop=0.5)), u1[,0,drop=FALSE])
+    expect_equivalent(as.matrix(downsampleMatrix(u1[0,0,drop=FALSE], prop=0.5)), u1[0,0,drop=FALSE])
 
-    expect_equal(downsampleMatrix(u1[,0,drop=FALSE], prop=0.5), u1[,0,drop=FALSE])
-    expect_equal(downsampleMatrix(v1[,0,drop=FALSE], prop=0.5), v1[,0,drop=FALSE])
+    v1 <- u1
+    storage.mode(v1) <- "double"
+    expect_equivalent(as.matrix(downsampleMatrix(u1[0,,drop=FALSE], bycol=TRUE, prop=0.5)), u1[0,,drop=FALSE])
+    expect_equivalent(as.matrix(downsampleMatrix(u1[,0,drop=FALSE], bycol=TRUE, prop=0.5)), u1[,0,drop=FALSE])
+    expect_equivalent(as.matrix(downsampleMatrix(u1[0,0,drop=FALSE], bycol=TRUE, prop=0.5)), u1[0,0,drop=FALSE])
 
-    expect_equal(downsampleMatrix(u1[0,0,drop=FALSE], prop=0.5), u1[0,0,drop=FALSE])
-    expect_equal(downsampleMatrix(v1[0,0,drop=FALSE], prop=0.5), v1[0,0,drop=FALSE])
+    w1 <- as(u1, "dgCMatrix")
+    expect_equivalent(downsampleMatrix(w1[0,,drop=FALSE], prop=0.5), w1[0,,drop=FALSE])
+    expect_equivalent(downsampleMatrix(w1[,0,drop=FALSE], prop=0.5), w1[,0,drop=FALSE])
+    expect_equivalent(downsampleMatrix(w1[0,0,drop=FALSE], prop=0.5), w1[0,0,drop=FALSE])
 })
 
 test_that("different matrix representations yield the same result", {
@@ -92,30 +101,30 @@ test_that("different matrix representations yield the same result", {
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(501)
         dd <- downsampleMatrix(u1, down)
+        expect_s4_class(dd, "dgCMatrix")
 
         set.seed(501)
         dc <- downsampleMatrix(v1, down)
-        expect_s4_class(dc, "dgCMatrix")
-        expect_equivalent(as.matrix(dc), dd)
+        expect_identical(dc, dd)
 
         set.seed(501)
         dt <- downsampleMatrix(w1, down)
-        expect_equivalent(as.matrix(dt), dd)
+        expect_identical(dt, dd)
     }
 
     # Columnar downsampling.
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(502)
         dd <- downsampleMatrix(u1, down, bycol=TRUE)
+        expect_s4_class(dd, "dgCMatrix")
 
         set.seed(502)
         dc <- downsampleMatrix(v1, down, bycol=TRUE)
-        expect_s4_class(dc, "dgCMatrix")
-        expect_equivalent(as.matrix(dc), dd)
+        expect_identical(dc, dd)
 
         set.seed(502)
         dt <- downsampleMatrix(w1, down, bycol=TRUE)
-        expect_equivalent(as.matrix(dt), dd)
+        expect_identical(dt, dd)
     }
 
     # Columnar downsampling.
@@ -123,23 +132,15 @@ test_that("different matrix representations yield the same result", {
 
     set.seed(503)
     dd <- downsampleMatrix(u1, prop, bycol=TRUE)
+    expect_s4_class(dd, "dgCMatrix")
 
     set.seed(503)
     dc <- downsampleMatrix(v1, prop, bycol=TRUE)
-    expect_equivalent(as.matrix(dc), dd)
+    expect_equivalent(dc, dd)
 
     set.seed(503)
     dt <- downsampleMatrix(w1, prop, bycol=TRUE)
-    expect_equivalent(as.matrix(dt), dd)
-
-    # Checking silly inputs.
-    expect_equal(downsampleMatrix(v1[0,,drop=FALSE], prop=0.5), v1[0,,drop=FALSE])
-    expect_equal(downsampleMatrix(v1[,0,drop=FALSE], prop=0.5), v1[,0,drop=FALSE])
-    expect_equal(downsampleMatrix(v1[0,0,drop=FALSE], prop=0.5), v1[0,0,drop=FALSE])
-
-    expect_equivalent(downsampleMatrix(w1[0,,drop=FALSE], prop=0.5), u1[0,,drop=FALSE])
-    expect_equivalent(downsampleMatrix(w1[,0,drop=FALSE], prop=0.5), u1[,0,drop=FALSE])
-    expect_equivalent(downsampleMatrix(w1[0,0,drop=FALSE], prop=0.5), u1[0,0,drop=FALSE])
+    expect_equivalent(dt, dd)
 })
 
 set.seed(510)
@@ -153,6 +154,7 @@ test_that("downsampleMatrix responds to various DelayedArray options", {
     set.seed(504)
     refT <- downsampleMatrix(u1, prop, bycol=TRUE)
 
+    library(DelayedArray)
     D1 <- DelayedArray(u1)
     old <- getAutoBlockSize()
     for (block.size in c(1000, 10000, 100000)) {
@@ -173,12 +175,14 @@ test_that("downsampleMatrix responds to various DelayedArray options", {
     sink <- RealizationSink(dim(u1)) 
     set.seed(504)
     sunkF <- downsampleMatrix(u1, 0.211, bycol=FALSE, sink=sink)
-    expect_identical(refF, as.matrix(sunkF))
+    expect_s4_class(sunkF, "DelayedMatrix")
+    expect_identical(unname(as.matrix(refF)), as.matrix(sunkF))
 
     sink <- RealizationSink(dim(u1)) 
     set.seed(504)
     sunkT <- downsampleMatrix(u1, prop, bycol=TRUE, sink=sink)
-    expect_identical(refT, as.matrix(sunkT))
+    expect_s4_class(sunkT, "DelayedMatrix")
+    expect_identical(unname(as.matrix(refT)), as.matrix(sunkT))
 })
 
 set.seed(500)
@@ -239,7 +243,8 @@ test_that("downsampling batches gives consistent results", {
 
     # Checking that it's a no-op when the coverage is the same
     # (aside from the type conversion).
-    expect_equal(downsampleBatches(u1, u1), List(u1, u1))
+    mat <- as(u1, "dgCMatrix")
+    expect_equal(downsampleBatches(u1, u1), List(mat, mat))
 
     # Checking that the downsampling actually equalizes coverage.
     output <- downsampleBatches(u1, u1*10)

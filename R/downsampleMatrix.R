@@ -9,7 +9,7 @@
 #' @param sink A \linkS4class{RealizationSink} object specifying the format of the downsampled matrix should be returned.
 #' 
 #' @return An numeric matrix-like object of downsampled counts.
-#' This is usually of the same class as \code{x}, unless \code{sink} is set in which case it is a \linkS4class{DelayedMatrix}.
+#' This is a \linkS4class{dgCMatrix} unless \code{sink} is set, in which case it is a \linkS4class{DelayedMatrix}.
 #' 
 #' @details
 #' Given multiple batches of very different sequencing depths, 
