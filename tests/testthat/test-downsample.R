@@ -226,29 +226,108 @@ test_that("downsampling from a count matrix gives expected margins", {
 })
 
 set.seed(5001)
-test_that("downsampling batches gives consistent results", {
+test_that("downsampling batches gives expected results", {
     u1 <- matrix(rpois(20000, 5), ncol=100)
-    u2 <- matrix(rpois(40000, 1), ncol=200)
 
-    for (method in c("mean", "median", "geomean")) {
-        set.seed(100)
-        output <- downsampleBatches(u1, u2, method=method)
-        set.seed(100)
-        output2 <- downsampleBatches(cbind(u1, u2), batch=rep(1:2, c(ncol(u1), ncol(u2))), method=method)
-        expect_identical(output2, do.call(cbind, as.list(output)))
-    }
+    set.seed(0)
+    output <- downsampleBatches(u1, u1*10)
+    expect_equal(colSums(output[[1]])/colSums(output[[2]]), rep(1, ncol(output[[1]])))
+    expect_equivalent(u1, as.matrix(output[[1]]))
 
-    # Checking that the output is actually random.
-    expect_false(identical(downsampleBatches(u1, u2), downsampleBatches(u1, u2)))
+    # Checking that the output responds to the seed.
+    set.seed(0)
+    output2 <- downsampleBatches(u1, u1*10)
+    expect_identical(output, output2)
+    output2 <- downsampleBatches(u1, u1*10)
+    expect_false(identical(output, output2))
+
+    # Works with bycol=FALSE.
+    output <- downsampleBatches(u1, u1*10, bycol=FALSE)
+    expect_equal(sum(output[[1]])/sum(output[[2]]), 1)
+    expect_equivalent(u1, as.matrix(output[[1]]))
+
+    # Works with blocking factors.
+    set.seed(0)
+    output <- downsampleBatches(u1, u1*10, u1 * 5,  u1*2, block=c(1,2,1,2))
+    expect_equal(colSums(output[[1]])/colSums(output[[3]]), rep(1, ncol(output[[1]])))
+    expect_equivalent(u1, as.matrix(output[[1]]))
+    expect_equal(colSums(output[[2]])/colSums(output[[4]]), rep(1, ncol(output[[1]])))
+    expect_equivalent(u1*2, as.matrix(output[[4]]))
+
+    set.seed(0)
+    ref1 <- downsampleBatches(u1, u1*5)
+    ref2 <- downsampleBatches(u1*10, u1*2)
+    expect_identical(output[c(1,3)], ref1)
+    expect_identical(output[c(2,4)], ref2)
 
     # Checking that it's a no-op when the coverage is the same
     # (aside from the type conversion).
     mat <- as(u1, "dgCMatrix")
     expect_equal(downsampleBatches(u1, u1), List(mat, mat))
-
-    # Checking that the downsampling actually equalizes coverage.
-    output <- downsampleBatches(u1, u1*10)
-    expect_equal(colSums(output[[1]])/colSums(output[[2]]), rep(1, ncol(output[[1]])))
-
-    expect_error(downsampleBatches(cbind(u1, u2)), "must be specified")
 })
+
+set.seed(5001)
+test_that("downsampling batches gives consistent results with a single object", {
+    u1 <- matrix(rpois(20000, 5), ncol=100)
+    u2 <- matrix(rpois(40000, 1), ncol=200)
+    combined <- cbind(u1, u2)
+    batch <- rep(1:2, c(ncol(u1), ncol(u2)))
+
+    for (method in c("mean", "median", "geomean")) {
+        set.seed(100)
+        output <- downsampleBatches(u1, u2, method=method)
+        set.seed(100)
+        output2 <- downsampleBatches(combined, batch=batch, method=method)
+        expect_identical(output2, do.call(cbind, as.list(output)))
+    }
+
+    # Works correctly with bycol=FALSE.
+    set.seed(100)
+    output <- downsampleBatches(u1, u2, bycol=FALSE)
+    set.seed(100)
+    output2 <- downsampleBatches(combined, batch=batch, bycol=FALSE)
+
+    # Responds correctly with scrambled ordering.
+    scrambler <- sample(batch)
+    new.indices <- integer(ncol(combined))
+    new.indices[scrambler==1] <- seq_len(ncol(u1))
+    new.indices[scrambler==2] <- ncol(u1) + seq_len(ncol(u2))
+
+    set.seed(100)
+    ref <- downsampleBatches(combined, batch=batch)
+    set.seed(100)
+    alt <- downsampleBatches(combined[,new.indices], batch=batch[new.indices])
+    expect_identical(ref[,new.indices], alt)
+
+    # Handles the blocking correctly.
+    v1 <- matrix(rpois(20000, 10), ncol=100)
+    v2 <- matrix(rpois(40000, 2), ncol=200)
+    set.seed(100)
+    ref <- downsampleBatches(u1, u2, v1, v2, block=c(1,2,1,2))
+    set.seed(100)
+    mult <- c(ncol(u1), ncol(u2), ncol(v1), ncol(v2))
+    alt <- downsampleBatches(cbind(u1, u2, v1, v2), batch=rep(1:4, mult), block=rep(c(1,2,1,2), mult))
+    expect_identical(do.call(cbind, as.list(ref)), alt)
+
+    expect_error(downsampleBatches(combined), "must be specified")
+    expect_error(downsampleBatches(combined, batch="A"), "must be equal")
+    expect_error(downsampleBatches(combined, batch=batch, block="A"), "must be equal")
+})
+
+set.seed(5001)
+test_that("downsampling batches handles a diverse set of other inputs", {
+    u1 <- matrix(rpois(20000, 5), ncol=100)
+    u2 <- matrix(rpois(40000, 1), ncol=200)
+
+    set.seed(0)
+    ref <- downsampleBatches(u1, u2)
+
+    set.seed(0)
+    alt <- downsampleBatches(list(u1, u2))
+    expect_identical(ref, alt)
+
+    set.seed(0)
+    alt <- downsampleBatches(SummarizedExperiment(u1), SummarizedExperiment(u2))
+    expect_identical(ref, alt)
+})
+

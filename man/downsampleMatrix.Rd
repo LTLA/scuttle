@@ -18,7 +18,7 @@ All values should lie in [0, 1] specifying the downsampling proportion for the m
 }
 \value{
 An numeric matrix-like object of downsampled counts.
-This is usually of the same class as \code{x}, unless \code{sink} is set in which case it is a \linkS4class{DelayedMatrix}.
+This is a \linkS4class{dgCMatrix} unless \code{sink} is set, in which case it is a \linkS4class{DelayedMatrix}.
 }
 \description{
 Downsample a count matrix to a desired proportion, either on a whole-matrix or per-cell basis.

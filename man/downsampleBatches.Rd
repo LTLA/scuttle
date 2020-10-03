@@ -7,23 +7,43 @@
 downsampleBatches(
   ...,
   batch = NULL,
+  block = NULL,
   method = c("median", "mean", "geomean"),
-  bycol = TRUE
+  bycol = TRUE,
+  assay.type = 1
 )
 }
 \arguments{
-\item{...}{Two or more count matrices, where each matrix represents data from a separate batch.
-Alternatively, a single filtered count matix containing cells from all batches, in which case \code{batch} should be specified.}
+\item{...}{Two or more count matrices, where each matrix has the same set of genes (rows)
+and contains cells (columns) from a separate batch.
+
+Alternatively, one or more entries may be a \linkS4class{SummarizedExperiment}, 
+in which case the count matrix is extracted from the assays according to \code{assay.type}.
+
+A list containing two or more of these matrices or SummarizedExperiments can also be supplied.
+
+Alternatively, a single count matrix or SummarizedExperiment can be supplied.
+This is assumed to contain cells from all batches, in which case \code{batch} should also be specified.}
 
 \item{batch}{A factor of length equal to the number of columns in the sole entry of \code{...},
 specifying the batch of origin for each column of the matrix.
 Ignored if there are multiple entries in \code{...}.}
+
+\item{block}{If \code{...} contains multiple matrices or SummarizedExperiments,
+this should be a character vector of length equal to the number of objects in \code{...},
+specifying the blocking level for each object (see Details).
+
+Alternatively, if \code{...} contains a single object, 
+this should be a character vector or factor of length specifing the blocking level for each cell in that object.}
 
 \item{method}{String indicating how the average total should be computed.
 The geometric mean is computed with a pseudo-count of 1.}
 
 \item{bycol}{A logical scalar indicating whether downsampling should be performed on a column-by-column basis, 
 see \code{?\link{downsampleMatrix}} for more details.}
+
+\item{assay.type}{String or integer scalar specifying the assay of the SummarizedExperiment containing the count matrix,
+if any SummarizedExperiments are present in \code{...}.}
 }
 \value{
 If \code{...} contains two or more matrices, a \linkS4class{List} of downsampled matrices is returned.
@@ -45,6 +65,11 @@ This is most relevant to high-throughput scRNA-seq experiments (e.g., using  dro
 where the majority of libaries do not actually contain cells.
 If these are not filtered out, downsampling will equalize coverage among the majority of empty libraries
 rather than among cell-containing libraries.
+
+In more complex experiments,
+batches can be organized into blocks where downsampling is performed to the lowest-coverage batch within each block.
+This is most useful for larger datasets involving technical replicates for the same biological sample.
+By setting \code{block=} to the biological sample, we can equalize coverage across replicates within each sample without forcing all samples to have the same coverage (e.g., to avoid loss of information if they are to be analyzed separately anyway).
 }
 \examples{
 sce1 <- mockSCE()
