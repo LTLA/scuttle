@@ -6,6 +6,8 @@
 
 \item Began transition to dot-separate argument names from original snake case format.
 
-\item Added a \code{geometricSizeFactors} function, deprecated \code{geometric=TRUE} in \code{librarySizeFactors}.
+\item Added a \code{geometricSizeFactors()} function, deprecated \code{geometric=TRUE} in \code{librarySizeFactors()}.
+
+\item Single-object downsampling in \code{downsampleBatches()} now behaves more consistently with multi-object downsampling.
 }}
 
