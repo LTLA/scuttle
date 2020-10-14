@@ -1,5 +1,5 @@
 # This tests the fitLinearModel function.
-# library(scuttle); library(testthat); source("test-linear-model.R")
+# library(scuttle); library(testthat); source("setup.R"); source("test-linear-model.R")
 
 y <- matrix(rnorm(10000), ncol=20)
 g <- gl(4, 5)
@@ -74,5 +74,15 @@ test_that("fitLinearModel correctly identifies low-rank matrices", {
     design <- model.matrix(~g) 
     design2 <- cbind(design, design)
     expect_error(fitLinearModel(y, design2), "not of full rank")
-})
 
+    design3 <- design
+    ref <- fitLinearModel(y, design, get.coef=TRUE)
+    design3[] <- 1
+    alt <- fitLinearModel(y, design3, get.coef=TRUE, rank.error=FALSE)
+
+    for (x in seq_along(ref)) {
+        ref[[x]][] <- NA_real_
+    }
+    ref$residual.df <- NA_integer_
+    expect_identical(alt, ref)
+})

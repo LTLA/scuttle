@@ -9,7 +9,8 @@ fitLinearModel(
   design,
   get.coefs = TRUE,
   subset.row = NULL,
-  BPPARAM = SerialParam()
+  BPPARAM = SerialParam(),
+  rank.error = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ This should be of full column rank.}
 \item{subset.row}{An integer, character or logical vector indicating the rows of \code{x} to use for model fitting.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying the parallelization backend to use.}
+
+\item{rank.error}{Logical scalar indicating whether to throw an error when \code{design} is not of full rank.}
 }
 \value{
 If \code{get.coefs=TRUE}, a list is returned containing:
@@ -34,7 +37,7 @@ and one column per column of \code{design}.
 Computed as a courtesy to avoid iterating over the matrix twice.
 \item \code{variance}, a numeric vector of residual variances per row of \code{x}.
 Computed by summing the residual effects from the fitted model.
-\item \code{residual.df}, a numeric scalar containing the residual degrees of freedom for \code{design}.
+\item \code{residual.df}, an integer scalar containing the residual degrees of freedom for \code{design}.
 }
 
 Otherwise, if \code{get.coefs=FALSE}, the same list is returned without \code{coefficients}.
@@ -45,8 +48,10 @@ No-frills fitting of a linear model to the rows of any matrix-like object with n
 \details{
 This function is basically a stripped-down version of \code{\link{lm.fit}},
 made to operate on any matrix representation (ordinary, sparse, whatever).
-It is generally intended for use inside other functions that require 
-robust and efficient linear model fitting.
+It is generally intended for use inside other functions that require robust and efficient linear model fitting.
+
+If \code{design} is not of full rank and \code{rank.error=TRUE}, an error is raised.
+If \code{rank.error=FALSE}, \code{NA} values are returned for all entries of the output list.
 }
 \examples{
 y <- Matrix::rsparsematrix(1000, 1000, 0.1)
