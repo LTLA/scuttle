@@ -199,9 +199,15 @@ setGeneric(".internal_transformer", function(x, ...) standardGeneric(".internal_
 
 #' @importFrom Matrix t
 setMethod(".internal_transformer", "ANY", function(x, size.factors, log, pseudo.count) {
+    # Needs a double-transpose. Oh well.
     norm_exprs <- t(t(x) / size.factors)
     if (log) {
-        norm_exprs <- log2(norm_exprs + pseudo.count)
+        if (pseudo.count==1) {
+            # Preserve DelayedMatrix sparsity, if possible.
+            norm_exprs <- log1p(norm_exprs)/log(2)
+        } else {
+            norm_exprs <- log2(norm_exprs + pseudo.count)
+        }
     }
     norm_exprs
 })

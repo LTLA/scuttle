@@ -109,6 +109,17 @@ test_that("normalizeCounts behaves with DelayedArray inputs", {
 
     expect_s4_class(out <- normalizeCounts(dadum, subset_row=1:10), "DelayedMatrix")
     expect_equal(normalizeCounts(dummy, subset_row=1:10), as.matrix(out))
+
+    # Preserves sparsity (or not).
+    zeroed <- dummy
+    zeroed[rbinom(length(zeroed), 1, 0.95)==1] <- 0
+    sparsed <- DelayedArray(as(zeroed, "dgCMatrix"))
+
+    expect_identical(as.matrix(normalizeCounts(sparsed)), as.matrix(normalizeCounts(zeroed)))
+#    expect_true(is_sparse(normalizeCounts(sparsed)))
+
+    expect_identical(as.matrix(normalizeCounts(sparsed, pseudo.count=2)), as.matrix(normalizeCounts(zeroed, pseudo.count=2)))
+    expect_false(is_sparse(normalizeCounts(sparsed, pseudo.count=2)))
 })
 
 test_that("normalizeCounts behaves with downsampling", {

@@ -19,7 +19,7 @@ test_that("librarySizeFactors works as expected", {
 
 test_that("geometric size factors work as expected", {
     sf <- geometricSizeFactors(X)
-    expect_identical(mean(sf), 1)
+    expect_equal(mean(sf), 1)
     expect_true(sd(sf/exp(colMeans(log1p(dummy)))) < 1e-8)
 
     X <- computeGeometricFactors(X)
