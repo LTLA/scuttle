@@ -20,10 +20,13 @@
 #' This function implements a modified version of the \pkg{DESeq2} size factor calculation.
 #' For each cell, the size factor is proportional to the median of the ratios of that cell's counts to \code{reference}.
 #' The assumption is that most genes are not DE between the cell and the reference, such that the median captures any systematic increase due to technical biases.
-#' The modification stems from the fact that we use the arithmetic mean instead of the geometric mean to compute \code{reference},
-#' as the former is more robust to the many zeros in single-cell RNA sequencing data.
 #'
-#' That said, the median-based approach tends to perform poorly for typical scRNA-seq datasets for various reasons:
+#' The modification stems from the fact that we use the arithmetic mean instead of the geometric mean to compute the default \code{reference},
+#' as the former is more robust to the many zeros in single-cell RNA sequencing data.
+#' We also ignore all genes with values of zero in \code{reference}, as this usually results in undefined ratios when \code{reference} is itself computed from \code{x}.
+#'
+#' @section Caveats:
+#' For typical scRNA-seq datasets, the median-based approach tends to perform poorly, for various reasons:
 #' \itemize{
 #' \item The high number of zeroes in the count matrix means that the median ratio for each cell is often zero. 
 #' If this method must be used, we recommend subsetting to only the highest-abundance genes to avoid problems with zeroes.
@@ -32,7 +35,7 @@
 #' This is a strong assumption for heterogeneous populations containing many cell types;
 #' most genes are likely to exhibit DE between at least one pair of cell types. 
 #' }
-#' For these reasons, the simpler \code{\link{librarySizeFactors}} is usually preferred, which is no less inaccurate but is guarantted to return a positive size factor for any cell with non-zero counts.
+#' For these reasons, the simpler \code{\link{librarySizeFactors}} is usually preferred, which is no less inaccurate but is at least guaranteed to return a positive size factor for any cell with non-zero counts.
 #'
 #' One valid application of this method lies in the normalization of antibody-derived tag counts for quantifying surface proteins.
 #' These counts are usually large enough to avoid zeroes yet are also susceptible to strong composition biases that preclude the use of \code{\link{librarySizeFactors}}.
@@ -68,15 +71,16 @@ NULL
         reference <- rowMeans(x)
     }
 
-    if (!is.null(subset.row)) {
-        i <- .subset2index(subset.row, x, byrow=TRUE)
+    i <- .subset2index(subset.row, x, byrow=TRUE)
+    i <- i[reference[i] > 0]
+
+    if (!identical(sort(i), seq_len(nrow(x)))) {
         reference <- reference[i]
         x <- x[i,,drop=FALSE]
     }
 
     sf.amb <- colMedians(DelayedArray(x/reference))
-    sf.amb <- sf.amb/mean(sf.amb)
-    sf.amb
+    sf.amb/mean(sf.amb)
 }       
 
 #' @export

@@ -47,10 +47,14 @@ Define per-cell size factors by taking the median of ratios to a reference expre
 This function implements a modified version of the \pkg{DESeq2} size factor calculation.
 For each cell, the size factor is proportional to the median of the ratios of that cell's counts to \code{reference}.
 The assumption is that most genes are not DE between the cell and the reference, such that the median captures any systematic increase due to technical biases.
-The modification stems from the fact that we use the arithmetic mean instead of the geometric mean to compute \code{reference},
-as the former is more robust to the many zeros in single-cell RNA sequencing data.
 
-That said, the median-based approach tends to perform poorly for typical scRNA-seq datasets for various reasons:
+The modification stems from the fact that we use the arithmetic mean instead of the geometric mean to compute the default \code{reference},
+as the former is more robust to the many zeros in single-cell RNA sequencing data.
+We also ignore all genes with values of zero in \code{reference}, as this usually results in undefined ratios when \code{reference} is itself computed from \code{x}.
+}
+\section{Caveats}{
+
+For typical scRNA-seq datasets, the median-based approach tends to perform poorly, for various reasons:
 \itemize{
 \item The high number of zeroes in the count matrix means that the median ratio for each cell is often zero. 
 If this method must be used, we recommend subsetting to only the highest-abundance genes to avoid problems with zeroes.
@@ -59,13 +63,14 @@ If this method must be used, we recommend subsetting to only the highest-abundan
 This is a strong assumption for heterogeneous populations containing many cell types;
 most genes are likely to exhibit DE between at least one pair of cell types. 
 }
-For these reasons, the simpler \code{\link{librarySizeFactors}} is usually preferred, which is no less inaccurate but is guarantted to return a positive size factor for any cell with non-zero counts.
+For these reasons, the simpler \code{\link{librarySizeFactors}} is usually preferred, which is no less inaccurate but is at least guaranteed to return a positive size factor for any cell with non-zero counts.
 
 One valid application of this method lies in the normalization of antibody-derived tag counts for quantifying surface proteins.
 These counts are usually large enough to avoid zeroes yet are also susceptible to strong composition biases that preclude the use of \code{\link{librarySizeFactors}}.
 In such cases, we would also set \code{reference} to some estimate of the the ambient profile.
 This assumes that most proteins are not expressed in each cell; thus, counts for most tags for any given cell can be attributed to background contamination that should not be DE between cells.
 }
+
 \examples{
 example_sce <- mockSCE()
 summary(medianSizeFactors(example_sce))

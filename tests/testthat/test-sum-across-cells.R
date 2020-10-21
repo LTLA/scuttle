@@ -90,7 +90,7 @@ test_that("internal .colmed method works correctly", {
     Y <- Matrix::rsparsematrix(100, 20, density=0.6)
     ids <- sample(LETTERS[1:5], ncol(Y), replace=TRUE)
     M <- scuttle:::.colmed(Y, ids)
-    expect_identical(M, scuttle:::.colmed(as.matrix(Y), ids))
+    expect_equal(M, scuttle:::.colmed(as.matrix(Y), ids))
 })
 
 ##########################################################

@@ -45,4 +45,13 @@ test_that("medianSizeFactors works as expected", {
     sf <- medianSizeFactors(X, subset.row=100:200, reference=ref)
     expect_identical(mean(sf), 1)
     expect_identical(sf, medianSizeFactors(X[100:200,], reference=ref[100:200]))
+
+    # Same results if we whack on a bunch of zeroes.
+    ref <- medianSizeFactors(dummy)
+    sf2 <- medianSizeFactors(rbind(0, dummy))
+    expect_equal(ref, sf2)
+
+    ref <- medianSizeFactors(dummy, subset.row=1:10)
+    sf2 <- medianSizeFactors(rbind(0, dummy), subset.row=2:11)
+    expect_equal(ref, sf2)
 })
