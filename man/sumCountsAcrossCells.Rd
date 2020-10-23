@@ -65,6 +65,7 @@ For DataFrame \code{ids}, each column corresponds to a unique combination of lev
 }
 \description{
 Sum counts or average expression values for each feature across groups of cells.
+This function is deprecated; use \code{\link{summarizeAssayByGroup}} instead.
 }
 \details{
 These functions provide a convenient method for summing or averaging expression values across multiple columns for each feature.
@@ -84,9 +85,6 @@ This is particularly useful if \code{x} contains expression values that have alr
 as computing the average avoids another round of normalization to account for differences in the size of each set.
 The same effect is obtained by setting \code{average="mean"},
 while setting \code{average="median"} will instead compute the median across all cells.
-
-Note that, prior to version 1.16.0, \code{sumCountsAcrossCells} would return a raw matrix.
-This has now been wrapped in a \linkS4class{SummarizedExperiment} for consistency and to include per-group statistics.
 }
 \examples{
 example_sce <- mockSCE()
@@ -94,13 +92,11 @@ ids <- sample(LETTERS[1:5], ncol(example_sce), replace=TRUE)
 
 out <- sumCountsAcrossCells(example_sce, ids)
 head(out)
-attr(out, "ncells")
 
 batches <- sample(1:3, ncol(example_sce), replace=TRUE)
 out2 <- sumCountsAcrossCells(example_sce, 
       DataFrame(label=ids, batch=batches))
 head(out2)
-attr(out2, "ids")
 }
 \seealso{
 \code{\link{aggregateAcrossCells}}, which also combines information in the \code{colData}.

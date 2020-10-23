@@ -6,95 +6,6 @@ library(DelayedArray)
 
 ##########################################################
 
-test_that("internal .colsum method works correctly for character indices", {
-    thing <- matrix(rpois(2000, lambda=0.5), ncol=100, nrow=20)
-    ids <- sample(LETTERS[1:6], ncol(thing), replace=TRUE)
-
-    ref <- scuttle:::.colsum(thing, ids)
-    expect_equal(rowSums(ref), rowSums(thing))
-    expect_identical(ref, t(rowsum(t(thing), ids)))
-    expect_identical(colnames(ref), as.character(sort(unique(ids)))) # is sorted.
-
-    sparse <- as(thing, 'dgCMatrix')
-    expect_equal(scuttle:::.colsum(sparse, ids), ref)
-
-    oldBP <- getAutoBPPARAM()
-    setAutoBPPARAM(SerialParam())
-    delayed <- DelayedArray(thing)
-    expect_equal(scuttle:::.colsum(delayed, ids), ref)
-    setAutoBPPARAM(oldBP)
-})
-
-test_that("internal .colsum method works correctly for integer indices", {
-    thing <- matrix(rpois(2000, lambda=0.5), ncol=100, nrow=20)
-
-    # Continues to work for integer IDs that don't sort nicely as characters:
-    ids <- sample(5:15, ncol(thing), replace=TRUE)
-
-    ref <- scuttle:::.colsum(thing, ids)
-    expect_equal(rowSums(ref), rowSums(thing))
-    expect_identical(ref, t(rowsum(t(thing), ids)))
-    expect_identical(colnames(ref), as.character(sort(unique(ids)))) # is sorted.
-
-    sparse <- as(thing, 'dgCMatrix')
-    expect_equal(scuttle:::.colsum(sparse, ids), ref)
-
-    oldBP <- getAutoBPPARAM()
-    setAutoBPPARAM(SerialParam())
-    delayed <- DelayedArray(thing)
-    expect_equal(scuttle:::.colsum(delayed, ids), ref)
-    setAutoBPPARAM(oldBP)
-})
-
-test_that("internal .colsum method respects factor level ordering", {
-    thing <- matrix(rpois(2000, lambda=0.5), ncol=100, nrow=20)
-    ids <- factor(rep(LETTERS[1:3], length.out=ncol(thing)), levels=LETTERS[3:1])
-
-    ref <- scuttle:::.colsum(thing, ids)
-    expect_equal(rowSums(ref), rowSums(thing))
-    expect_identical(ref, t(rowsum(t(thing), ids)))
-    expect_identical(colnames(ref), LETTERS[3:1]) # is sorted.
-
-    sparse <- as(thing, 'dgCMatrix')
-    expect_equal(scuttle:::.colsum(sparse, ids), ref)
-
-    oldBP <- getAutoBPPARAM()
-    setAutoBPPARAM(SerialParam())
-    delayed <- DelayedArray(thing)
-    expect_equal(scuttle:::.colsum(delayed, ids), ref)
-    setAutoBPPARAM(oldBP)
-})
-
-test_that("internal .colmed method works correctly", {
-    thing <- matrix(rnorm(2000), ncol=100, nrow=20)
-    ids <- sample(LETTERS[1:5], ncol(thing), replace=TRUE)
-
-    # Vanilla check.
-    meds <- scuttle:::.colmed(thing, ids)
-    expect_false(is.unsorted(colnames(ids)))
-
-    for (i in levels(ids)) {
-        ref <- apply(thing[,ids==i], 1, median)
-        expect_equal(meds[,i], ref)
-    }  
-
-    # Check that it respects ordering of levels.
-    forward <- rep(LETTERS[1:3], length.out=ncol(thing))
-    backward <- factor(forward, levels=LETTERS[3:1])
-    fmeds <- scuttle:::.colmed(thing, forward)
-    bmeds <- scuttle:::.colmed(thing, backward)
-    expect_identical(colnames(fmeds), rev(colnames(bmeds)))
-    expect_identical(fmeds, bmeds[,colnames(fmeds)])
-
-    # Handles sparse matrices.
-    Y <- Matrix::rsparsematrix(100, 20, density=0.6)
-    ids <- sample(LETTERS[1:5], ncol(Y), replace=TRUE)
-    M <- scuttle:::.colmed(Y, ids)
-    expect_equal(M, scuttle:::.colmed(as.matrix(Y), ids))
-})
-
-##########################################################
-
 set.seed(10003)
 test_that("we can summarise counts at cell cluster level", {
     ids <- sample(ncol(sce)/2, ncol(sce), replace=TRUE)
@@ -347,7 +258,7 @@ test_that("Aggregation across cells works correctly with reducedDims", {
     agg2 <- aggregateAcrossCells(copy, ids, average=FALSE)
     expect_identical(reducedDims(agg2), reducedDims(agg))
 
-    agg3 <- aggregateAcrossCells(copy, ids, average="median")
+    agg3 <- aggregateAcrossCells(copy, ids, average="median", dimred.stats="median")
     expect_identical(reducedDim(agg3, "PCA"), t(assay(agg3)[1:3,]))
     expect_identical(reducedDim(agg3, "TSNE"), t(assay(agg3)[1:10,]))
     expect_false(identical(agg3, agg))
@@ -449,6 +360,29 @@ test_that("Aggregation across cells works correctly with custom coldata acquisit
     expect_identical(colnames(colData(alt)), c("ids", "ncells"))
     alt <- aggregateAcrossCells(sce, ids, coldata_merge=list(thing=FALSE))
     expect_identical(alt$thing, NULL)
+})
+
+set.seed(10004121)
+test_that("Aggregation across cells works correctly with suffixing", {
+    ids <- paste0("CLUSTER_", sample(ncol(sce)/2, ncol(sce), replace=TRUE))
+    alt <- aggregateAcrossCells(sce, ids, suffix=TRUE)
+    expect_identical(assayNames(alt), "counts.sum")
+
+    sce <- logNormCounts(sce)
+    alt <- aggregateAcrossCells(sce, ids, statistics=c("mean", "median"), use.assay.type=TRUE)
+    expect_identical(assayNames(alt), c("counts.mean", "counts.median", "logcounts.mean", "logcounts.median"))
+
+    # Works for reddims.
+    reducedDims(sce) <- list(PCA=matrix(runif(ncol(sce)*2), ncol=2), TSNE=matrix(rnorm(ncol(sce)*2), ncol=2))
+    alt <- aggregateAcrossCells(sce, ids)
+    expect_identical(reducedDimNames(alt), reducedDimNames(sce))
+
+    alt <- aggregateAcrossCells(sce, ids, suffix=TRUE)
+    expect_identical(reducedDimNames(alt), paste0(reducedDimNames(sce), ".mean"))
+    expect_identical(assayNames(alt), "counts.sum") # passed along.
+
+    alt <- aggregateAcrossCells(sce, ids, use.dimred="PCA", dimred.stats=c("mean", "median"))
+    expect_identical(reducedDimNames(alt), c("PCA.mean", "PCA.median"))
 })
 
 set.seed(1000413)

@@ -1,6 +1,8 @@
 # This tests the whichNonZero utility function.
 # library(scuttle); library(testthat); source("test-which-nonzero.R")
 
+library(DelayedArray)
+
 test_that("whichNonZero works as expected for all matrix types", {
     stuff <- Matrix::rsparsematrix(1000, 1000, density=0.01)
     ref <- whichNonZero(as.matrix(stuff))

@@ -75,6 +75,7 @@ If \code{average=TRUE}, the assay is instead a numeric matrix containing the pro
 \description{
 Computes the number of detected expression values (by default, defined as non-zero counts) 
 for each feature in each group of cells.
+This function is deprecated: use \code{\link{summarizeAssayByGroup}} instead.
 }
 \examples{
 example_sce <- mockSCE()

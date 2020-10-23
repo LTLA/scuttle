@@ -2,6 +2,7 @@
 #' 
 #' Computes the number of detected expression values (by default, defined as non-zero counts) 
 #' for each feature in each group of cells.
+#' This function is deprecated: use \code{\link{summarizeAssayByGroup}} instead.
 #'
 #' @param x A numeric matrix of counts containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a count matrix.
@@ -36,6 +37,7 @@ NULL
 
 #' @importFrom BiocParallel SerialParam 
 #' @importClassesFrom BiocParallel MulticoreParam
+#' @importFrom SummarizedExperiment assayNames<-
 .nexprs_across_cells <- function(x, ids, subset.row=NULL, subset.col=NULL, 
     store.number="ncells", average=FALSE, threshold=0, BPPARAM=SerialParam(),
     subset_row=NULL, subset_col=NULL, store_number=NULL, detection_limit=NULL)
@@ -45,10 +47,23 @@ NULL
     store.number <- .replace(store.number, store_number)
     threshold <- .replace(threshold, detection_limit)
 
-    .sum_across_cells_to_se(x=x, ids=ids,subset.row=subset.row, subset.col=subset.col, 
-        average=average, store.number=store.number, BPPARAM=BPPARAM, 
-        modifier=function(x) (x > threshold) + 0L) # coercing to numeric to make life easier.
-} 
+    if (average) {
+        stat <- "prop.detected"
+    } else {
+        stat <- "num.detected"
+    }
+
+    output <- summarizeAssayByGroup(x, ids, subset.row=subset.row, subset.col=subset.col,
+        statistics=stat, store.number=store.number, threshold=threshold, BPPARAM=BPPARAM)
+
+    if (average) {
+        assayNames(output) <- "average"
+    } else {
+        assayNames(output) <- "sum"
+    }
+
+    output
+}
 
 #' @export
 #' @rdname numDetectedAcrossCells

@@ -1,6 +1,7 @@
 #' Sum expression across groups of cells
 #' 
 #' Sum counts or average expression values for each feature across groups of cells.
+#' This function is deprecated; use \code{\link{summarizeAssayByGroup}} instead.
 #'
 #' @param x A numeric matrix of expression values (usually counts) containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
@@ -51,9 +52,6 @@
 #' The same effect is obtained by setting \code{average="mean"},
 #' while setting \code{average="median"} will instead compute the median across all cells.
 #'
-#' Note that, prior to version 1.16.0, \code{sumCountsAcrossCells} would return a raw matrix.
-#' This has now been wrapped in a \linkS4class{SummarizedExperiment} for consistency and to include per-group statistics.
-#'
 #' @author Aaron Lun
 #' @name sumCountsAcrossCells
 #'
@@ -68,16 +66,15 @@
 #'
 #' out <- sumCountsAcrossCells(example_sce, ids)
 #' head(out)
-#' attr(out, "ncells")
 #'
 #' batches <- sample(1:3, ncol(example_sce), replace=TRUE)
 #' out2 <- sumCountsAcrossCells(example_sce, 
 #'       DataFrame(label=ids, batch=batches))
 #' head(out2)
-#' attr(out2, "ids")
 NULL
 
 #' @importFrom BiocParallel SerialParam 
+#' @importFrom SummarizedExperiment assayNames<-
 .sum_counts_across_cells <- function(x, ids, subset.row=NULL, subset.col=NULL,
     store.number="ncells", average=FALSE, BPPARAM=SerialParam(), 
     subset_row=NULL, subset_col=NULL, store_number=NULL)
@@ -86,143 +83,27 @@ NULL
     subset.col <- .replace(subset.col, subset_col)
     store.number <- .replace(store.number, store_number)
 
-    .sum_across_cells_to_se(x, ids=ids, subset.row=subset.row, subset.col=subset.col,
-        store.number=store.number, average=average, BPPARAM=BPPARAM)
+    average <- .average2statistic(average)
+    output <- summarizeAssayByGroup(x, ids, subset.row=subset.row, subset.col=subset.col,
+        statistics=average, store.number=store.number, BPPARAM=BPPARAM)
+
+    if (average!="sum") {
+        assayNames(output) <- "average"
+    }
+    output
 }
 
-
-#' @importFrom BiocParallel SerialParam 
-#' @importFrom SummarizedExperiment SummarizedExperiment
-.sum_across_cells_to_se <- function(x, ids, subset.row=NULL, subset.col=NULL,
-    store.number="ncells", average=FALSE, BPPARAM=SerialParam(), modifier=NULL) 
-{
-    new.ids <- .process_ids(x, ids, subset.col)
-    sum.out <- .sum_across_cells(x, ids=new.ids, subset.row=subset.row,
-        average=average, BPPARAM=BPPARAM, modifier=modifier)
-
-    mat <- sum.out$mat 
-    mapping <- match(colnames(mat), as.character(new.ids))
-    coldata <- .create_coldata(original.ids=ids, mapping=mapping, 
-        freq=sum.out$freq, store.number=store.number)
-
-    # Sync'ing the names as coldata is the source of truth.
-    colnames(mat) <- rownames(coldata)
-
-    output <- list(mat)
-    names(output) <- sum.out$name
-    SummarizedExperiment(output, colData=coldata)
-}
-
-.standardize_average_arg <- function(average) {
+.average2statistic <- function(average) {
     if (isTRUE(average)) {
-        average <- "mean"
+        "mean"
     } else if (isFALSE(average)) {
-        average <- "none"
-    }
-    match.arg(average, c("none", "mean", "median"))
-}
-
-#' @importFrom Matrix t 
-#' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
-#' @importFrom BiocParallel SerialParam 
-#' @importFrom beachmat rowBlockApply
-.sum_across_cells <- function(x, ids, subset.row=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
-    average <- .standardize_average_arg(average)
-    if (average=="median") {
-        FUN <- .colmed
+        "sum"
     } else {
-        FUN <- .colsum
+        average <- match.arg(average, c("none", "mean", "median"))
+        if (average=="none") average <- "sum"
+        average
     }
-
-    if (!is.null(subset.row)) {
-        x <- x[subset.row,,drop=FALSE]
-    }
-
-    lost <- is.na(ids)
-    ids <- ids[!lost]
-    if (any(lost)) {
-        x <- x[,!lost,drop=FALSE]
-    }
-
-    if (!is.null(modifier)) { # used by numDetectedAcrossCells.
-        x <- modifier(x)
-    }
-
-    # Avoid additional parallelization from DA methods.
-    # We do the check primarily for testing purposes, as
-    # flush tests with a FailParam defined in the GlobalEnv
-    # don't get the FailParam class definition when this 
-    # function is called via a SnowParam.
-    oldBP <- getAutoBPPARAM()
-    setAutoBPPARAM(SerialParam()) 
-    if (!is.null(oldBP)) {
-        on.exit(setAutoBPPARAM(oldBP))
-    }
-
-    out <- rowBlockApply(x, FUN=FUN, group=ids, BPPARAM=BPPARAM)
-    out <- do.call(rbind, out)
-
-    freq <- table(ids)
-    freq <- as.integer(freq[colnames(out)])
-    if (average=="mean") {
-        out <- t(t(out)/freq)
-    }
-
-    if (average=="none") {
-        name <- "sum" 
-    } else { 
-        name <- "average" 
-    }
-
-    list(mat=out, freq=freq, name=name)
 }
-
-##########################
-##########################
-
-#' @importFrom S4Vectors selfmatch
-.df_to_factor <- function(ids) {
-    o <- order(ids)
-    x <- selfmatch(ids[o,,drop=FALSE]) 
-    x[o] <- x
-    x[Reduce("|", lapply(ids, is.na))] <- NA_integer_
-    x
-}
-
-#' @importFrom methods is
-.has_multi_ids <- function(ids) is(ids, "DataFrame")
-
-.process_ids <- function(x, ids, subset.col) {    
-    if (.has_multi_ids(ids)) {
-        ids <- .df_to_factor(ids)
-    } 
-    if (ncol(x)!=length(ids)) {
-        stop("length of 'ids' and 'ncol(x)' are not equal")
-    }
-    if (!is.null(subset.col)) {
-        ids[!seq_along(ids) %in% .subset2index(subset.col, x, byrow=FALSE)] <- NA_integer_
-    }
-    ids
-}
-
-#' @importFrom S4Vectors DataFrame
-.create_coldata <- function(original.ids, mapping, freq, store.number) {
-    if (.has_multi_ids(original.ids)) {
-        coldata <- original.ids[mapping,,drop=FALSE]
-        rownames(coldata) <- NULL
-    } else {
-        coldata <- DataFrame(ids=original.ids[mapping])
-        rownames(coldata) <- coldata$ids
-    }
-
-    if (!is.null(store.number)) {
-        coldata[[store.number]] <- freq
-    }
-    coldata
-}
-
-##########################
-##########################
 
 #' @export
 #' @rdname sumCountsAcrossCells
@@ -240,39 +121,3 @@ setMethod("sumCountsAcrossCells", "SummarizedExperiment", function(x, ..., assay
     assay.type <- .replace(assay.type, exprs_values)
     .sum_counts_across_cells(assay(x, assay.type), ...)
 })
-
-##########################
-##########################
-
-setGeneric(".colsum", function(x, group) standardGeneric(".colsum"))
-
-#' @importFrom Matrix rowSums
-setMethod(".colsum", "ANY", function(x, group) {
-    by.group <- split(seq_len(ncol(x)), group)
-    out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
-    do.call(cbind, out)
-})
-
-#' @importFrom DelayedArray colsum
-setMethod(".colsum", "matrix", function(x, group) {
-    colsum(x, group)
-})
-
-#' @importFrom DelayedArray colsum
-setMethod(".colsum", "DelayedMatrix", function(x, group) {
-    colsum(x, group)
-})
-
-#' @importFrom DelayedMatrixStats rowMedians
-.colmed <- function(x, group) {
-    by.group <- split(seq_along(group), group)
-    output <- matrix(0, nrow(x), length(by.group),
-        dimnames=list(rownames(x), names(by.group)))
-
-    for (i in names(by.group)) {
-        current <- x[,by.group[[i]],drop=FALSE]
-        current <- DelayedArray(current)
-        output[,i] <- rowMedians(current)
-    }
-    output
-}
