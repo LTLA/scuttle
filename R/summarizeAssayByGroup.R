@@ -139,22 +139,30 @@ NULL
     
     if ("sum" %in% statistics || "mean" %in% statistics) {
         out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
-        collated$sum <- do.call(cbind, out)
+        collated$sum <- .cbind_empty(out, x)
     }
 
     if ("median" %in% statistics) {
         out <- lapply(by.group, function(i) rowMedians(x[,i,drop=FALSE]))
-        out <- do.call(cbind, out)
+        out <- .cbind_empty(out, x)
         rownames(out) <- rownames(x)
         collated$median <- out
     }
 
     if ("num.detected" %in% statistics || "prop.detected" %in% statistics) {
         out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE] > threshold))
-        collated$num.detected <- do.call(cbind, out)
+        collated$num.detected <- .cbind_empty(out, x)
     }
 
     collated
+}
+
+.cbind_empty <- function(out, x) {
+    if (length(out)) {
+        do.call(cbind, out)
+    } else {
+        as.matrix(x[,0,drop=FALSE])
+    }
 }
 
 ##########################
