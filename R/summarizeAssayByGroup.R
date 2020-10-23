@@ -5,7 +5,7 @@
 #'
 #' @param x A numeric matrix containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
-#' @param ids A factor specifying the group to which each cell in \code{x} belongs.
+#' @param ids A factor (or vector coercible into a factor) specifying the group to which each cell in \code{x} belongs.
 #' Alternatively, a \linkS4class{DataFrame} of such vectors or factors, 
 #' in which case each unique combination of levels defines a group. 
 #' @param subset.row An integer, logical or character vector specifying the features to use.
@@ -49,6 +49,8 @@
 #' Any \code{NA} values in \code{ids} are implicitly ignored and will not be considered during summation.
 #' This may be useful for removing undesirable cells by setting their entries in \code{ids} to \code{NA}.
 #' Alternatively, we can explicitly select the cells of interest with \code{subset_col}.
+#'
+#' If \code{ids} is a factor and contains unused levels, they will not be represented as columns in the output.
 #' 
 #' @author Aaron Lun
 #' @name summarizeAssayByGroup
@@ -109,7 +111,10 @@ NULL
         x <- x[,!lost,drop=FALSE]
     }
 
-    by.group <- split(seq_along(ids), ids)
+    # Drop unused levels, as the subsequent mapping step to preserve the type of 'ids'
+    # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
+    by.group <- split(seq_along(ids), ids, drop=TRUE)
+
     out <- rowBlockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
         statistics=statistics, threshold=threshold, BPPARAM=BPPARAM)
 

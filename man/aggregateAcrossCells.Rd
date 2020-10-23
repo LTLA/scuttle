@@ -54,7 +54,7 @@ For the SummarizedExperiment method, further arguments to be passed to \code{\li
 
 For the SingleCellExperiment method, arguments to be passed to the SummarizedExperiment method.}
 
-\item{ids}{A factor specifying the group to which each cell in \code{x} belongs.
+\item{ids}{A factor (or vector coercible into a factor) specifying the group to which each cell in \code{x} belongs.
 Alternatively, a \linkS4class{DataFrame} of such vectors or factors, 
 in which case each unique combination of levels defines a group.}
 

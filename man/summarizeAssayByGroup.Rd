@@ -29,7 +29,7 @@ Alternatively, a \linkS4class{SummarizedExperiment} object containing such a mat
 
 For the SummarizedExperiment method, further arguments to be passed to the ANY method.}
 
-\item{ids}{A factor specifying the group to which each cell in \code{x} belongs.
+\item{ids}{A factor (or vector coercible into a factor) specifying the group to which each cell in \code{x} belongs.
 Alternatively, a \linkS4class{DataFrame} of such vectors or factors, 
 in which case each unique combination of levels defines a group.}
 
@@ -81,6 +81,8 @@ This makes the most sense for raw counts or sparsity-preserving transformations.
 Any \code{NA} values in \code{ids} are implicitly ignored and will not be considered during summation.
 This may be useful for removing undesirable cells by setting their entries in \code{ids} to \code{NA}.
 Alternatively, we can explicitly select the cells of interest with \code{subset_col}.
+
+If \code{ids} is a factor and contains unused levels, they will not be represented as columns in the output.
 }
 \examples{
 example_sce <- mockSCE()

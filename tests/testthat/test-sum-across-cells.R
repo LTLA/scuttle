@@ -36,6 +36,13 @@ test_that("we can summarise counts at cell cluster level", {
     fout$ids <- as.integer(levels(fout$ids))[fout$ids]
     expect_identical(out, fout)
 
+    # Drops unused levels.
+    fids <- factor(ids, levels=1:100)
+    fout <- sumCountsAcrossCells(sce, fids)
+    expect_identical(fout$ids, sort(unique(fids)))
+    fout$ids <- as.integer(fout$ids)
+    expect_identical(out, fout)
+
     # Handles NA's correctly.
     ids2 <- sample(LETTERS, ncol(sce), replace=TRUE)
     out2 <- sumCountsAcrossCells(sce, ids2)
