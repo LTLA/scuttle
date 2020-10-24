@@ -85,6 +85,12 @@ test_that("by-cell count summarization behaves with other classes", {
     counts(delayed) <- DelayedArray(counts(delayed))
     dack <- sumCountsAcrossCells(delayed, ids)
     expect_equivalent(ref, dack)
+
+    # Handles _sparse_ DelayedArrays properly.
+    sdelayed <- sce
+    counts(sdelayed) <- DelayedArray(as(counts(sce), "dgCMatrix"))
+    sdack <- sumCountsAcrossCells(sdelayed, ids)
+    expect_equivalent(ref, sdack)
 })
 
 set.seed(100041)

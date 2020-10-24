@@ -134,7 +134,13 @@ NULL
 
 #' @importFrom Matrix rowSums
 #' @importFrom DelayedMatrixStats rowMedians 
+#' @importClassesFrom Matrix sparseMatrix
+#' @importClassesFrom DelayedArray SparseArraySeed
 .summarize_assay_internal <- function(x, by.group, statistics, threshold) {
+    if (is(x, "SparseArraySeed")) {
+        x <- as(x, "sparseMatrix")
+    }
+
     collated <- list()
     
     if ("sum" %in% statistics || "mean" %in% statistics) {
