@@ -223,7 +223,7 @@ setMethod("perCellQCMetrics", "SummarizedExperiment", function(x, ..., assay.typ
 #' @rdname perCellQCMetrics
 #' @importFrom SummarizedExperiment assay
 #' @importFrom SingleCellExperiment altExp altExpNames
-#' @importFrom S4Vectors make_zero_col_DFrame
+#' @importFrom S4Vectors make_zero_col_DFrame I
 #' @importClassesFrom S4Vectors DataFrame
 setMethod("perCellQCMetrics", "SingleCellExperiment", 
     function(x, subsets=NULL, percent.top=integer(0), ..., flatten=TRUE, assay.type="counts", use.altexps=TRUE, 
