@@ -23,6 +23,7 @@ Imports:
     BiocGenerics, 
     S4Vectors, 
     BiocParallel,
+    GenomicRanges,
     SummarizedExperiment,
     DelayedArray,
     DelayedMatrixStats,
