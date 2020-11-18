@@ -141,6 +141,32 @@ test_that("Aggregation across features works correctly", {
     expect_identical(normcounts(alt3), sumCountsAcrossFeatures(sce, ids, assay.type="normcounts"))
 })
 
+set.seed(10004)
+test_that("Aggregation across features works correctly with lists", {
+    idl <- list(10:1, sample(nrow(sce), 100), nrow(sce) - 1:10)
+    alt <- aggregateAcrossFeatures(sce, idl)
+    outl <- sumCountsAcrossFeatures(sce, idl)
+    expect_identical(counts(alt), outl)
+
+    # Handles row names.
+    idl <- list(X=10:1, Y=sample(nrow(sce), 100), Z=nrow(sce) - 1:10)
+    alt <- aggregateAcrossFeatures(sce, idl)
+    expect_identical(rownames(alt), names(idl))
+
+    # Strips metadata.
+    rowRanges(sce) <- GRanges("chrA", IRanges(seq_len(nrow(sce)), width=1))
+    alt <- aggregateAcrossFeatures(sce, idl)
+    expect_identical(ncol(rowData(alt)), 0L)
+    expect_true(all(lengths(rowRanges(alt))==0))
+
+    # Stripping works for SE's.
+    se <- as(sce, "SummarizedExperiment")
+    rowData(se)$stuff <- 1L
+    alt <- aggregateAcrossFeatures(se, idl)
+    expect_identical(ncol(rowData(alt)), 0L)
+    expect_identical(rownames(alt), names(idl))
+})
+
 ############################################
 
 test_that("numDetectedAcrossFeatures works as expected", {
