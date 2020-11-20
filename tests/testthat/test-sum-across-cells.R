@@ -379,6 +379,13 @@ test_that("Aggregation across cells works correctly with custom coldata acquisit
     expect_identical(colnames(colData(alt)), c("ids", "ncells"))
     alt <- aggregateAcrossCells(sce, ids, coldata_merge=list(thing=FALSE))
     expect_identical(alt$thing, NULL)
+
+    # Handles factors correctly.
+    alt <- sce
+    alt$Cell_Cycle <- factor(alt$Cell_Cycle)
+    alt <- aggregateAcrossCells(alt, factor(ids))
+    expect_true(is.factor(alt$Cell_Cycle))
+    expect_true(is.factor(alt$ids))
 })
 
 set.seed(10004121)
