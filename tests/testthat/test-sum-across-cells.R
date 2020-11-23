@@ -379,6 +379,11 @@ test_that("Aggregation across cells works correctly with custom coldata acquisit
     expect_identical(colnames(colData(alt)), c("ids", "ncells"))
     alt <- aggregateAcrossCells(sce, ids, coldata_merge=list(thing=FALSE))
     expect_identical(alt$thing, NULL)
+})
+
+set.seed(1000412)
+test_that("Aggregation across cells works correctly with different colData types", {
+    ids <- paste0("CLUSTER_", sample(ncol(sce)/2, ncol(sce), replace=TRUE))
 
     # Handles factors correctly.
     alt <- sce
@@ -386,6 +391,31 @@ test_that("Aggregation across cells works correctly with custom coldata acquisit
     alt <- aggregateAcrossCells(alt, factor(ids))
     expect_true(is.factor(alt$Cell_Cycle))
     expect_true(is.factor(alt$ids))
+
+    alt <- sce
+    alt$Cell_Cycle <- factor(alt$Cell_Cycle)
+    alt <- aggregateAcrossCells(alt, rep(NA, ncol(alt)))
+    expect_true(is.factor(alt$Cell_Cycle))
+
+    # Handles nested DFs correctly.
+    alt <- sce
+    alt$nested <- DataFrame(ID=ids)
+    alt <- aggregateAcrossCells(alt, ids)
+    expect_s4_class(alt$nested, "DFrame")
+    expect_identical(alt$nested$ID, alt$ids)
+
+    alt <- sce
+    alt$nested <- DataFrame(ID=runif(ncol(alt)))
+    alt <- aggregateAcrossCells(alt, ids)
+    expect_s4_class(alt$nested, "DFrame")
+    expect_type(alt$nested$ID, "double")
+    expect_true(any(is.na(alt$nested$ID)))
+
+    alt <- sce
+    alt$nested <- DataFrame(ID=runif(ncol(alt)))
+    alt <- aggregateAcrossCells(alt, rep(NA, ncol(alt)))
+    expect_s4_class(alt$nested, "DFrame")
+    expect_type(alt$nested$ID, "double")
 })
 
 set.seed(10004121)

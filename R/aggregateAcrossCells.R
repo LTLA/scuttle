@@ -188,7 +188,7 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ..., 
 }
 
 #' @importFrom BiocGenerics match
-#' @importFrom S4Vectors split 
+#' @importFrom S4Vectors split extractROWS bindROWS I
 .merge_DF_rows <- function(x, ids, final, mapping=match(final, ids), mergeFUN=NULL) {
     collected <- list()
     if (isFALSE(mergeFUN)) {
@@ -211,10 +211,10 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ..., 
         if (is.null(FUN)) {
             # Obtaining a NA of matched type.
             FUN <- function(x) {
-                if (length(val <- unique(x))==1L) {
+                if (NROW(val <- unique(x))==1L) {
                     val 
                 } else {
-                    val[1][NA]
+                    extractROWS(val, NA_integer_)
                 }
             }
         }
@@ -222,17 +222,13 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ..., 
         per.group <- lapply(grouped, FUN)
         per.group <- unname(per.group)
         if (length(per.group)>=1L) {
-            if (is.factor(per.group[[1]])) {
-                # Because factor's c() doesn't preserve factor-ness. 
-                collected[[cn]] <- unlist(per.group)
-            } else {
-                # Using 'c' instead of unlist to accommodate Vectors.
-                collected[[cn]] <- do.call(c, per.group)
-            }
+            col <- bindROWS(per.group[[1]], per.group[-1])
         } else {
             # Obtaining a column of the correct type.
-            collected[[cn]] <- FUN(x[[cn]])[0]
+            col <- extractROWS(FUN(x[[cn]]), 0L)
         }
+
+        collected[[cn]] <- I(col)
     }
 
     collected
