@@ -79,6 +79,10 @@ test_that("perCellQCMetrics works with alternative experiments", {
     flat <- perCellQCMetrics(sce)
     expect_identical(flat$altexps_alpha_sum, df$altexps$alpha$sum)
     expect_identical(flat$altexps_bravo_detected, df$altexps$bravo$detected)
+
+    flat <- perCellQCMetrics(sce, use.altexps="alpha")
+    expect_identical(flat$altexps_alpha_sum, df$altexps$alpha$sum)
+    expect_null(flat$altexps_beta_sum)
 })
 
 test_that("perCellQCMetrics handles silly inputs", {

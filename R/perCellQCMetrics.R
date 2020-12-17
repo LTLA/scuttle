@@ -236,7 +236,7 @@ setMethod("perCellQCMetrics", "SingleCellExperiment",
     # subsets and percent.top need to be explicitly listed,
     # because the altexps call sets them to NULL and integer(0).
     main <- .per_cell_qc_metrics(assay(x, assay.type), subsets=subsets, percent.top=percent.top, flatten=FALSE, ...)
-    use.altexps <- .get_altexps_to_use(x, use.altexps)
+    use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
 
     alt <- list()
     total <- main$sum
@@ -266,17 +266,6 @@ setMethod("perCellQCMetrics", "SingleCellExperiment",
 })
 
 ##################################################
-
-.get_altexps_to_use <- function(x, use_altexps) {
-    if (is.logical(use_altexps)) {
-        if (use_altexps) {
-            use_altexps <- seq_along(altExpNames(x))
-        } else {
-            use_altexps <- NULL
-        }
-    } 
-    use_altexps
-}
 
 #' @importFrom S4Vectors DataFrame
 .flatten_nested_dims <- function(x, name="") {
