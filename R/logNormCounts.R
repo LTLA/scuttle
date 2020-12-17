@@ -138,7 +138,7 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=NULL
         int_metadata(x)$scater$pseudo.count <- pseudo.count
     }
 
-    use.altexps <- .get_altexps_to_use(x, use.altexps)
+    use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
     for (i in use.altexps) {
         tryCatch({
             altExp(x, i) <- FUN(altExp(x, i), size.factors=original, center.size.factors=center.size.factors)
