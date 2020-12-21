@@ -85,11 +85,11 @@
 #'   |   |-- Spike
 #'   |   |   |-- sum
 #'   |   |   |-- detected
-#'   |   |   +-- percent.total
+#'   |   |   +-- percent
 #'   |   +-- Ab
 #'   |       |-- sum
 #'   |       |-- detected
-#'   |       +-- percent.total
+#'   |       +-- percent
 #'   +-- total 
 #' }
 #' The \code{total} field contains the total sum of counts for each cell across the main and alternative Experiments.
