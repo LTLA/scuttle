@@ -60,9 +60,7 @@ readSparseCounts <- function(file, sep="\t", quote=NULL, comment.char="", row.na
         readLines(fhandle, n=ignore.row)
     }
     if (col.names) {
-        cell.names <- read.table(fhandle, sep=sep, quote=quote, comment.char=comment.char, nrows=1L, 
-            stringsAsFactors=FALSE, header=FALSE)
-        cell.names <- as.character(cell.names)
+        cell.names <- scan(fhandle, sep=sep, nlines=1, what=character(), quote=quote, comment.char=comment.char, quiet=TRUE)
     } else {
         cell.names <- NULL
     }
@@ -71,10 +69,9 @@ readSparseCounts <- function(file, sep="\t", quote=NULL, comment.char="", row.na
     }
 
     # Figuring out how to extract the columns.
-    first <- read.table(fhandle, sep=sep, quote=quote, comment.char=comment.char, nrows=1L, 
-        stringsAsFactors=FALSE, header=FALSE)
+    first <- scan(fhandle, sep=sep, quote=quote, what=character(), comment.char=comment.char, nlines=1L, quiet=TRUE) 
 
-    nentries <- ncol(first)
+    nentries <- length(first)
     what <- vector("list", nentries)
     if (row.names) {
         row.name.col <- ignore.col + 1L
@@ -92,11 +89,11 @@ readSparseCounts <- function(file, sep="\t", quote=NULL, comment.char="", row.na
     if (row.names) { 
         gene.names <- first[[row.name.col]]
     }
-    output <- list(as.matrix(first[,cell.cols]))
-    colnames(output[[1]]) <- NULL
+
+    output <- list(as(rbind(first[cell.cols]), "dgCMatrix"))
     it <- 2L
 
-    # Reading it in, chunk by chunk.
+    # Reading it in, chunk by chunk (see behavior of nmax= when what= is a list).
     repeat {
         current <- scan(fhandle, what=what, sep=sep, quote=quote, comment.char=comment.char, nmax=chunk, quiet=TRUE)
         if (row.names) {
