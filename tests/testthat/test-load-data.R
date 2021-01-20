@@ -36,7 +36,8 @@ test_that("readSparseCounts avoids row/column names if requested", {
     colnames(ref2) <- NULL
     expect_identical(ref2, out)
 
-    expect_error(readSparseCounts(ofile, col.names=FALSE), "invalid")
+    expect_warning(out <- readSparseCounts(ofile, col.names=FALSE), "coercion")
+    expect_true(all(is.na(out[1,])))
 })
 
 test_that("Skipping works correctly", {
