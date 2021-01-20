@@ -170,7 +170,6 @@ setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL,
 .downsample_counts <- function(x, size.factors, down.prop, down.target) {
     if (is.null(down.target)) {
         down.target <- quantile(size.factors, probs=down.prop)
-        warning("'down.target' defined as the 1st percentile of size factors")
     }
     down_rate <- pmin(1, down.target/size.factors)
     x <- downsampleMatrix(x, down_rate, bycol=TRUE)

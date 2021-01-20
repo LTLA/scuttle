@@ -136,29 +136,27 @@ test_that("normalizeCounts behaves with DelayedArray inputs", {
 })
 
 test_that("normalizeCounts behaves with downsampling", {
-    skip("need to move downsampling in")
-
     # Testing the two extremes.
     set.seed(1000)
-    out <- normalizeCounts(dummy, ref, downsample=TRUE, down_prop=0)
+    out <- as.matrix(normalizeCounts(dummy, ref, downsample=TRUE, down.prop=0))
     set.seed(1000)
-    tst <- downsampleMatrix(dummy, min(ref)/ref)
+    tst <- as.matrix(downsampleMatrix(dummy, min(ref)/ref, bycol=TRUE))
     expect_equal(log2(tst+1), out)
 
-    out <- normalizeCounts(dummy, ref, downsample=TRUE, down_prop=1, log=FALSE)
-    tst <- normalizeCounts(dummy, ref, log=FALSE)
+    out <- as.matrix(normalizeCounts(dummy, ref, downsample=TRUE, down.prop=1, log=FALSE))
+    tst <- as.matrix(normalizeCounts(dummy, ref, log=FALSE))
     expect_identical(out==0, tst==0)
-    expect_true(mad(out/tst) <1e-8)
+    expect_true(mad(out/tst, na.rm=TRUE) <1e-8)
 
     # Testing that it actually does the job w.r.t. equalizing coverage.
     lsf <- colSums(dummy)
-    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down_prop=0.01, log=FALSE)
+    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down.prop=0.01, log=FALSE)
     expect_true(mad(colSums(out)) < 1e-8)
 
-    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down_prop=0.05, log=FALSE)
+    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down.prop=0.05, log=FALSE)
     expect_true(mad(colSums(out)) < 1e-8)
 
-    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down_prop=0.1, log=FALSE)
+    out <- normalizeCounts(dummy, lsf, downsample=TRUE, down.prop=0.1, log=FALSE)
     expect_true(mad(colSums(out)) < 1e-8)
 
     # Testing with DelayedArrays. 
