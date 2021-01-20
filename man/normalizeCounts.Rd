@@ -16,6 +16,7 @@ normalizeCounts(x, ...)
   pseudo.count = 1,
   center.size.factors = TRUE,
   subset.row = NULL,
+  normalize.all = FALSE,
   downsample = FALSE,
   down.target = NULL,
   down.prop = 0.01,
@@ -52,7 +53,12 @@ Alternatively \code{NULL}, in which case the size factors are extracted or compu
 
 \item{center.size.factors}{Logical scalar indicating whether size factors should be centered at unity before being used.}
 
-\item{subset.row}{A vector specifying the subset of rows of \code{x} for which to return a result.}
+\item{subset.row}{A vector specifying the subset of rows of \code{x} for which to return normalized values.
+If \code{size.factors=NULL}, the size factors are also computed from this subset.}
+
+\item{normalize.all}{Logical scalar indicating whether to return normalized values for all genes.
+If \code{TRUE}, \code{subset.row} is only used to compute the size factors.
+Ignored if \code{subset.row=NULL} or \code{size.factors} is supplied.}
 
 \item{downsample}{Logical scalar indicating whether downsampling should be performed prior to scaling and log-transformation.}
 

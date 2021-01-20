@@ -11,7 +11,11 @@
 #' @param log Logical scalar indicating whether normalized values should be log2-transformed.
 #' @param pseudo.count Numeric scalar specifying the pseudo-count to add when log-transforming expression values.
 #' @param center.size.factors Logical scalar indicating whether size factors should be centered at unity before being used.
-#' @param subset.row A vector specifying the subset of rows of \code{x} for which to return a result.
+#' @param subset.row A vector specifying the subset of rows of \code{x} for which to return normalized values.
+#' If \code{size.factors=NULL}, the size factors are also computed from this subset.
+#' @param normalize.all Logical scalar indicating whether to return normalized values for all genes.
+#' If \code{TRUE}, \code{subset.row} is only used to compute the size factors.
+#' Ignored if \code{subset.row=NULL} or \code{size.factors} is supplied.
 #' @param downsample Logical scalar indicating whether downsampling should be performed prior to scaling and log-transformation.
 #' @param down.target Numeric scalar specifying the downsampling target when \code{downsample=TRUE}.
 #' If \code{NULL}, this is defined by \code{down.prop} and a warning is emitted.
@@ -110,7 +114,7 @@ setGeneric("normalizeCounts", function(x, ...) standardGeneric("normalizeCounts"
 #' @importFrom BiocParallel SerialParam
 setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL, 
     log=TRUE, pseudo.count=1, center.size.factors=TRUE, subset.row=NULL,
-    downsample=FALSE, down.target=NULL, down.prop=0.01, BPPARAM=SerialParam(),
+    normalize.all=FALSE, downsample=FALSE, down.target=NULL, down.prop=0.01, BPPARAM=SerialParam(),
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL,
     subset_row=NULL, down_target=NULL, down_prop=NULL)
 {
@@ -121,14 +125,17 @@ setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL,
     down.prop <- .replace(down.prop, down_prop)
     pseudo.count <- .replace(pseudo.count, pseudo_count)
 
-    if (!is.null(subset.row)) {
+    if (!is.null(subset.row) && !normalize.all) {
         x <- x[subset.row,,drop=FALSE]
+        subset.row <- NULL
     }
+
     if (nrow(x)==0L) {
         return(x + 0) # coerce to numeric.
     }
 
-    size.factors <- .get_default_sizes(x, size.factors, center.size.factors, BPPARAM=BPPARAM)
+    size.factors <- .get_default_sizes(x, size.factors, center.size.factors, BPPARAM=BPPARAM, subset.row=subset.row)
+
     if (length(size.factors)!=ncol(x)) {
         stop("number of size factors does not equal 'ncol(x)'")
     }

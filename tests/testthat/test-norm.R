@@ -36,6 +36,19 @@ test_that("normalizeCounts works as expected", {
     out <- normalizeCounts(dummy, ref, subset_row=chosen)
     sub <- normalizeCounts(dummy[chosen,], ref)
     expect_equal(out, sub)
+
+    # With subsetting and normalize.all=TRUE.
+    out <- normalizeCounts(dummy, subset.row=1:10, normalize.all=TRUE) # no effect if subset.row=NULL.
+    sub <- normalizeCounts(dummy, colSums(dummy[1:10,]))
+    expect_identical(out, sub)
+
+    out <- normalizeCounts(dummy, normalize.all=TRUE) # no effect if subset.row=NULL.
+    sub <- normalizeCounts(dummy)
+    expect_identical(out, sub)
+
+    out <- normalizeCounts(dummy, ref, subset.row=1:10, normalize.all=TRUE) # no effect if sub is supplied.
+    sub <- normalizeCounts(dummy, ref)
+    expect_identical(out, sub)
 })
 
 test_that("normalizeCounts handles silly inputs correctly", {
