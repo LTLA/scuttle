@@ -38,7 +38,7 @@ test_that("normalizeCounts works as expected", {
     expect_equal(out, sub)
 
     # With subsetting and normalize.all=TRUE.
-    out <- normalizeCounts(dummy, subset.row=1:10, normalize.all=TRUE) # no effect if subset.row=NULL.
+    out <- normalizeCounts(dummy, subset.row=1:10, normalize.all=TRUE)
     sub <- normalizeCounts(dummy, colSums(dummy[1:10,]))
     expect_identical(out, sub)
 
@@ -191,15 +191,27 @@ test_that("logNormCounts works for SE objects", {
     expect_equal(nc(logNormCounts(se, log=FALSE)), normalizeCounts(cn(se), log=FALSE))
     expect_equal(lc(logNormCounts(se, pseudo.count=2)), normalizeCounts(cn(se), pseudo.count=2))
 
-    sf <- runif(ncol(X))
+    sf <- runif(ncol(se))
     expect_equal(lc(logNormCounts(se, size_factors=sf)),
         normalizeCounts(cn(se), size_factors=sf))
     expect_equal(lc(logNormCounts(se, size_factors=sf, center_size_factors=FALSE)), 
         normalizeCounts(cn(se), size_factors=sf, center_size_factors=FALSE))
- 
+
+    # Subsetting behaves as expected.
+    out <- logNormCounts(se, subset.row=1:10)
+    ref <- logNormCounts(se[1:10,])
+    expect_identical(out, ref)
+
+    out <- logNormCounts(se, subset.row=1:10, normalize.all=TRUE)
+    ref <- logNormCounts(se, size.factors=colSums(assay(se)[1:10,]))
+    expect_identical(out, ref)
+
+    out <- logNormCounts(se, size.factors=sf, subset.row=1:10)
+    expect_identical(out, logNormCounts(se, size.factors=sf)[1:10,])
+
     # Doesn't break on silly inputs.
-    expect_equal(unname(dim(logNormCounts(X[,0,drop=FALSE]))), c(ngenes, 0L))
-    expect_equal(unname(dim(logNormCounts(X[0,,drop=FALSE]))), c(0L, ncells)) 
+    expect_equal(unname(dim(logNormCounts(se[,0,drop=FALSE]))), c(ngenes, 0L))
+    expect_equal(unname(dim(logNormCounts(se[0,,drop=FALSE]))), c(0L, ncells)) 
 })
 
 test_that("logNormCounts works for SCE objects (basic)", {
@@ -228,6 +240,21 @@ test_that("logNormCounts works for SCE objects (basic)", {
     Z <- logNormCounts(Z)
     expect_identical(int_metadata(Z)$scater$pseudo.count, 1)
     expect_identical(int_metadata(Z)$scater$whee, "YAY")
+
+    # Subsetting behaves as expected.
+    out <- logNormCounts(X, subset.row=1:10)
+    ref <- logNormCounts(X[1:10,])
+    expect_identical(out, ref)
+
+    Y <- X
+    sizeFactors(Y) <- NULL
+    out <- logNormCounts(Y, subset.row=1:10)
+    ref <- logNormCounts(Y[1:10,])
+    expect_identical(out, ref)
+
+    out <- logNormCounts(Y, subset.row=1:10, normalize.all=TRUE) 
+    sub <- logNormCounts(Y, colSums(counts(Y)[1:10,]))
+    expect_identical(out, sub)
 
     # Diverts to other names.
     Y <- logNormCounts(X, name="blah")
@@ -259,10 +286,11 @@ test_that("logNormCounts works for SCE objects (altExp)", {
     altExps(ref) <- NULL
     expect_identical(ref, logNormCounts(X))
 
-    # Global size factors are respected.
+    # Global size factors are not respected in alternativeExperiments.
     sf <- runif(ncol(sce))
     sce2 <- logNormCounts(sce, size_factors=sf, use_altexps=TRUE)
-    COMPFUN(altExp(sce2), logNormCounts(Y, size_factors=sf))
+    COMPFUN(removeAltExps(sce2), logNormCounts(X, size.factors=sf))
+    COMPFUN(altExp(sce2), logNormCounts(Y))
 
     # Other parameters are respected.
     sce3a <- logNormCounts(sce, pseudo.count=2, use_altexps=TRUE)

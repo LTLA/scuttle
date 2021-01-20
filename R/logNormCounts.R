@@ -23,13 +23,17 @@
 #' It returns a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} containing the normalized values in a separate assay.
 #' This makes it easier to perform normalization by avoiding book-keeping errors during a long analysis workflow.
 #' 
-#' If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
+#' If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, 
+#' normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
 #' By default, \code{use.altexps=FALSE} to avoid problems from attempting to library size-normalize alternative experiments that have zero total counts for some cells.
 #'
-#' If \code{size.factors=NULL}, size factors are obtained following the rules in \code{\link{normalizeCounts}}.
+#' Size factors are obtained following the rules in \code{\link{normalizeCounts}}.
 #' This is done independently for the main and alternative Experiments when \code{use.altexps} is specified,
-#' i.e. no information is shared between Experiments by default.
-#' However, if \code{size.factors} is supplied, it will override any size factors available in any Experiment.
+#' i.e., no size factor information is shared between Experiments. 
+#' If \code{size.factors} is supplied, it will override the size factors in the main Experiment only.
+#'
+#' \code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
+#' However, both of these arguments only apply to the main Experiment when \code{use.altexps} is specified.
 #'
 #' @return 
 #' \code{x} is returned containing the (log-)normalized expression values in an additional assay named as \code{name}.
@@ -77,15 +81,23 @@ setGeneric("logNormCounts", function(x, ...) standardGeneric("logNormCounts"))
 #' @rdname logNormCounts
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL, log=TRUE, 
-    pseudo.count=1, center.size.factors=TRUE, ..., assay.type="counts", name=NULL, BPPARAM=SerialParam(), 
+    pseudo.count=1, center.size.factors=TRUE, ..., subset.row=NULL, normalize.all=FALSE, 
+    assay.type="counts", name=NULL, BPPARAM=SerialParam(), 
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL, exprs_values=NULL)
 {
     size.factors <- .replace(size.factors, size_factors)
     pseudo.count <- .replace(pseudo.count, pseudo_count)
     center.size.factors <- .replace(center.size.factors, center_size_factors)
     assay.type <- .replace(assay.type, exprs_values)
+
+    if (!is.null(subset.row) && !normalize.all) {
+        x <- x[subset.row,,drop=FALSE]
+        subset.row <- NULL
+    }
     
-    FUN <- .se_lnc(assay.type=assay.type, log=log, pseudo.count=pseudo.count, ..., name=name, BPPARAM=BPPARAM) 
+    FUN <- .se_lnc(assay.type=assay.type, log=log, pseudo.count=pseudo.count, ..., 
+        normalize.all=normalize.all, subset.row=subset.row, name=name, BPPARAM=BPPARAM) 
+
     FUN(x, size.factors=size.factors, center.size.factors=center.size.factors)
 })
 
@@ -107,8 +119,9 @@ setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL
 #' @importFrom BiocGenerics sizeFactors sizeFactors<-
 #' @importFrom SingleCellExperiment altExp altExp<- int_metadata int_metadata<-
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=NULL, log=TRUE, pseudo.count=1, 
-    center.size.factors=TRUE, ..., assay.type="counts", use.altexps=FALSE, name=NULL, BPPARAM=SerialParam(), 
+setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=sizeFactors(x), log=TRUE, pseudo.count=1, 
+    center.size.factors=TRUE, ..., subset.row=NULL, normalize.all=FALSE, 
+    assay.type="counts", use.altexps=FALSE, name=NULL, BPPARAM=SerialParam(), 
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL, exprs_values=NULL, use_altexps=NULL) 
 {
     size.factors <- .replace(size.factors, size_factors)
@@ -117,13 +130,14 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=NULL
     use.altexps <- .replace(use.altexps, use_altexps)
     assay.type <- .replace(assay.type, exprs_values)
 
-    # Guarantee that we get (centered) size factors back out.
-    original <- size.factors
+    if (!is.null(subset.row) && !normalize.all) {
+        x <- x[subset.row,,drop=FALSE]
+        subset.row <- NULL
+    }
+
+    # Guarantee that we store (centered) size factors in the output matrix.
     if (is.null(size.factors)) {
-        size.factors <- sizeFactors(x)
-        if (is.null(size.factors)) {
-            size.factors <- librarySizeFactors(x, assay.type=assay.type, BPPARAM=BPPARAM)
-        }
+        size.factors <- librarySizeFactors(x, assay.type=assay.type, BPPARAM=BPPARAM, subset.row=subset.row)
     }
     size.factors <- .center.size.factors(size.factors, center.size.factors)
     sizeFactors(x) <- size.factors
@@ -141,7 +155,7 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=NULL
     use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
     for (i in use.altexps) {
         tryCatch({
-            altExp(x, i) <- FUN(altExp(x, i), size.factors=original, center.size.factors=center.size.factors)
+            altExp(x, i) <- FUN(altExp(x, i), center.size.factors=center.size.factors)
         }, error=function(err) {
             stop(paste0(sprintf("failed to normalize 'altExp(x, %s)'\n", deparse(i)), conditionMessage(err)))
         })

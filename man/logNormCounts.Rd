@@ -15,6 +15,8 @@ logNormCounts(x, ...)
   pseudo.count = 1,
   center.size.factors = TRUE,
   ...,
+  subset.row = NULL,
+  normalize.all = FALSE,
   assay.type = "counts",
   name = NULL,
   BPPARAM = SerialParam(),
@@ -26,11 +28,13 @@ logNormCounts(x, ...)
 
 \S4method{logNormCounts}{SingleCellExperiment}(
   x,
-  size.factors = NULL,
+  size.factors = sizeFactors(x),
   log = TRUE,
   pseudo.count = 1,
   center.size.factors = TRUE,
   ...,
+  subset.row = NULL,
+  normalize.all = FALSE,
   assay.type = "counts",
   use.altexps = FALSE,
   name = NULL,
@@ -50,13 +54,20 @@ logNormCounts(x, ...)
 For the methods, additional arguments passed to \code{\link{normalizeCounts}}.}
 
 \item{size.factors}{A numeric vector of cell-specific size factors.
-Alternatively \code{NULL}, in which case the size factors are extracted or computed from \code{x}.}
+Alternatively \code{NULL}, in which case the size factors are computed from \code{x}.}
 
 \item{log}{Logical scalar indicating whether normalized values should be log2-transformed.}
 
 \item{pseudo.count}{Numeric scalar specifying the pseudo-count to add when log-transforming expression values.}
 
 \item{center.size.factors}{Logical scalar indicating whether size factors should be centered at unity before being used.}
+
+\item{subset.row}{A vector specifying the subset of rows of \code{x} for which to return normalized values.
+If \code{size.factors=NULL}, the size factors are also computed from this subset.}
+
+\item{normalize.all}{Logical scalar indicating whether to return normalized values for all genes.
+If \code{TRUE}, \code{subset.row} is only used to compute the size factors.
+Ignored if \code{subset.row=NULL} or \code{size.factors} is supplied.}
 
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the count matrix.}
 
@@ -99,13 +110,17 @@ This function is a convenience wrapper around \code{\link{normalizeCounts}}.
 It returns a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} containing the normalized values in a separate assay.
 This makes it easier to perform normalization by avoiding book-keeping errors during a long analysis workflow.
 
-If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
+If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, 
+normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
 By default, \code{use.altexps=FALSE} to avoid problems from attempting to library size-normalize alternative experiments that have zero total counts for some cells.
 
-If \code{size.factors=NULL}, size factors are obtained following the rules in \code{\link{normalizeCounts}}.
+Size factors are obtained following the rules in \code{\link{normalizeCounts}}.
 This is done independently for the main and alternative Experiments when \code{use.altexps} is specified,
-i.e. no information is shared between Experiments by default.
-However, if \code{size.factors} is supplied, it will override any size factors available in any Experiment.
+i.e., no size factor information is shared between Experiments. 
+If \code{size.factors} is supplied, it will override the size factors in the main Experiment only.
+
+\code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
+However, both of these arguments only apply to the main Experiment when \code{use.altexps} is specified.
 }
 \examples{
 example_sce <- mockSCE()
