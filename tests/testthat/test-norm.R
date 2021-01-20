@@ -129,7 +129,7 @@ test_that("normalizeCounts behaves with DelayedArray inputs", {
     sparsed <- DelayedArray(as(zeroed, "dgCMatrix"))
 
     expect_identical(as.matrix(normalizeCounts(sparsed)), as.matrix(normalizeCounts(zeroed)))
-#    expect_true(is_sparse(normalizeCounts(sparsed)))
+    expect_true(is_sparse(normalizeCounts(sparsed)))
 
     expect_identical(as.matrix(normalizeCounts(sparsed, pseudo.count=2)), as.matrix(normalizeCounts(zeroed, pseudo.count=2)))
     expect_false(is_sparse(normalizeCounts(sparsed, pseudo.count=2)))
