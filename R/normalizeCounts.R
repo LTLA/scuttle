@@ -7,7 +7,7 @@
 #' Alternatively, a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} object containing such a count matrix.
 #' @param assay.type A string or integer scalar specifying the assay of \code{x} containing the count matrix.
 #' @param size.factors A numeric vector of cell-specific size factors.
-#' Alternatively \code{NULL}, in which case the size factors are extracted or computed from \code{x}.
+#' Alternatively \code{NULL}, in which case the size factors are computed from \code{x}.
 #' @param log Logical scalar indicating whether normalized values should be log2-transformed.
 #' @param pseudo.count Numeric scalar specifying the pseudo-count to add when log-transforming expression values.
 #' @param center.size.factors Logical scalar indicating whether size factors should be centered at unity before being used.
@@ -36,14 +36,9 @@
 #' This removes cell-specific scaling biases due to differences in sequencing coverage, capture efficiency or total RNA content.
 #' If \code{log=TRUE}, log-normalized values are calculated by adding \code{pseudo.count} to the normalized count and performing a log2-transformation.
 #'
-#' If no size factors are supplied, they are determined automatically from \code{x}:
-#' \itemize{
-#' \item For count matrices and \linkS4class{SummarizedExperiment} inputs,
-#' the sum of counts for each cell is used to compute a size factor via the \code{\link{librarySizeFactors}} function.
-#' \item For \linkS4class{SingleCellExperiment} instances, the function searches for \code{\link{sizeFactors}} from \code{x}.
-#' If none are available, it defaults to library size-derived size factors.
-#' }
-#' If \code{size.factors} are supplied, they will override any size factors present in \code{x}.
+#' If the size factors are \code{NULL}, they are determined automatically from \code{x}.
+#' The sum of counts for each cell is used to compute a size factor via the \code{\link{librarySizeFactors}} function.
+#' For the SingleCellExperiment method, size factors are extracted from \code{\link{sizeFactors}(x)} if available, otherwise they are computed from the assay containing the count matrix.
 #'
 #' @section Centering the size factors:
 #' If \code{center.size.factors=TRUE}, size factors are centred at unity prior to calculation of normalized expression values.
@@ -192,10 +187,7 @@ setMethod("normalizeCounts", "SummarizedExperiment", function(x, ..., assay.type
 #' @rdname normalizeCounts
 #' @importFrom BiocGenerics sizeFactors
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("normalizeCounts", "SingleCellExperiment", function(x, size.factors=NULL, ...) {
-    if (is.null(size.factors)) {
-        size.factors <- sizeFactors(x)
-    }
+setMethod("normalizeCounts", "SingleCellExperiment", function(x, size.factors=sizeFactors(x), ...) {
     callNextMethod(x=x, size.factors=size.factors, ...)
 })
 

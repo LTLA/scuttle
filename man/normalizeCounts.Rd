@@ -31,7 +31,7 @@ normalizeCounts(x, ...)
 
 \S4method{normalizeCounts}{SummarizedExperiment}(x, ..., assay.type = "counts", exprs_values = NULL)
 
-\S4method{normalizeCounts}{SingleCellExperiment}(x, size.factors = NULL, ...)
+\S4method{normalizeCounts}{SingleCellExperiment}(x, size.factors = sizeFactors(x), ...)
 }
 \arguments{
 \item{x}{A numeric matrix-like object containing counts for cells in the columns and features in the rows.
@@ -45,7 +45,7 @@ For the SummarizedExperiment method, further arguments to pass to the ANY or \li
 For the SingleCellExperiment method, further arguments to pass to the SummarizedExperiment method.}
 
 \item{size.factors}{A numeric vector of cell-specific size factors.
-Alternatively \code{NULL}, in which case the size factors are extracted or computed from \code{x}.}
+Alternatively \code{NULL}, in which case the size factors are computed from \code{x}.}
 
 \item{log}{Logical scalar indicating whether normalized values should be log2-transformed.}
 
@@ -88,14 +88,9 @@ Normalized expression values are computed by dividing the counts for each cell b
 This removes cell-specific scaling biases due to differences in sequencing coverage, capture efficiency or total RNA content.
 If \code{log=TRUE}, log-normalized values are calculated by adding \code{pseudo.count} to the normalized count and performing a log2-transformation.
 
-If no size factors are supplied, they are determined automatically from \code{x}:
-\itemize{
-\item For count matrices and \linkS4class{SummarizedExperiment} inputs,
-the sum of counts for each cell is used to compute a size factor via the \code{\link{librarySizeFactors}} function.
-\item For \linkS4class{SingleCellExperiment} instances, the function searches for \code{\link{sizeFactors}} from \code{x}.
-If none are available, it defaults to library size-derived size factors.
-}
-If \code{size.factors} are supplied, they will override any size factors present in \code{x}.
+If the size factors are \code{NULL}, they are determined automatically from \code{x}.
+The sum of counts for each cell is used to compute a size factor via the \code{\link{librarySizeFactors}} function.
+For the SingleCellExperiment method, size factors are extracted from \code{\link{sizeFactors}(x)} if available, otherwise they are computed from the assay containing the count matrix.
 }
 \section{Centering the size factors}{
 
