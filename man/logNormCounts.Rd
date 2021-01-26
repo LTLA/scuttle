@@ -85,22 +85,13 @@ Only used if \code{size.factors} is not specified.}
 
 \item{exprs_values}{Soft-deprecated equivalents to the arguments described previously.}
 
-\item{use.altexps}{Logical scalar indicating whether normalization should be performed for alternative experiments in \code{x}.
-
-Alternatively, a character vector specifying the names of the alternative experiments to be normalized.
-
-Alternatively \code{NULL}, in which case no calculations are performed on the alternative experiments.}
-
-\item{use_altexps}{Soft-deprecated equivalent to the argument above.}
+\item{use.altexps, use_altexps}{Deprecated, use \code{\link{applySCE}} instead (see Examples).}
 }
 \value{
 \code{x} is returned containing the (log-)normalized expression values in an additional assay named as \code{name}.
 
 If \code{x} is a \linkS4class{SingleCellExperiment}, the size factors used for normalization are stored in \code{\link{sizeFactors}}.
 These are centered if \code{center.size.factors=TRUE}.
-
-If \code{x} contains alternative experiments and \code{use.altexps=TRUE},  each of the alternative experiments in \code{x} will also contain an additional assay.
-This can be limited to particular \code{\link{altExps}} entries by specifying them in \code{use.altexps}.
 }
 \description{
 Compute log-transformed normalized expression values from a count matrix in a \linkS4class{SingleCellExperiment} object.
@@ -110,17 +101,8 @@ This function is a convenience wrapper around \code{\link{normalizeCounts}}.
 It returns a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} containing the normalized values in a separate assay.
 This makes it easier to perform normalization by avoiding book-keeping errors during a long analysis workflow.
 
-If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, 
-normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
-By default, \code{use.altexps=FALSE} to avoid problems from attempting to library size-normalize alternative experiments that have zero total counts for some cells.
-
-Size factors are obtained following the rules in \code{\link{normalizeCounts}}.
-This is done independently for the main and alternative Experiments when \code{use.altexps} is specified,
-i.e., no size factor information is shared between Experiments. 
-If \code{size.factors} is supplied, it will override the size factors in the main Experiment only.
-
+If \code{NULL}, size factors are determined as described in \code{\link{normalizeCounts}}.
 \code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
-However, both of these arguments only apply to the main Experiment when \code{use.altexps} is specified.
 }
 \examples{
 example_sce <- mockSCE()
@@ -141,7 +123,7 @@ example_sce2 <- logNormCounts(example_sce2)
 logcounts(example_sce2)[1:5,1:5]
 
 # Also normalizing the alternative experiments:
-example_sce2 <- logNormCounts(example_sce, use.altexps="Spikes")
+example_sce2 <- applySCE(example_sce, logNormCounts)
 logcounts(altExp(example_sce2))[1:5,1:5]
 
 }

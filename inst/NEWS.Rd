@@ -15,6 +15,8 @@ Exposed the default \code{size.factors=} in the SingleCellExperiment method.
 
 \item Modified the SingleCellExperiment method of \code{logNormCounts()} so that manually specified size factors do not apply to alternative Experiments.
 Only relevant if \code{size.factors=} and \code{use.altexps=} are specified.
+
+\item Deprecated \code{use.altexps=} in favor of \code{applySCE()} in \code{logNormCounts()} and \code{aggregateAcrossCells()}.
 }}
 
 \section{Version 1.0.0}{\itemize{

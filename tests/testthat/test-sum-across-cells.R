@@ -225,7 +225,7 @@ test_that("Aggregation across cells works correctly with altExps", {
     agg <- aggregateAcrossCells(copy, ids)
     expect_identical(counts(altExp(agg, "THING")), counts(agg)*2)
 
-    agg0 <- aggregateAcrossCells(sce, ids, use.altexps=FALSE)
+    agg0 <- applySCE(sce, aggregateAcrossCells, ids=ids, use.altexps=NULL)
     expect_identical(counts(agg0), counts(agg))
     expect_identical(altExpNames(agg0), character(0))
 
@@ -249,17 +249,10 @@ test_that("Aggregation across cells works correctly with altExps", {
     )
 
     # Other options work correctly.
-    agg4 <- aggregateAcrossCells(copy, ids, use.altexps=1)
+    agg4 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, which=1, use.altexps=NULL)
     expect_identical(altExpNames(agg4), "THING")
-    expect_error(aggregateAcrossCells(copy, ids, use.altexps=10), 'use.altexps')
-    agg5 <- aggregateAcrossCells(copy, ids, use.altexps="THING")
+    agg5 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, which="THING", use.altexps=NULL)
     expect_identical(altExpNames(agg5), "THING")
-    expect_error(aggregateAcrossCells(copy, ids, use.altexps="WASDA"), 'use.altexps')
-
-    # We get the same behavior for deeply nested alternative experiments.
-    altExp(altExp(copy, "THING"), "BLAH") <- sce[1:10,]
-    agg6 <- aggregateAcrossCells(copy, ids)
-    expect_identical(assay(altExp(altExp(agg6))), assay(agg6)[1:10,])
 })
 
 set.seed(1000401)

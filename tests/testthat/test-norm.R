@@ -267,7 +267,7 @@ test_that("logNormCounts works for SCE objects (altExp)", {
 
     sce <- X
     altExp(sce, "BLAH") <- Y
-    sce1 <- logNormCounts(sce, use_altexps=TRUE)
+    sce1 <- applySCE(sce, logNormCounts)
 
     # Do a class round-trip to wipe out metadata added to the int_* fields.
     COMPFUN <- function(left, right) {
@@ -286,32 +286,26 @@ test_that("logNormCounts works for SCE objects (altExp)", {
     altExps(ref) <- NULL
     expect_identical(ref, logNormCounts(X))
 
-    # Global size factors are not respected in alternativeExperiments.
-    sf <- runif(ncol(sce))
-    sce2 <- logNormCounts(sce, size_factors=sf, use_altexps=TRUE)
-    COMPFUN(removeAltExps(sce2), logNormCounts(X, size.factors=sf))
-    COMPFUN(altExp(sce2), logNormCounts(Y))
-
     # Other parameters are respected.
-    sce3a <- logNormCounts(sce, pseudo.count=2, use_altexps=TRUE)
+    sce3a <- applySCE(sce, logNormCounts, pseudo.count=2)
     COMPFUN(altExp(sce3a), logNormCounts(Y, pseudo.count=2))
 
-    sce3b <- logNormCounts(sce, log=FALSE, use_altexps=TRUE)
+    sce3b <- applySCE(sce, logNormCounts, log=FALSE)
     COMPFUN(altExp(sce3b), logNormCounts(Y, log=FALSE))
 
     # Internal size factors do not propagate to alternative experiments.
     sce4 <- sce
-    sizeFactors(sce4) <- sf
-    sce4 <- logNormCounts(sce4, use_altexps=TRUE)
+    sizeFactors(sce4) <- runif(ncol(sce))
+    sce4 <- applySCE(sce4, logNormCounts)
     COMPFUN(altExp(sce4), logNormCounts(Y))
 
     # Lack of centering is respected in downstream methods.
-    sce5 <- logNormCounts(sce, center_size_factors=FALSE, use_altexps=TRUE)
+    sce5 <- applySCE(sce, logNormCounts, center.size.factors=FALSE)
     COMPFUN(altExp(sce5), logNormCounts(Y, center_size_factors=FALSE))
 
     # Throws errors with zero-valued size factors.
     sce6 <- sce
     sizeFactors(altExp(sce6)) <- 0
-    expect_error(logNormCounts(sce6, use_altexps=TRUE), 'altExp')
+    expect_error(applySCE(sce6, logNormCounts), 'should be positive')
     expect_error(logNormCounts(sce6), NA)
 })

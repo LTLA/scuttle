@@ -4,11 +4,7 @@
 #'
 #' @param x A \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} object containing a count matrix.
 #' @inheritParams normalizeCounts
-#' @param use.altexps Logical scalar indicating whether normalization should be performed for alternative experiments in \code{x}.
-#' 
-#' Alternatively, a character vector specifying the names of the alternative experiments to be normalized.
-#' 
-#' Alternatively \code{NULL}, in which case no calculations are performed on the alternative experiments. 
+#' @param use.altexps,use_altexps Deprecated, use \code{\link{applySCE}} instead (see Examples).
 #' @param ... For the generic, additional arguments passed to specific methods. 
 #'
 #' For the methods, additional arguments passed to \code{\link{normalizeCounts}}.
@@ -16,33 +12,20 @@
 #' Defaults to \code{"logcounts"} when \code{log=TRUE} and \code{"normcounts"} otherwise.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 #' Only used if \code{size.factors} is not specified.
-#' @param use_altexps Soft-deprecated equivalent to the argument above.
 #'
 #' @details
 #' This function is a convenience wrapper around \code{\link{normalizeCounts}}.
 #' It returns a \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} containing the normalized values in a separate assay.
 #' This makes it easier to perform normalization by avoiding book-keeping errors during a long analysis workflow.
 #' 
-#' If \code{x} is a \linkS4class{SingleCellExperiment} that contains alternative Experiments, 
-#' normalized values can be computed and stored within each alternative experiment by setting \code{use.altexps} appropriately.
-#' By default, \code{use.altexps=FALSE} to avoid problems from attempting to library size-normalize alternative experiments that have zero total counts for some cells.
-#'
-#' Size factors are obtained following the rules in \code{\link{normalizeCounts}}.
-#' This is done independently for the main and alternative Experiments when \code{use.altexps} is specified,
-#' i.e., no size factor information is shared between Experiments. 
-#' If \code{size.factors} is supplied, it will override the size factors in the main Experiment only.
-#'
+#' If \code{NULL}, size factors are determined as described in \code{\link{normalizeCounts}}.
 #' \code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
-#' However, both of these arguments only apply to the main Experiment when \code{use.altexps} is specified.
 #'
 #' @return 
 #' \code{x} is returned containing the (log-)normalized expression values in an additional assay named as \code{name}.
 #' 
 #' If \code{x} is a \linkS4class{SingleCellExperiment}, the size factors used for normalization are stored in \code{\link{sizeFactors}}.
 #' These are centered if \code{center.size.factors=TRUE}.
-#'
-#' If \code{x} contains alternative experiments and \code{use.altexps=TRUE},  each of the alternative experiments in \code{x} will also contain an additional assay.
-#' This can be limited to particular \code{\link{altExps}} entries by specifying them in \code{use.altexps}.
 #'
 #' @author Aaron Lun, based on code by Davis McCarthy 
 #' @seealso
@@ -67,7 +50,7 @@
 #' logcounts(example_sce2)[1:5,1:5]
 #'
 #' # Also normalizing the alternative experiments:
-#' example_sce2 <- logNormCounts(example_sce, use.altexps="Spikes")
+#' example_sce2 <- applySCE(example_sce, logNormCounts)
 #' logcounts(altExp(example_sce2))[1:5,1:5]
 #'
 #' @name logNormCounts
@@ -152,13 +135,16 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=size
         int_metadata(x)$scater$pseudo.count <- pseudo.count
     }
 
-    use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
-    for (i in use.altexps) {
-        tryCatch({
-            altExp(x, i) <- FUN(altExp(x, i), center.size.factors=center.size.factors)
-        }, error=function(err) {
-            stop(paste0(sprintf("failed to normalize 'altExp(x, %s)'\n", deparse(i)), conditionMessage(err)))
-        })
+    if (!is.null(use.altexps)) {
+        .Deprecated(msg="'use.altexps=' is deprecated.\nUse 'applySCE(x, logNormCounts)' instead.")
+        use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
+        for (i in use.altexps) {
+            tryCatch({
+                altExp(x, i) <- FUN(altExp(x, i), center.size.factors=center.size.factors)
+            }, error=function(err) {
+                stop(paste0(sprintf("failed to normalize 'altExp(x, %s)'\n", deparse(i)), conditionMessage(err)))
+            })
+        }
     }
 
     x
