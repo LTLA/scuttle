@@ -135,7 +135,7 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=size
         int_metadata(x)$scater$pseudo.count <- pseudo.count
     }
 
-    if (!is.null(use.altexps)) {
+    if (!is.null(use.altexps) && !isFALSE(use.altexps)) {
         .Deprecated(msg="'use.altexps=' is deprecated.\nUse 'applySCE(x, logNormCounts)' instead.")
         use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
         for (i in use.altexps) {
