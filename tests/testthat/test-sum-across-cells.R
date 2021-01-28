@@ -249,9 +249,9 @@ test_that("Aggregation across cells works correctly with altExps", {
     )
 
     # Other options work correctly.
-    agg4 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, which=1, use.altexps=NULL)
+    agg4 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, WHICH=1, use.altexps=NULL)
     expect_identical(altExpNames(agg4), "THING")
-    agg5 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, which="THING", use.altexps=NULL)
+    agg5 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, WHICH="THING", use.altexps=NULL)
     expect_identical(altExpNames(agg5), "THING")
 })
 
