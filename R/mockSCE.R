@@ -48,6 +48,7 @@ mockSCE <- function(ncells=200, ngenes=2000, nspikes=100) {
         Treatment=sample(c("treat1", "treat2"), ncells, replace=TRUE)
     ))
 
+    colnames(spike.data) <- colnames(sce)
     altExp(sce, "Spikes") <- SingleCellExperiment(list(counts=spike.data))
     sce
 }
