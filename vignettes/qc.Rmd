@@ -1,0 +1,177 @@
+---
+title: Quality control for single-cell data 
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+date: "Revised: February 6, 2020"
+package: scuttle 
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+vignette: >
+  %\VignetteIndexEntry{1. Quality control}
+  %\VignetteEngine{knitr::rmarkdown}
+  %VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE, results="hide"}
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+library(BiocStyle)
+set.seed(10918)
+```
+
+# Introduction
+
+`r Biocpkg("scuttle")` provides various low-level utilities for single-cell RNA-seq data analysis,
+typically used at the start of the analysis workflows or within high-level functions in other packages.
+This document will discuss one of the earliest steps, namely, quality control (QC) to remove damaged cells.
+
+To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package.
+In this case, the dataset is provided as a `SingleCellExperiment` object.
+However, most `r Biocpkg("scuttle")` functions can also be used with raw expression matrices 
+or instances of the more general `SummarizedExperiment` class.
+
+```{r}
+library(scRNAseq)
+sce <- ZeiselBrainData()
+sce
+```
+
+**Note:** A more comprehensive description of the use of `r Biocpkg("scuttle")` functions
+(along with other packages) in a scRNA-seq analysis workflow is available at https://osca.bioconductor.org.
+
+# Computing per-cell QC metrics
+
+The `perCellQCMetrics()` function computes a variety of basic cell-level metrics,
+including `sum`, total number of counts for the cell (i.e., the library size);
+and `detected`, the number of features for the cell that have counts above the detection limit (default of zero).
+Low values for either metric are indicative of poor cDNA capture.
+
+```{r}
+library(scuttle)
+is.mito <- grep("mt-", rownames(sce))
+per.cell <- perCellQCMetrics(sce, subsets=list(Mito=is.mito))
+summary(per.cell$sum)
+summary(per.cell$detected)
+```
+
+In addition, we can compute `subsets_X_percent`, percentage of counts that come from the feature control set named `X`;
+and `altexps_Y_percent`, the percentage of all counts that come from an alternative feature set `Y`.
+Here, `X` contains the mitochondrial genes and `Y` contains the set of spike-ins.
+High proportions for either metric are indicative of cell damage.
+
+```{r}
+summary(per.cell$subsets_Mito_percent)
+summary(per.cell$altexp_Spike_percent)
+```
+
+It is often convenient to store this in the `colData()` of our `SingleCellExperiment` object for future reference.
+One can either do so manually:
+
+```{r}
+colData(sce) <- cbind(colData(sce), per.cell)
+```
+
+... or just use the `addPerCellQCMetrics()` function, which does this automatically:
+
+```{r}
+sce2 <- addPerCellQCMetrics(sce, subsets=list(Mito=is.mito))
+colnames(colData(sce2))
+```
+
+# Identifying outliers on QC metrics
+
+We identify low-quality cells by setting a threshold on each of these metrics using the `isOutlier()` function.
+This defines the threshold at a certain number of median absolute deviations (MADs) away from the median;
+values beyond this threshold are considered outliers and can be filtered out, assuming that they correspond to low-quality cells.
+Here, we define small outliers (using `type="lower"`) for the _log_-total counts at 3 MADs from the median.
+
+```{r}
+low.total <- isOutlier(per.cell$sum, type="lower", log=TRUE)
+summary(low.total)
+```
+
+Note that the attributes of the `isOutlier()` output contain the thresholds, if this is of interest.
+
+```{r}
+attr(low.total, "threshold")
+```
+
+Advanced users can set `batch=` to compute outliers within each batch, avoiding inflated MADs due to batch effects.
+
+```{r}
+low.total.batched <- isOutlier(per.cell$sum, type="lower", log=TRUE, batch=sce$tissue)
+summary(low.total.batched)
+```
+
+In cases where entire batches contain a majority of low-quality cells, we can set `subset=` to only use high-quality batches for computing the thresholds.
+Those thresholds are then extrapolated back to the low-quality batches for some more stringent QC.
+
+# Filtering out low-quality cells
+
+We could manually apply `isOutlier()` to all of our metrics, but it is easier to use `perCellQCFilters()` to do this for us.
+This identifies low-quality cells as those that are low outliers for the log-total count, low outliers for the log-number of detected features,
+or high outliers for the percentage of counts in specified gene sets (e.g., mitochondrial genes, spike-in transcripts).
+The `discard` column contains the final call for whether a particular cell should be discarded.
+
+```{r}
+# An example with just mitochondrial filters.
+qc.stats <- perCellQCFilters(per.cell, sub.fields="subsets_Mito_percent") 
+colSums(as.matrix(qc.stats))
+
+# Another example with mitochondrial + spike-in filters.
+qc.stats2 <- perCellQCFilters(per.cell, 
+    sub.fields=c("subsets_Mito_percent", "altexps_ERCC_percent")) 
+colSums(as.matrix(qc.stats2))
+```
+
+For typical scRNA-seq applications, `quickPerCellQC()` will wrap the `perCellQCMetrics()` and `perCellQCFilters()` calls.
+This returns a filtered `SingleCellExperiment` that can be immediately used in downstream analyses.
+
+```{r}
+filtered <- quickPerCellQC(sce, subsets=list(Mito=is.mito), sub.fields="subsets_Mito_percent")
+filtered
+```
+
+The outlier-based approach adjusts to experiment-specific aspects of the data, e.g., sequencing depth, amount of spike-in RNA added, differences in total RNA content between cell types.
+In contrast, a fixed threshold would require manual adjustment to account for changes to the experimental protocol or system.
+We refer readers to the [book](https://osca.bioconductor.org/quality-control.html) for more details.
+
+# Computing feature-level statistics
+
+Some basic feature-level statistics are computed by the `perFeatureQCMetrics()` function.
+This includes `mean`, the mean count of the gene/feature across all cells;
+`detected`, the percentage of cells with non-zero counts for each gene;
+`subsets_Y_ratio`, ratio of mean counts between the cell control set named Y and all cells.
+
+```{r}
+# Pretending that the first 10 cells are empty wells, for demonstration.
+per.feat <- perFeatureQCMetrics(sce, subsets=list(Empty=1:10))
+summary(per.feat$mean)
+summary(per.feat$detected)
+summary(per.feat$subsets_Empty_ratio)
+```
+
+A more refined calculation of the average is provided by the `calculateAverage()` function, 
+which adjusts the counts by the relative library size (or size factor) prior to taking the mean.
+
+```{r}
+ave <- calculateAverage(sce)
+summary(ave)
+```
+
+These metrics tend to be more useful for informing the analyst about the overall behavior of the experiment,
+rather than being explicitly used to filter out genes.
+For example, one would hope that the most abundant genes are the "usual suspects", e.g., ribosomal proteins, actin, histones.
+
+Users _may_ wish to filter out very lowly or non-expressed genes to reduce the size of the dataset prior to downstream processing.
+However, **be sure to publish the unfiltered count matrix!**
+It is very difficult to re-use a count matrix where the features are filtered;
+information from the filtered features cannot be recovered, complicating integration with other datasets.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
+
