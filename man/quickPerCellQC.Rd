@@ -24,7 +24,8 @@ quickPerCellQC(x, ...)
   ...,
   subsets = NULL,
   assay.type = "counts",
-  other.args = list()
+  other.args = list(),
+  filter = TRUE
 )
 }
 \arguments{
@@ -41,7 +42,8 @@ For the SummarizedExperiment method, further arguments to pass to the ANY method
 
 \item{detected.field}{String specifying the column of \code{x} containing the number of detected features per cell.}
 
-\item{sub.fields}{Character vector specifying the column(s) of \code{x} containing the percentage of counts in subsets of \dQuote{control features}, usually mitochondrial genes or spike-in transcripts.
+\item{sub.fields}{Character vector specifying the column(s) of \code{x} containing the percentage of counts in subsets of \dQuote{control features}, 
+usually mitochondrial genes or spike-in transcripts.
 
 If set to \code{TRUE}, this will default to all columns in \code{x} with names following the patterns \code{"subsets_.*_percent"} and \code{"altexps_.*_percent"}.}
 
@@ -50,50 +52,45 @@ If set to \code{TRUE}, this will default to all columns in \code{x} with names f
 \item{subsets, assay.type}{Arguments to pass to the \code{\link{perCellQCMetrics}} function, exposed here for convenience.}
 
 \item{other.args}{A named list containing other arguments to pass to the \code{\link{perCellQCMetrics}} function.}
+
+\item{filter}{Logical scalar indicating whether to filter out low-quality cells from \code{x}.}
 }
 \value{
-A \linkS4class{DataFrame} with one row per cell and containing columns of logical vectors.
+If \code{filter=FALSE} or \code{x} is a DataFrame, a \linkS4class{DataFrame} is returned with one row per cell and containing columns of logical vectors.
 Each column specifies a reason for why a cell was considered to be low quality,
 with the final \code{discard} column indicating whether the cell should be discarded.
+
+If \code{filter=TRUE}, \code{x} is returned with the low-quality cells removed.
+QC statistics and filtering information for all remaining cells are stored in the \code{\link{colData}}.
 }
 \description{
 A convenient utility that identifies low-quality cells based on frequently used QC metrics.
 }
 \details{
-The ANY method simply calls \code{\link{isOutlier}} on the various QC metrics in \code{x}.
-\itemize{
-\item For \code{sum.field}, small outliers are detected. 
-These are considered to represent low-quality cells that have not been insufficiently sequenced.
-Detection is performed on the log-scale to adjust for a heavy right tail and to improve resolution at zero.
-\item For \code{detected.field}, small outliers are detected.
-These are considered to represent low-quality cells with low-complexity libraries. 
-Detection is performed on the log-scale to adjust for a heavy right tail.
-This is done on the log-scale to adjust for a heavy right tail and to improve resolution at zero.
-\item For each column specified by \code{sub.fields}, large outliers are detected.
-This aims to remove cells with high spike-in or mitochondrial content, usually corresponding to damaged cells.
-While these distributions often have heavy right tails, the putative low-quality cells are often present in this tail;
-thus, transformation is not performed to ensure maintain resolution of the filter.
-}
+For DataFrame \code{x}, this function simply calls \code{\link{perCellQCFilters}}.
+The latter should be directly used in such cases; DataFrame inputs are soft-deprecated here.
 
-Users can control the outlier detection (e.g., change the number of MADs, specify batches)
-by passing appropriate arguments to \code{...}.
-
-The SummarizedExperiment method calls \code{\link{perCellQCMetrics}} before running outlier detection.
-This is simply a convenient wrapper that avoids the need for two separate function calls in routine applications.
+For SummarizedExperiment \code{x}, this function is simply a convenient wrapper around \code{\link{perCellQCMetrics}} and \code{\link{perCellQCFilters}}.
 }
 \examples{
 example_sce <- mockSCE()
-x <- perCellQCMetrics(example_sce, subsets=list(Mito=1:100))
 
-discarded <- quickPerCellQC(x, percent_subsets=c(
-    "subsets_Mito_percent", "altexps_Spikes_percent"))
-colSums(as.data.frame(discarded))
+filtered_sce <- quickPerCellQC(example_sce, subsets=list(Mito=1:100),
+    sub.fields=c("subsets_Mito_percent", "altexps_Spikes_percent"))
+ncol(filtered_sce)
+
+# Same result as the longer chain of expressions:
+stats <- perCellQCMetrics(example_sce, subsets=list(Mito=1:100))
+discard <- perCellQCFilters(stats, 
+    sub.fields=c("subsets_Mito_percent", "altexps_Spikes_percent"))
+filtered_sce2 <- example_sce[,!discard$discard]
+ncol(filtered_sce2)
 
 }
 \seealso{
 \code{\link{perCellQCMetrics}}, for calculation of these metrics.
 
-\code{\link{isOutlier}}, to identify outliers with a MAD-based approach.
+\code{\link{perCellQCFilters}}, to define filter thresholds based on those metrics.
 }
 \author{
 Aaron Lun
