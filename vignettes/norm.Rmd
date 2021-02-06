@@ -1,0 +1,142 @@
+---
+title: Normalizing single-cell RNA-seq data
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+date: "Revised: February 6, 2021"
+package: scuttle 
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+vignette: >
+  %\VignetteIndexEntry{2. Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE, results="hide"}
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+library(BiocStyle)
+set.seed(10918)
+```
+
+# Introduction
+
+`r Biocpkg("scuttle")` provides various low-level utilities for single-cell RNA-seq data analysis,
+typically used at the start of the analysis workflows or within high-level functions in other packages.
+This vignette will discuss the use of scaling normalization for removing cell-specific biases.
+To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package
+and apply some quick quality control to remove damaged cells.
+
+```{r}
+library(scRNAseq)
+sce <- ZeiselBrainData()
+
+library(scuttle)
+sce <- quickPerCellQC(sce, subsets=list(Mito=grep("mt-", rownames(sce))),
+    sub.fields=c("subsets_Mito_percent", "altexps_ERCC_percent")) 
+
+sce
+```
+
+**Note:** A more comprehensive description of the use of `r Biocpkg("scuttle")` functions
+(along with other packages) in a scRNA-seq analysis workflow is available at https://osca.bioconductor.org.
+
+# Computing size factors
+
+Scaling normalization involves dividing the counts for each cell by a cell-specific "size factor" to adjust for uninteresting differences in sequencing depth and capture efficiency.
+The `librarySizeFactors()` function provides a simple definition of the size factor for each cell,
+computed as the library size of each cell after scaling them to have a mean of 1 across all cells.
+This is fast but inaccurate in the presence of differential expression between cells that introduce composition biases.
+
+```{r}
+summary(librarySizeFactors(sce))
+```
+
+The `geometricSizeFactors()` function instead computes the geometric mean within each cell.
+This is more robust to composition biases but is only accurate when the counts are large and there are few zeroes.
+
+```{r}
+summary(geometricSizeFactors(sce))
+```
+
+The `medianSizeFactors()` function uses a `r Biocpkg("DESeq2")`-esque approach based on the median ratio from an average pseudo-cell.
+Briefly, we assume that most genes are non-DE, such that any systematic fold difference in coverage (as defined by the median ratio) represents technical biases that must be removed.
+This is highly robust to composition biases but relies on sufficient sequencing coverage to obtain well-defined ratios.
+
+```{r}
+summary(medianSizeFactors(sce))
+```
+
+All of these size factors can be stored in the `SingleCellExperiment` via the `sizeFactors<-()` setter function.
+Most downstream functions will pick these up automatically for any calculations that rely on size factors.
+
+```{r}
+sizeFactors(sce) <- librarySizeFactors(sce)
+```
+
+Alternatively, functions like `computeLibraryFactors()` can automatically compute and attach the size factors to our `SingleCellExperiment` object.
+
+```{r}
+sce <- computeLibraryFactors(sce)
+summary(sizeFactors(sce))
+```
+
+# Pool-based normalization
+
+The `computePooledFactors` method implements the [pooling strategy for scaling normalization](https://doi.org/10.1186/s13059-016-0947-7).
+This uses an approach similar to `medianSizeFactors()` to remove composition biases, 
+but pools cells together to overcome problems with discreteness at low counts.
+Per-cell factors are then obtained from the pools using a deconvolution strategy.
+
+```{r}
+library(scran)
+clusters <- quickCluster(sce)
+
+sce <- computePooledFactors(sce, clusters=clusters)
+summary(sizeFactors(sce))
+```
+
+For larger data sets, a rough clustering should be performed prior to normalization.
+`computePooledFactors()` will then automatically apply normalization within each cluster first, before adjusting the scaling factors to be comparable across clusters.
+This reduces the risk of violating our assumptions (of a non-DE majority of genes) when many genes are DE between clusters in a heterogeneous population.
+In this case, we use the `quickCluster()` function from the `r Biocpkg("scran")` package, 
+but any clustering function or prior subpopulation information can be used here.
+
+We assume that quality control on the cells has already been performed prior to running this function.
+Low-quality cells with few expressed genes can often have negative size factor estimates.
+
+# Computing normalized expression matrices
+
+The `logNormCounts()` function calculates log~2~-transformed normalized expression values by dividing each count by the size factor for the cell, adding a constant pseudo-count and log-transforming.
+The resulting values can be roughly interpreted on the same scale as log-transformed counts and are stored in `"logcounts"`.
+This is the most common expression measure for downstream analyses as differences between values can be treated as log-fold changes.
+For example, Euclidean distances between cells are analogous to the average log-fold change across genes.
+
+```{r}
+sce <- logNormCounts(sce)
+assayNames(sce)
+```
+
+Of course, users can construct any arbitrary matrix of the same dimensions as the count matrix and store it as an assay.
+Here, we use the `normalizeCounts()` function to perform some custom normalization with random size factors.
+
+```{r}
+assay(sce, "normed") <- normalizeCounts(sce, 
+    size.factors=runif(ncol(sce)), pseudo.count=1.5)
+```
+
+`r Biocpkg("scuttle")` can also calculate counts-per-million using the aptly-named `calculateCPM()` function.
+The output is most appropriately stored as an assay named `"cpm"` in the assays of the `SingleCellExperiment` object.
+Related functions include `calculateTPM()` and `calculateFPKM()`, which do pretty much as advertised.
+
+```{r}
+assay(sce, "cpm") <- calculateCPM(sce)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
+

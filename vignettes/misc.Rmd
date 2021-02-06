@@ -1,5 +1,5 @@
 ---
-title: Single-cell RNA-seq analysis utilities
+title: Other single-cell RNA-seq analysis utilities
 author:
 - name: Aaron Lun
   email: infinite.monkeys.with.keyboards@gmail.com
@@ -9,7 +9,7 @@ output:
   BiocStyle::html_document:
     toc_float: yes
 vignette: >
-  %\VignetteIndexEntry{Package overview}
+  %\VignetteIndexEntry{3. Other functions}
   %\VignetteEngine{knitr::rmarkdown}
   %VignetteEncoding{UTF-8}
 ---
@@ -23,79 +23,24 @@ set.seed(10918)
 # Introduction
 
 `r Biocpkg("scuttle")` provides various low-level utilities for single-cell RNA-seq data analysis,
-focusing on basic normalization, quality control and transformation of expression values.
-These functions are intended for use by analysts, usually at the start of the analysis workflow;
-or by developers of other packages, to assemble more complex functions in downstream analysis steps.
-
-To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package.
-In this case, the dataset is provided as a `SingleCellExperiment` object.
-However, most `r Biocpkg("scuttle")` functions can also be used with raw expression matrices 
-or instances of the more general `SummarizedExperiment` class.
+typically used at the start of the analysis workflows or within high-level functions in other packages.
+This vignette will discuss the use of miscellaneous functions for scRNA-seq data processing. 
+To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package,
+and apply some quick quality control to remove damaged cells.
 
 ```{r}
 library(scRNAseq)
 sce <- ZeiselBrainData()
+
+library(scuttle)
+sce <- quickPerCellQC(sce, subsets=list(Mito=grep("mt-", rownames(sce))),
+    sub.fields=c("subsets_Mito_percent", "altexps_ERCC_percent")) 
+
 sce
 ```
 
 **Note:** A more comprehensive description of the use of `r Biocpkg("scuttle")` functions
 (along with other packages) in a scRNA-seq analysis workflow is available at https://osca.bioconductor.org.
-
-# Utilities for normalizaton
-
-## Computing size factors
-
-`r Biocpkg("scuttle")` provides a number of utilities for global scaling normalization, where the counts for each cell are divided by a cell-specific "size factor" to adjust for uninteresting differences in sequencing depth and capture efficiency.
-By default, the size factor is automatically computed from the library size of each cell using the `librarySizeFactors()` function.
-This calculation simply involves scaling the library sizes so that they have a mean of 1 across all cells.
-
-```{r}
-summary(librarySizeFactors(sce))
-```
-
-`r Biocpkg("scuttle")` also implements two other basic methods of computing size factors,
-either from the geometric mean or using a `r Biocpkg("DESeq")`-esque approach based on the median.
-These have their own strengths and weaknesses that are discussed in the relevant documentation pages.
-
-```{r}
-summary(geometricSizeFactors(sce))
-summary(medianSizeFactors(sce))
-```
-
-Note that if size factors are explicitly provided in the `SingleCellExperiment`, 
-they will be used by the downstream normalization functions.
-Size factors can be manually added by `sizeFactors()<-` or with the functions like:
-
-```{r}
-sce <- computeLibraryFactors(sce)
-summary(sizeFactors(sce))
-```
-
-## Normalizing expression values
-
-The most commonly used function is `logNormCounts()`, which calculates log~2~-transformed normalized expression values by dividing each count by the size factor for the cell, adding a constant pseudo-count and log-transforming.
-The resulting values can be roughly interpreted on the same scale as log-transformed counts and are stored in `"logcounts"`.
-
-```{r}
-sce <- logNormCounts(sce)
-assayNames(sce)
-```
-
-Of course, users can construct any arbitrary matrix of the same dimensions as the count matrix and store it as an assay.
-Here, we use the `normalizeCounts()` function to perform some custom normalization with random size factors.
-
-```{r}
-assay(sce, "normed") <- normalizeCounts(sce, 
-    size.factors=runif(ncol(sce)), pseudo.count=1.5)
-```
-
-`r Biocpkg("scuttle")` can also calculate counts-per-million using the aptly-named `calculateCPM()` function.
-The output is most appropriately stored as an assay named `"cpm"` in the assays of the `SingleCellExperiment` object.
-Related functions include `calculateTPM()` and `calculateFPKM()`, which do pretty much as advertised.
-
-```{r}
-assay(sce, "cpm") <- calculateCPM(sce)
-```
 
 # Aggregation across groups or clusters
 
@@ -105,6 +50,7 @@ possibly to use as a summary statistic for downstream analyses (e.g., for differ
 This will also perform the courtesy of sensibly aggregating the column metadata for downstream use.
 
 ```{r}
+library(scuttle)
 agg.sce <- aggregateAcrossCells(sce, ids=sce$level1class)
 head(assay(agg.sce))
 colData(agg.sce)[,c("ids", "ncells")]
@@ -126,6 +72,7 @@ Given a list of gene sets, we can use the `sumCountsAcrossFeatures()` function t
 This is usually best done by averaging the log-expression values as shown below.
 
 ```{r}
+sce <- logNormCounts(sce)
 agg.feat <- sumCountsAcrossFeatures(sce,
     ids=list(GeneSet1=1:10, GeneSet2=11:50, GeneSet3=1:100),
     average=TRUE, exprs_values="logcounts")
@@ -136,14 +83,12 @@ Similar functions are available to compute the number or proportion of cells wit
 To wit:
 
 ```{r}
-agg.n <- numDetectedAcrossCells(sce,
+agg.n <- summarizeAssayByGroup(sce, statistics="prop.detected",
     ids=colData(sce)[,c("level1class", "tissue")])
 head(assay(agg.n))
 ```
 
-# Miscellaneous functions
-
-## Reading in sparse matrices
+# Reading in sparse matrices
 
 Normally, sparse matrices are provided in the MatrixMarket (`.mtx`) format,
 where they can be read efficiently into memory using the `readMM()` function from the `r CRANpkg("Matrix")` package.
@@ -164,7 +109,7 @@ output <- readSparseCounts(outfile)
 class(output)
 ```
 
-## Making gene symbols unique
+# Making gene symbols unique
 
 When publishing a dataset, the best practice is to provide gene annotations in the form of a stable identifier like those from Ensembl or Entrez.
 This provides an unambiguous reference to the identity of the gene, avoiding difficulties with synonynms and making it easier to cross-reference.
@@ -186,7 +131,7 @@ rownames(sce.ens) <- uniquifyFeatureNames(
 head(rownames(sce.ens)) 
 ```
 
-## Creating a `data.frame`
+# Creating a `data.frame`
 
 The `makePerCellDF()` and `makePerFeatureDF()` functions create `data.frame`s from the `SingleCellExperiment` object.
 In the `makePerCellDF()` case, each row of the output `data.frame` corresponds to a cell and each column represents the expression of a specified feature across cells, a field of the column metadata, or reduced dimensions (if any are available).
@@ -204,10 +149,10 @@ out2 <- makePerFeatureDF(sce, cells=c("1772063062_D05",
 colnames(out2)
 ```
 
-The aim is to enable the data in a `SingleCellExperiment` to be easilybe used in functions like `model.matrix()` or in `ggplot()`,
+The aim is to enable the data in a `SingleCellExperiment` to be easily used in functions like `model.matrix()` or in `ggplot()`,
 without requiring users to manually extract the desired fields from the `SingleCellExperiment` to construct their own `data.frame`.
 
-# Session information {.unnumbered}
+# Session information {-}
 
 ```{r}
 sessionInfo()
