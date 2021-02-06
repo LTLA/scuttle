@@ -1,9 +1,9 @@
 ---
-title: Quality control for single-cell data 
+title: Quality control for single-cell RNA-seq data 
 author:
 - name: Aaron Lun
   email: infinite.monkeys.with.keyboards@gmail.com
-date: "Revised: February 6, 2020"
+date: "Revised: February 6, 2021"
 package: scuttle 
 output:
   BiocStyle::html_document:
@@ -24,7 +24,7 @@ set.seed(10918)
 
 `r Biocpkg("scuttle")` provides various low-level utilities for single-cell RNA-seq data analysis,
 typically used at the start of the analysis workflows or within high-level functions in other packages.
-This document will discuss one of the earliest steps, namely, quality control (QC) to remove damaged cells.
+This vignette will discuss one of the earliest steps, namely, quality control (QC) to remove damaged cells.
 
 To demonstrate, we will obtain the classic Zeisel dataset from the `r Biocpkg("scRNAseq")` package.
 In this case, the dataset is provided as a `SingleCellExperiment` object.
@@ -62,7 +62,7 @@ High proportions for either metric are indicative of cell damage.
 
 ```{r}
 summary(per.cell$subsets_Mito_percent)
-summary(per.cell$altexp_Spike_percent)
+summary(per.cell$altexps_ERCC_percent)
 ```
 
 It is often convenient to store this in the `colData()` of our `SingleCellExperiment` object for future reference.
