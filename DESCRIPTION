@@ -33,7 +33,8 @@ Suggests:
     knitr,
     scRNAseq,
     rmarkdown,
-    testthat
+    testthat,
+    scran
 VignetteBuilder: knitr
 biocViews: 
     ImmunoOncology, 

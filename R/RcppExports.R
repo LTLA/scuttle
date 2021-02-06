@@ -17,6 +17,10 @@ fit_linear_model <- function(qr, qraux, exprs, get_coefs) {
     .Call(`_scuttle_fit_linear_model`, qr, qraux, exprs, get_coefs)
 }
 
+pool_size_factors <- function(exprs, pseudo_cell, order, pool_sizes) {
+    .Call(`_scuttle_pool_size_factors`, exprs, pseudo_cell, order, pool_sizes)
+}
+
 sum_row_counts <- function(counts, genes, runs) {
     .Call(`_scuttle_sum_row_counts`, counts, genes, runs)
 }

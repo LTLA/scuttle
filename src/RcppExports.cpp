@@ -54,6 +54,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pool_size_factors
+Rcpp::List pool_size_factors(Rcpp::RObject exprs, Rcpp::NumericVector pseudo_cell, Rcpp::IntegerVector order, Rcpp::IntegerVector pool_sizes);
+RcppExport SEXP _scuttle_pool_size_factors(SEXP exprsSEXP, SEXP pseudo_cellSEXP, SEXP orderSEXP, SEXP pool_sizesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type exprs(exprsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type pseudo_cell(pseudo_cellSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type pool_sizes(pool_sizesSEXP);
+    rcpp_result_gen = Rcpp::wrap(pool_size_factors(exprs, pseudo_cell, order, pool_sizes));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -72,6 +85,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
     {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},
+    {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };
