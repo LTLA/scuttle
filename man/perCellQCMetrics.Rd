@@ -163,7 +163,7 @@ stats3$altexps
 
 }
 \seealso{
-\code{\link{addPerCellQC}}, to add the QC metrics to the column metadata.
+\code{\link{addPerCellQCMetrics}}, to add the QC metrics to the column metadata.
 }
 \author{
 Aaron Lun
