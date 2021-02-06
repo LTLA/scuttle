@@ -115,7 +115,7 @@ For example, if the input \code{subsets} contained \code{"Mito"} and \code{"Sex"
           |-- detected
           +-- percent
 }
-Here, the \code{percent} field contains the percentage of each cell's count sum assigned to each subset. 
+Here, the \code{percent} field contains the percentage of each cell's count \code{sum} assigned to each subset. 
 
 If \code{use.altexps=TRUE}, the same statistics are computed for each alternative experiment in \code{x}.
 This can also be an integer or character vector specifying the alternative Experiments to use.
@@ -137,7 +137,11 @@ For example, if \code{x} contained the alternative Experiments \code{"Spike"} an
   +-- total 
 }
 The \code{total} field contains the total sum of counts for each cell across the main and alternative Experiments.
-The \code{percent} field contains the percentage of the total count in each alternative Experiment for each cell.
+The \code{percent} field contains the percentage of the \code{total} count in each alternative Experiment for each cell.
+
+Note that the denominator for \code{altexps$...$percent} is not the same as the denominator for \code{subset$...$percent}.
+For example, if \code{subsets} contains a set of mitochondrial genes, the mitochondrial percentage would be computed as a fraction of the total endogenous coverage,
+while the \code{altexps} percentage would be computed as a fraction of the total coverage across all (endogenous and artificial) features.
 
 If \code{flatten=TRUE}, the nested DataFrames are flattened by concatenating the column names with underscores.
 This means that, say, the \code{subsets$Mito$sum} nested field becomes the top-level \code{subsets_Mito_sum} field.
