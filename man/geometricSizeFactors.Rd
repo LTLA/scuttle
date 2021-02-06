@@ -51,10 +51,12 @@ Define per-cell size factors from the geometric mean of counts per cell.
 \details{
 The geometric mean provides an alternative measure of the average coverage per cell,
 in contrast to the library size factors (i.e., the arithmetic mean) computed by \code{\link{librarySizeFactors}}.
-The main advantage of the geometric mean is that it is more robust to composition biases from a few strongly upregulated genes.
+The main advantage of the geometric mean is that it is more robust to large outliers, due to the slowly increasing nature of the log-transform at large values;
+in the normalization context, this translates to greater resistance to coposition biases from a few strongly upregulated genes.
 
 On the other hand, the geometric mean is a poor estimator of the relative bias at low or zero counts.
-This is because the scaling of the coverage applies to the expectation of the raw counts, so the geometric mean only becomes an accurate estimator if the mean of the logs approaches the log of the mean (usually at high counts).
+This is because the scaling of the coverage applies to the expectation of the raw counts, 
+so the geometric mean only becomes an accurate estimator if the mean of the logs approaches the log of the mean (usually at high counts).
 The arbitrary pseudo-count also has a bigger influence at low counts.
 
 As such, the geometric mean is only well-suited for deeply sequenced features, e.g., antibody-derived tags.
