@@ -17,6 +17,12 @@ Exposed the default \code{size.factors=} in the SingleCellExperiment method.
 Only relevant if \code{size.factors=} and \code{use.altexps=} are specified.
 
 \item Deprecated \code{use.altexps=} in favor of \code{applySCE()} in \code{logNormCounts()} and \code{aggregateAcrossCells()}.
+
+\item Renamed \code{addPerCellQC()} and \code{addPerFeatureQC()} to \code{addPerCellQCMetrics()} and \code{addPerCellFeatureMetrics()}, for consistency.
+Soft-deprecated the old functions.
+
+\item Moved most of \code{quickPerCellQC()} functionality into the new \code{perCellQCFilters()} function.
+Repurposed the former to directly return a filtered SummarizedExperiment object.
 }}
 
 \section{Version 1.0.0}{\itemize{
