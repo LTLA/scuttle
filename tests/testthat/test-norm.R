@@ -23,6 +23,10 @@ test_that("normalizeCounts works as expected", {
     out <- normalizeCounts(dummy, ref, log=FALSE)
     expect_equal(out, t(t(dummy)/sf))
 
+    # With asinh transforms.
+    out <- normalizeCounts(dummy, ref, transform="asinh")
+    expect_equal(out, asinh(t(t(dummy)/sf))/log(2))
+
     # With subsetting.
     out <- normalizeCounts(dummy, ref, subset_row=1:10)
     sub <- normalizeCounts(dummy[1:10,], ref)
@@ -77,6 +81,9 @@ test_that("normalizeCounts behaves with sparse inputs", {
     expect_s4_class(out <- normalizeCounts(sparsed, ref, log=FALSE), "dgCMatrix")
     expect_equal(normalizeCounts(zeroed, ref, log=FALSE), as.matrix(out))
 
+    expect_s4_class(out <- normalizeCounts(sparsed, ref, transform="asinh"), "dgCMatrix")
+    expect_equal(normalizeCounts(zeroed, ref, transform="asinh"), as.matrix(out))
+
     out <- normalizeCounts(sparsed, ref, pseudo.count=2)
     expect_equivalent(as.matrix(normalizeCounts(zeroed, ref, pseudo.count=2)), as.matrix(out))
 
@@ -92,6 +99,9 @@ test_that("normalizeCounts behaves with sparse inputs", {
 
     expect_s4_class(out <- normalizeCounts(sparsed, ref, log=FALSE), "dgTMatrix")
     expect_equal(normalizeCounts(zeroed, ref, log=FALSE), as.matrix(out))
+
+    expect_s4_class(out <- normalizeCounts(sparsed, ref, transform="asinh"), "dgTMatrix")
+    expect_equal(normalizeCounts(zeroed, ref, transform="asinh"), as.matrix(out))
 
     out <- normalizeCounts(sparsed, ref, pseudo.count=2)
     expect_equivalent(normalizeCounts(zeroed, ref, pseudo.count=2), as.matrix(out))
@@ -112,6 +122,9 @@ test_that("normalizeCounts behaves with DelayedArray inputs", {
 
     expect_s4_class(out <- normalizeCounts(dadum, ref, pseudo.count=2), "DelayedMatrix")
     expect_equal(normalizeCounts(dummy, ref, pseudo.count=2), as.matrix(out))
+
+    expect_s4_class(out <- normalizeCounts(dadum, ref, transform="asinh"), "DelayedMatrix")
+    expect_equal(normalizeCounts(dummy, ref, transform="asinh"), as.matrix(out))
 
     expect_s4_class(out <- normalizeCounts(dadum, ref, subset_row=1:10), "DelayedMatrix")
     expect_equal(normalizeCounts(dummy, ref, subset_row=1:10), as.matrix(out))
@@ -190,6 +203,7 @@ test_that("logNormCounts works for SE objects", {
     expect_equal(lc(logNormCounts(se)), normalizeCounts(cn(se)))
     expect_equal(nc(logNormCounts(se, log=FALSE)), normalizeCounts(cn(se), log=FALSE))
     expect_equal(lc(logNormCounts(se, pseudo.count=2)), normalizeCounts(cn(se), pseudo.count=2))
+    expect_equal(assay(logNormCounts(se, transform="asinh"), "ashcounts"), normalizeCounts(cn(se), transform="asinh"))
 
     sf <- runif(ncol(se))
     expect_equal(lc(logNormCounts(se, size_factors=sf)),
@@ -217,6 +231,7 @@ test_that("logNormCounts works for SE objects", {
 test_that("logNormCounts works for SCE objects (basic)", {
     expect_equal(logcounts(logNormCounts(X)), normalizeCounts(counts(X), sizeFactors(X)))
     expect_equal(normcounts(logNormCounts(X, log=FALSE)), normalizeCounts(counts(X), sizeFactors(X), log=FALSE))
+    expect_equal(assay(logNormCounts(X, transform="asinh"), "ashcounts"), normalizeCounts(counts(X), sizeFactors(X), transform="asinh"))
     expect_equal(logcounts(logNormCounts(X, pseudo.count=2)), normalizeCounts(counts(X), sizeFactors(X), pseudo.count=2))
 
     # Checking that size factors are correctly reported.

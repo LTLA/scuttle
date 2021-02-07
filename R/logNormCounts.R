@@ -9,7 +9,7 @@
 #'
 #' For the methods, additional arguments passed to \code{\link{normalizeCounts}}.
 #' @param name String containing an assay name for storing the output normalized values.
-#' Defaults to \code{"logcounts"} when \code{log=TRUE} and \code{"normcounts"} otherwise.
+#' Defaults to \code{"logcounts"} when \code{transform="log"}, \code{"ashcounts"} when \code{transform="asinh"}, and \code{"normcounts"} otherwise.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 #' Only used if \code{size.factors} is not specified.
 #'
@@ -63,8 +63,9 @@ setGeneric("logNormCounts", function(x, ...) standardGeneric("logNormCounts"))
 #' @export
 #' @rdname logNormCounts
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
-setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL, log=TRUE, 
-    pseudo.count=1, center.size.factors=TRUE, ..., subset.row=NULL, normalize.all=FALSE, 
+setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL, 
+    log=NULL, transform=c("log", "none", "asinh"), pseudo.count=1, 
+    center.size.factors=TRUE, ..., subset.row=NULL, normalize.all=FALSE, 
     assay.type="counts", name=NULL, BPPARAM=SerialParam(), 
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL, exprs_values=NULL)
 {
@@ -72,24 +73,30 @@ setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL
     pseudo.count <- .replace(pseudo.count, pseudo_count)
     center.size.factors <- .replace(center.size.factors, center_size_factors)
     assay.type <- .replace(assay.type, exprs_values)
+    transform <- .choose_transform(log, match.arg(transform))
 
     if (!is.null(subset.row) && !normalize.all) {
         x <- x[subset.row,,drop=FALSE]
         subset.row <- NULL
     }
     
-    FUN <- .se_lnc(assay.type=assay.type, log=log, pseudo.count=pseudo.count, ..., 
+    FUN <- .se_lnc(assay.type=assay.type, transform=transform, pseudo.count=pseudo.count, ..., 
         normalize.all=normalize.all, subset.row=subset.row, name=name, BPPARAM=BPPARAM) 
 
     FUN(x, size.factors=size.factors, center.size.factors=center.size.factors)
 })
 
 #' @importFrom SummarizedExperiment assay<-
-.se_lnc <- function(assay.type, log, pseudo.count, ..., name) {
-    args <- list(..., assay.type=assay.type, log=log, pseudo.count=pseudo.count)
+.se_lnc <- function(assay.type, transform, pseudo.count, ..., name) {
+    args <- list(..., assay.type=assay.type, transform=transform, pseudo.count=pseudo.count)
     if (is.null(name)) {
-        name <- if (log) "logcounts" else "normcounts"
+        name <- switch(transform,
+            none="normcounts",
+            log="logcounts",
+            asinh="ashcounts"
+        )
     }
+
     function(x, ...) {
         out <- do.call(normalizeCounts, c(list(x, ...), args))
         assay(x, name) <- out
@@ -102,7 +109,8 @@ setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL
 #' @importFrom BiocGenerics sizeFactors sizeFactors<-
 #' @importFrom SingleCellExperiment altExp altExp<- int_metadata int_metadata<-
 #' @importClassesFrom SingleCellExperiment SingleCellExperiment
-setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=sizeFactors(x), log=TRUE, pseudo.count=1, 
+setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=sizeFactors(x), 
+    log=NULL, transform=c("log", "none", "asinh"), pseudo.count=1, 
     center.size.factors=TRUE, ..., subset.row=NULL, normalize.all=FALSE, 
     assay.type="counts", use.altexps=FALSE, name=NULL, BPPARAM=SerialParam(), 
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL, exprs_values=NULL, use_altexps=NULL) 
@@ -112,6 +120,7 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=size
     center.size.factors <- .replace(center.size.factors, center_size_factors)
     use.altexps <- .replace(use.altexps, use_altexps)
     assay.type <- .replace(assay.type, exprs_values)
+    transform <- .choose_transform(log, match.arg(transform))
 
     if (!is.null(subset.row) && !normalize.all) {
         x <- x[subset.row,,drop=FALSE]
@@ -126,9 +135,9 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=size
     sizeFactors(x) <- size.factors
 
     # Set center.size.factors=FALSE, as we've already centered above.
-    FUN <- .se_lnc(assay.type=assay.type, log=log, pseudo.count=pseudo.count, ..., name=name) 
+    FUN <- .se_lnc(assay.type=assay.type, transform=transform, pseudo.count=pseudo.count, ..., name=name) 
     x <- FUN(x, size.factors=size.factors, center.size.factors=FALSE)
-    if (log) {
+    if (transform=="log") {
         if (is.null(int_metadata(x)$scater)) {
             int_metadata(x)$scater <- list()
         }

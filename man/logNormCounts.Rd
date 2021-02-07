@@ -11,7 +11,8 @@ logNormCounts(x, ...)
 \S4method{logNormCounts}{SummarizedExperiment}(
   x,
   size.factors = NULL,
-  log = TRUE,
+  log = NULL,
+  transform = c("log", "none", "asinh"),
   pseudo.count = 1,
   center.size.factors = TRUE,
   ...,
@@ -29,7 +30,8 @@ logNormCounts(x, ...)
 \S4method{logNormCounts}{SingleCellExperiment}(
   x,
   size.factors = sizeFactors(x),
-  log = TRUE,
+  log = NULL,
+  transform = c("log", "none", "asinh"),
   pseudo.count = 1,
   center.size.factors = TRUE,
   ...,
@@ -56,9 +58,13 @@ For the methods, additional arguments passed to \code{\link{normalizeCounts}}.}
 \item{size.factors}{A numeric vector of cell-specific size factors.
 Alternatively \code{NULL}, in which case the size factors are computed from \code{x}.}
 
-\item{log}{Logical scalar indicating whether normalized values should be log2-transformed.}
+\item{log}{Logical scalar indicating whether normalized values should be log2-transformed.
+This is retained for back-compatibility and will override any setting of \code{transform}.
+Users should generally use \code{transform} instead to specify the transformation.}
 
-\item{pseudo.count}{Numeric scalar specifying the pseudo-count to add when log-transforming expression values.}
+\item{transform}{String specifying the transformation (if any) to apply to the normalized expression values.}
+
+\item{pseudo.count}{Numeric scalar specifying the pseudo-count to add when \code{transform="log"}.}
 
 \item{center.size.factors}{Logical scalar indicating whether size factors should be centered at unity before being used.}
 
@@ -66,13 +72,13 @@ Alternatively \code{NULL}, in which case the size factors are computed from \cod
 If \code{size.factors=NULL}, the size factors are also computed from this subset.}
 
 \item{normalize.all}{Logical scalar indicating whether to return normalized values for all genes.
-If \code{TRUE}, \code{subset.row} is only used to compute the size factors.
+If \code{TRUE}, any non-\code{NULL} value for \code{subset.row} is only used to compute the size factors.
 Ignored if \code{subset.row=NULL} or \code{size.factors} is supplied.}
 
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the count matrix.}
 
 \item{name}{String containing an assay name for storing the output normalized values.
-Defaults to \code{"logcounts"} when \code{log=TRUE} and \code{"normcounts"} otherwise.}
+Defaults to \code{"logcounts"} when \code{transform="log"}, \code{"ashcounts"} when \code{transform="asinh"}, and \code{"normcounts"} otherwise.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 Only used if \code{size.factors} is not specified.}
