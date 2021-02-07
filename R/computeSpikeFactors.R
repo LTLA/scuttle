@@ -19,7 +19,7 @@
 #'
 #' Size factors are computed by applying \code{\link{librarySizeFactors}} to the spike-in count matrix.
 #' This ensures that the mean of all size factors is unity for standardization purposes,
-#' if one were to compare expression values normalized with sets of size factors (e.g., in \code{\link{modelGeneVarWithSpikes}}).
+#' if one were to compare expression values normalized with sets of size factors (e.g., in \code{\link[scran]{modelGeneVarWithSpikes}}).
 #' 
 #' Users who want the spike-in size factors without returning a SingleCellExperiment object can simply call
 #' \code{\link{librarySizeFactors}(\link{altExp}(x, spikes))}, which gives the same result.

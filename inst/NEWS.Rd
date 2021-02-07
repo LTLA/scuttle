@@ -23,6 +23,9 @@ Soft-deprecated the old functions.
 
 \item Moved most of \code{quickPerCellQC()} functionality into the new \code{perCellQCFilters()} function.
 Repurposed the former to directly return a filtered SummarizedExperiment object.
+
+\item Migrated \pkg{scran}'s normalization-related functions into this package.
+Added \code{pooledSizeFactors()}, \code{computePooledFactors()}, \code{cleanSizeFactors()} and \code{computeSpikeFactors()}.
 }}
 
 \section{Version 1.0.0}{\itemize{

@@ -373,16 +373,12 @@ test_that("pooledSizeFactors works properly on alternative representations", {
     library(Matrix)
     X <- as(matrix(rpois(100000, lambda=1), ncol=100), "dgCMatrix")
     X_ <- as.matrix(X)
-    
-    library(HDF5Array)
-    Y <- as(matrix(rpois(100000, lambda=5), ncol=100), "HDF5Array")
-    Y_ <- as.matrix(Y)
+    Y <- DelayedArray(X_)
 
     sf1 <- pooledSizeFactors(X_, min.mean=0)
     sf2 <- pooledSizeFactors(X, min.mean=0)
     expect_equal(sf1, sf2)
     
-    sf1 <- pooledSizeFactors(Y_, min.mean=0)
     sf2 <- pooledSizeFactors(Y, min.mean=0)
     expect_equal(sf1, sf2)
 })
