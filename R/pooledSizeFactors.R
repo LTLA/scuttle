@@ -219,7 +219,7 @@ NULL
         stop("'length(scaling)' should be equal to 'ncol(x)'")
     }
 
-    min.mean <- .guess_min_mean(x, min.mean=min.mean, BPPARAM=BPPARAM)
+    min.mean <- .guessMinMean(x, min.mean=min.mean, BPPARAM=BPPARAM)
 
     sizes <- sort(as.integer(sizes))
     if (anyDuplicated(sizes)) { 
@@ -269,10 +269,11 @@ NULL
     final.sf/mean(final.sf[is.pos])
 }
 
+#' @export
 #' @importFrom Matrix colSums
 #' @importFrom stats median
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
-.guess_min_mean <- function(x, min.mean, BPPARAM) { 
+.guessMinMean <- function(x, min.mean, BPPARAM) { 
     # Choosing a mean filter based on the data type and then filtering:
     if (is.null(min.mean)) {
         old <- getAutoBPPARAM()

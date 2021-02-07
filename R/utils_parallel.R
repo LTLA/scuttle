@@ -15,6 +15,7 @@
 #' .ranksafeQR
 #' .checkCountMatrix
 #' .unpackLists
+#' .guessMinMean
 NULL
 
 .single_worker_matrix <- function(x, subset.row, subset.col) {

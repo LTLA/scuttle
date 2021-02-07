@@ -2,6 +2,7 @@
 
 export(.assignIndicesToWorkers)
 export(.bpNotSharedOrUp)
+export(.guessMinMean)
 export(.ranksafeQR)
 export(.splitColsByWorkers)
 export(.splitRowsByWorkers)

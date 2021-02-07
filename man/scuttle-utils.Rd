@@ -12,6 +12,7 @@
 \alias{.ranksafeQR}
 \alias{.checkCountMatrix}
 \alias{.unpackLists}
+\alias{.guessMinMean}
 \title{Developer utilities}
 \description{
 Various utilities for re-use in packages that happen to depend on \pkg{scuttle}.
