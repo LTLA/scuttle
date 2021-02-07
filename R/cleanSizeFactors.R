@@ -50,7 +50,7 @@
 #' head(out)
 #'
 #' @export
-#' @importFrom stats nls residuals median coef lm
+#' @importFrom stats nls nls.control residuals median coef lm
 cleanSizeFactors <- function(size.factors, num.detected, control=nls.control(warnOnly=TRUE), iterations=3, nmads=3, ...) {
     keep <- size.factors > 0
     if (all(keep)) {

@@ -51,7 +51,7 @@ For the \code{computePooledFactors} function, additional arguments to pass to \c
 
 \item{min.mean}{A numeric scalar specifying the minimum (library size-adjusted) average count of genes to be used for normalization.}
 
-\item{subset.row}{See \code{?"\link{scran-gene-selection}"}.}
+\item{subset.row}{An integer, logical or character vector specifying the features to use.}
 
 \item{BPPARAM}{A BiocParallelParam object specifying whether and how clusters should be processed in parallel.}
 

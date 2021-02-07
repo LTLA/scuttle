@@ -13,7 +13,7 @@
 #' @param positive A logical scalar indicating whether linear inverse models should be used to enforce positive estimates.
 #' @param scaling A numeric scalar containing scaling factors to adjust the counts prior to computing size factors.
 #' @param min.mean A numeric scalar specifying the minimum (library size-adjusted) average count of genes to be used for normalization.
-#' @param subset.row See \code{?"\link{scran-gene-selection}"}.
+#' @param subset.row An integer, logical or character vector specifying the features to use.
 #' @param BPPARAM A BiocParallelParam object specifying whether and how clusters should be processed in parallel.
 #' @param ... For the \code{pooledSizeFactors} generic, additional arguments to pass to each method.
 #' For the \linkS4class{SummarizedExperiment} method, additional methods to pass to the ANY method.
