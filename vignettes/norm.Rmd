@@ -39,6 +39,11 @@ sce <- quickPerCellQC(sce, subsets=list(Mito=grep("mt-", rownames(sce))),
 sce
 ```
 
+```{r, echo=FALSE}
+# Make the damn thing sparse for speed.
+counts(sce) <- as(counts(sce), "dgCMatrix")
+```
+
 **Note:** A more comprehensive description of the use of `r Biocpkg("scuttle")` functions
 (along with other packages) in a scRNA-seq analysis workflow is available at https://osca.bioconductor.org.
 
@@ -100,8 +105,12 @@ summary(sizeFactors(sce))
 For larger data sets, a rough clustering should be performed prior to normalization.
 `computePooledFactors()` will then automatically apply normalization within each cluster first, before adjusting the scaling factors to be comparable across clusters.
 This reduces the risk of violating our assumptions (of a non-DE majority of genes) when many genes are DE between clusters in a heterogeneous population.
-In this case, we use the `quickCluster()` function from the `r Biocpkg("scran")` package, 
-but any clustering function or prior subpopulation information can be used here.
+In this case, we use the `quickCluster()` function from the `r Biocpkg("scran")` package, but any clustering function can be used, for example:
+
+```{r}
+sce <- computePooledFactors(sce, clusters=sce$level1class)
+summary(sizeFactors(sce))
+```
 
 We assume that quality control on the cells has already been performed prior to running this function.
 Low-quality cells with few expressed genes can often have negative size factor estimates.

@@ -4,6 +4,14 @@
 #include <stdexcept>
 #include <algorithm>
 #include <vector>
+#include <deque>
+
+template <typename T>
+void quick_rotate (std::deque<T>& dq) {
+    dq.push_back(dq.front());
+    dq.pop_front();
+    return;
+}
 
 /*** A function to estimate the pooled size factors and construct the linear equations. ***/
 
@@ -70,16 +78,25 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
         smat = beachmat::promote_to_sparse(emat);
     }
 
-    std::vector<const double*> xptrs(last_size);
-    std::vector<std::vector<double> > work_x(last_size, std::vector<double>(ngenes));
+    std::deque<const double*> xptrs(last_size);
+    std::deque<double*> work_xptrs(last_size);
+    std::vector<double> work_x(last_size*ngenes); // workspace, should not be referenced except by work_xptrs.
+    for (int i = 0; i < last_size; ++i) {
+        work_xptrs[i] = work_x.data() + i * ngenes;
+    }
 
-    std::vector<const int*> iptrs;
-    std::vector<std::vector<int> > work_i;
-    std::vector<size_t> nnzero;
+    std::deque<const int*> iptrs;
+    std::deque<int*> work_iptrs;
+    std::vector<int> work_i;
+    std::deque<size_t> nnzero;
     if (is_sparse) {
-        work_i.resize(last_size, std::vector<int>(ngenes));
         iptrs.resize(last_size);
+        work_iptrs.resize(last_size);
+        work_i.resize(last_size*ngenes); // workspace, should not be referenced except by work_iptrs.
         nnzero.resize(last_size);
+        for (int i = 0; i < last_size; ++i) {
+            work_iptrs[i] = work_i.data() + i * ngenes;
+        }
     }
      
     // The first vector is unfilled as it gets dropped and refilled in the first iteration anyway.
@@ -87,12 +104,12 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
     auto orIt_tail=order.begin();
     for (int s=1; s<last_size; ++s, ++orIt_tail) {
         if (is_sparse) {
-            auto idxs = smat->get_col(*orIt_tail, work_x[s].data(), work_i[s].data());
+            auto idxs = smat->get_col(*orIt_tail, work_xptrs[s], work_iptrs[s]);
             xptrs[s] = idxs.x;
             iptrs[s] = idxs.i;
             nnzero[s] = idxs.n;
         } else {
-            xptrs[s] = emat->get_col(*orIt_tail, work_x[s].data());
+            xptrs[s] = emat->get_col(*orIt_tail, work_xptrs[s]);
         }
     }
 
@@ -119,17 +136,17 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
          * The is the same as shifting the column that we've moved past to the end,
          * and then overwriting it with the next column.
          */
-        std::rotate(xptrs.begin(), xptrs.begin()+1, xptrs.end());
-        std::rotate(work_x.begin(), work_x.begin()+1, work_x.end());
+        quick_rotate(xptrs);
+        quick_rotate(work_xptrs);
 
         if (!is_sparse) {
-            xptrs.back() = emat->get_col(*orIt_tail, work_x.back().data());
+            xptrs.back() = emat->get_col(*orIt_tail, work_xptrs.back());
         } else {
-            std::rotate(iptrs.begin(), iptrs.begin()+1, iptrs.end());
-            std::rotate(work_i.begin(), work_i.begin()+1, work_i.end());
-            std::rotate(nnzero.begin(), nnzero.begin()+1, nnzero.end());
+            quick_rotate(iptrs);
+            quick_rotate(work_iptrs);
+            quick_rotate(nnzero);
 
-            auto idxs = smat->get_col(*orIt_tail, work_x.back().data(), work_i.back().data());
+            auto idxs = smat->get_col(*orIt_tail, work_xptrs.back(), work_iptrs.back());
             xptrs.back() = idxs.x;
             iptrs.back() = idxs.i;
             nnzero.back() = idxs.n;
