@@ -87,7 +87,7 @@ sce <- computeLibraryFactors(sce)
 summary(sizeFactors(sce))
 ```
 
-# Pool-based normalization
+# Pooling normalization
 
 The `computePooledFactors` method implements the [pooling strategy for scaling normalization](https://doi.org/10.1186/s13059-016-0947-7).
 This uses an approach similar to `medianSizeFactors()` to remove composition biases, 
@@ -115,23 +115,41 @@ summary(sizeFactors(sce))
 We assume that quality control on the cells has already been performed prior to running this function.
 Low-quality cells with few expressed genes can often have negative size factor estimates.
 
+# Spike-in normalization
+
+An alternative approach is to normalize based on the spike-in counts. 
+The idea is that the same quantity of spike-in RNA was added to each cell prior to library preparation.
+Size factors are computed to scale the counts such that the total coverage of the spike-in transcripts is equal across cells.
+
+```{r}
+sce2 <- computeSpikeFactors(sce, "ERCC")
+summary(sizeFactors(sce2))
+```
+
+The main practical difference from the other strategies is that spike-in normalization preserves differences in total RNA content between cells, whereas `computePooledFactors` and other non-DE methods do not.
+This can be important in certain applications where changes in total RNA content are associated with a biological phenomenon of interest.
+
 # Computing normalized expression matrices
 
-The `logNormCounts()` function calculates log~2~-transformed normalized expression values by dividing each count by the size factor for the cell, adding a constant pseudo-count and log-transforming.
-The resulting values can be roughly interpreted on the same scale as log-transformed counts and are stored in `"logcounts"`.
-This is the most common expression measure for downstream analyses as differences between values can be treated as log-fold changes.
-For example, Euclidean distances between cells are analogous to the average log-fold change across genes.
+Regardless of which size factor calculation we pick, the calculation of normalized expression values simply involves dividing each count by the size factor for the cell.
+This eliminates the cell-specific scaling effect for valid comparisons between cells in downstream analyses.
+The simplest approach to computing these values is to use the `logNormCounts()` function:
 
 ```{r}
 sce <- logNormCounts(sce)
 assayNames(sce)
 ```
 
+This computes log~2~-transformed normalized expression values by adding a constant pseudo-count and log-transforming.
+The resulting values can be roughly interpreted on the same scale as log-transformed counts and are stored in `"logcounts"`.
+This is the most common expression measure for downstream analyses as differences between values can be treated as log-fold changes.
+For example, Euclidean distances between cells are analogous to the average log-fold change across genes.
+
 Of course, users can construct any arbitrary matrix of the same dimensions as the count matrix and store it as an assay.
 Here, we use the `normalizeCounts()` function to perform some custom normalization with random size factors.
 
 ```{r}
-assay(sce, "normed") <- normalizeCounts(sce, 
+assay(sce, "normed") <- normalizeCounts(sce, log=FALSE,
     size.factors=runif(ncol(sce)), pseudo.count=1.5)
 ```
 
