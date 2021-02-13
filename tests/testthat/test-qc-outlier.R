@@ -53,7 +53,7 @@ test_that("isOutlier responds to subsetting for threshold calculations", {
 
     thresholds <- attr(out, "thresholds")
     expect_identical(thresholds, attr(out2, "thresholds"))
-    expect_identical(out[chosen], as.logical(out2))
+    expect_identical(out[chosen], out2)
     expect_identical(as.logical(out), vals < thresholds[1] | vals > thresholds[2])
 
     # NA inputs are automatically subsetted.
@@ -63,8 +63,8 @@ test_that("isOutlier responds to subsetting for threshold calculations", {
     ref.NA <- isOutlier(vals[-chosen])
 
     expect_identical(attr(out.NA, "thresholds"), attr(ref.NA, "thresholds"))
-    expect_identical(out.NA[-chosen], as.logical(ref.NA))
-    expect_identical(out.NA[chosen], rep(NA, length(chosen)))
+    expect_identical(out.NA[-chosen], ref.NA)
+    expect_true(all(is.na(out.NA[chosen])))
 })
 
 set.seed(1003)
@@ -89,7 +89,7 @@ test_that("isOutlier responds to batch specification", {
     for (b in unique(batches)) {
         chosen <- batches==b
         current <- isOutlier(vals[chosen])
-        expect_identical(as.logical(current), out[chosen])
+        expect_identical(as.logical(current), as.logical(out[chosen]))
         expect_equal(attr(current, "thresholds"), attr(out, "thresholds")[,as.character(b)])
     }
 
@@ -100,7 +100,7 @@ test_that("isOutlier responds to batch specification", {
     for (b in unique(batches)) {
         chosen <- intersect(which(batches==b), sampled)
         current <- isOutlier(vals[chosen])
-        expect_identical(as.logical(current), out[chosen])
+        expect_identical(as.logical(current), as.logical(out[chosen]))
         expect_equal(attr(current, "thresholds"), attr(out, "thresholds")[,as.character(b)])
     }
 })
@@ -177,4 +177,24 @@ test_that("isOutlier handles silly inputs correctly", {
 
     out <- isOutlier(1:10, subset=integer(0))
     expect_identical(as.logical(out), rep(NA, 10))
+})
+
+test_that("outlier.filter behaves correctly", {
+    vals <- rnorm(1000)
+    out <- isOutlier(vals)
+    expect_s3_class(out, "outlier.filter")
+    expect_true(!is.null(attr(out, "thresholds")))
+
+    # Robust to filtering.
+    expect_s3_class(out[1:10], "outlier.filter")
+    expect_identical(attr(out[1:10], "thresholds"), attr(out, "thresholds"))
+
+    # Works with c().
+    combined <- c(out, logical(10))
+    expect_null(attr(combined, "thresholds"))
+    expect_type(combined, "logical")
+
+    combined <- c(out, out)
+    expect_null(attr(combined, "thresholds"))
+    expect_type(combined, "logical")
 })

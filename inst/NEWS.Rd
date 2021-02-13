@@ -28,6 +28,9 @@ Repurposed the former to directly return a filtered SummarizedExperiment object.
 Added \code{pooledSizeFactors()}, \code{computePooledFactors()}, \code{cleanSizeFactors()} and \code{computeSpikeFactors()}.
 
 \item Added \code{transform="asinh"} to \code{normalizeCounts()} and \code{logNormCounts()} for inverse hyperbolic transformations of CITE-seq data.
+
+\item Modified \code{isOutlier()} to now return \code{outlier.filter} objects.
+These are simply logical vectors that preseve the \code{"thresholds"} attribute upon subsetting.
 }}
 
 \section{Version 1.0.0}{\itemize{

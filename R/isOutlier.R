@@ -22,10 +22,12 @@
 #' @param share_medians,share_mads,share_missing,min_diff
 #' Soft-deprecated equivalents of the arguments above.
 #' 
-#' @return A logical vector of the same length as the \code{metric} argument, specifying the observations that are considered as outliers.
+#' @return An \code{outlier.filter} object of the same length as the \code{metric} argument.
+#' This is effectively a logical vector specifying the observations that are considered as outliers.
+#' The chosen thresholds are stored in the \code{"thresholds"} attribute.
 #'
 #' @details
-#' Lower and upper thresholds are stored in the \code{"threshold"} attribute of the returned vector.
+#' Lower and upper thresholds are stored in the \code{"thresholds"} attribute of the returned vector.
 #' By default, this is a numeric vector of length 2 for the threshold on each side.
 #' If \code{type="lower"}, the higher limit is \code{Inf}, while if \code{type="higher"}, the lower limit is \code{-Inf}.
 #' 
@@ -38,6 +40,10 @@
 #' 
 #' Missing values trigger a warning and are automatically ignored during estimation of the median and MAD.
 #' The corresponding entries of the output vector are also set to \code{NA} values.
+#'
+#' The returned \code{outlier.filter} object is derived from an ordinary logical vector.
+#' The only difference is that any subsetting will not discard the \code{"thresholds"}, which avoids unnecessary loss of information.
+#' Users can simply call \code{\link{as.logical}} to convert this into a logical vector.
 #'
 #' @section Handling batches:
 #' If \code{batch} is specified, outliers are defined within each batch separately using batch-specific median and MAD values.
@@ -76,6 +82,10 @@
 #' \code{\link{quickPerCellQC}}, a convenience wrapper to perform outlier-based quality control.
 #'
 #' \code{\link{perCellQCMetrics}}, to compute potential QC metrics.
+#'
+#' @aliases
+#' outlier.filter
+#' [.outlier.filter
 #' @export
 isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"), 
     log = FALSE, subset = NULL, batch = NULL, share.medians=FALSE, 
@@ -125,7 +135,7 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
         thresholds <- 2^thresholds
     }
 
-    outliers <- output$outliers 
+    outliers <- outlier.filter(output$outliers)
     attr(outliers, "thresholds") <- thresholds
     outliers 
 }
@@ -201,4 +211,19 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
     } else {
         character(0)
     }
+}
+
+#' @export
+outlier.filter <- function(x) {
+    class(x) <- c("outlier.filter", "logical")
+    x
+}
+
+#' @export
+#' @method [ outlier.filter
+`[.outlier.filter` <- function(x, i, j, ..., drop=TRUE) {
+    out <- NextMethod()
+    at <- attributes(x)
+    mostattributes(out) <- at[setdiff(names(at), "names")]
+    out 
 }

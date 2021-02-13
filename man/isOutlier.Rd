@@ -2,6 +2,8 @@
 % Please edit documentation in R/isOutlier.R
 \name{isOutlier}
 \alias{isOutlier}
+\alias{outlier.filter}
+\alias{[.outlier.filter}
 \title{Identify outlier values}
 \usage{
 isOutlier(
@@ -52,13 +54,15 @@ Ignored if \code{NA}.}
 \item{share_medians, share_mads, share_missing, min_diff}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
-A logical vector of the same length as the \code{metric} argument, specifying the observations that are considered as outliers.
+An \code{outlier.filter} object of the same length as the \code{metric} argument.
+This is effectively a logical vector specifying the observations that are considered as outliers.
+The chosen thresholds are stored in the \code{"thresholds"} attribute.
 }
 \description{
 Convenience function to determine which values in a numeric vector are outliers based on the median absolute deviation (MAD).
 }
 \details{
-Lower and upper thresholds are stored in the \code{"threshold"} attribute of the returned vector.
+Lower and upper thresholds are stored in the \code{"thresholds"} attribute of the returned vector.
 By default, this is a numeric vector of length 2 for the threshold on each side.
 If \code{type="lower"}, the higher limit is \code{Inf}, while if \code{type="higher"}, the lower limit is \code{-Inf}.
 
@@ -71,6 +75,10 @@ In a quality control context, this can be handy for excluding groups of cells th
 
 Missing values trigger a warning and are automatically ignored during estimation of the median and MAD.
 The corresponding entries of the output vector are also set to \code{NA} values.
+
+The returned \code{outlier.filter} object is derived from an ordinary logical vector.
+The only difference is that any subsetting will not discard the \code{"thresholds"}, which avoids unnecessary loss of information.
+Users can simply call \code{\link{as.logical}} to convert this into a logical vector.
 }
 \section{Handling batches}{
 
