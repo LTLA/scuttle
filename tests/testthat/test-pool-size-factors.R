@@ -343,6 +343,17 @@ test_that("pooledSizeFactors is correct with clustering in majority-DE cases", {
     expect_error(pooledSizeFactors(dummy, cluster=known.clusters, ref="0"), "'ref.clust' not in 'clusters'")
 })
 
+set.seed(20010)
+test_that("pooledSizeFactors graceful handles majority zero cases", {
+    dummy <- matrix(0, nrow=1000, ncol=200)
+    dummy[1:10,1:100] <- 1
+    dummy[10+1:10,100+1:100] <- 2
+    known.clusters <- gl(2, 100)
+
+    expect_warning(out <- pooledSizeFactors(dummy, cluster=known.clusters), "not strictly positive")
+    expect_equal(out, as.numeric(known.clusters)/1.5)
+})
+
 ####################################################################################################
 
 set.seed(20010)

@@ -144,18 +144,24 @@ Any clustering can be used, and only a rough clustering is required; \code{compu
 The \code{\link[scran]{quickCluster}} function from the \pkg{scran} package is particularly convenient for this purpose.
 
 Size factors computed within each cluster must be rescaled for comparison between clusters.
-This is done by normalizing between the per-cluster pseudo-cells to identify the rescaling factor.
-One cluster is chosen as a \dQuote{reference} to which all others are normalized.
+To do so, we choose one cluster as a \dQuote{reference} to which all others are normalized.
 Ideally, the reference cluster should have a stable expression profile and not be extremely different from all other clusters.
 The assumption here is that there is a non-DE majority between the reference and each other cluster
 (which is still a weaker assumption than that required without clustering).
+The rescaling factor is then defined by computing the ratios in averaged expression between each cluster's pseudo-cell and that of the reference,
+and taking the median of these ratios across all genes.
 
 By default, the cluster with the most non-zero counts is used as the reference.
-This reduces the risk of obtaining undefined rescaling factors for the other clusters, while improving the precision (and also accuracy) of the median-based estimate of each factor.
+This reduces the risk of obtaining undefined rescaling factors for the other clusters, while improving the precision (and also accuracy) of the median-based factor estimate.
 Alternatively, the reference can be manually specified using \code{ref.clust} if there is prior knowledge about which cluster is most suitable, e.g., from PCA or t-SNE plots.
 
 Each cluster should ideally be large enough to contain a sufficient number of cells for pooling.
-Otherwise, \code{computePooledFactors} will degrade to library size normalization.
+Otherwise, \code{computePooledFactors} will fall back to library size normalization for small clusters.
+
+If the estimated rescaling factor is not positive, a warning is emitted and the function falls back to the ratio of sums between pseudo-cells (in effect, library size normalization).
+This can occasionally happen when a cluster's cells expresses a small subset of genes - 
+this is not problematic for within-cluster normalization, as non-expressed genes are simply ignored,
+but violates the assumption of a non-DE majority when performing inter-cluster comparisons.
 }
 
 \section{Dealing with negative size factors}{
