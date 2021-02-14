@@ -222,7 +222,7 @@ test_that("Aggregation across cells works correctly with altExps", {
     altExp(copy, "THING") <- sce
     counts(altExp(copy)) <- counts(altExp(copy)) * 2
 
-    agg <- aggregateAcrossCells(copy, ids)
+    suppressWarnings(agg <- aggregateAcrossCells(copy, ids))
     expect_identical(counts(altExp(agg, "THING")), counts(agg)*2)
 
     agg0 <- applySCE(sce, aggregateAcrossCells, ids=ids, use.altexps=NULL)
@@ -230,11 +230,11 @@ test_that("Aggregation across cells works correctly with altExps", {
     expect_identical(altExpNames(agg0), character(0))
 
     # Subsetting only affects the main experiment.
-    agg2 <- aggregateAcrossCells(copy, ids, subset.row=1:5)
+    suppressWarnings(agg2 <- aggregateAcrossCells(copy, ids, subset.row=1:5))
     expect_equal(agg[1:5,], agg2)
 
     # Other arguments are passed down.
-    agg3 <- aggregateAcrossCells(copy, ids, average=TRUE)
+    suppressWarnings(agg3 <- aggregateAcrossCells(copy, ids, statistics="mean"))
     ref <- sumCountsAcrossCells(copy, ids, average=TRUE)
     expect_identical(counts(agg3), assay(ref))
     expect_identical(counts(altExp(agg3)), assay(ref)*2)
@@ -244,8 +244,8 @@ test_that("Aggregation across cells works correctly with altExps", {
     failed <- ids2==ids2[1]
     ids2[failed] <- NA
     expect_identical(
-        aggregateAcrossCells(copy, ids2, average=TRUE),
-        aggregateAcrossCells(copy[,!failed], ids[!failed], average=TRUE)
+        suppressWarnings(aggregateAcrossCells(copy, ids2, statistics="mean")),
+        suppressWarnings(aggregateAcrossCells(copy[,!failed], ids[!failed], statistics="mean"))
     )
 
     # Other options work correctly.
@@ -263,28 +263,25 @@ test_that("Aggregation across cells works correctly with reducedDims", {
     reducedDim(copy, "TSNE") <- t(assay(sce)[1:10,])
 
     # Responds to the average settings.
-    agg <- aggregateAcrossCells(copy, ids, average=TRUE)
+    agg <- aggregateAcrossCells(copy, ids, statistics="mean")
     expect_identical(reducedDim(agg, "PCA"), t(assay(agg)[1:3,]))
     expect_identical(reducedDim(agg, "TSNE"), t(assay(agg)[1:10,]))
 
-    agg2 <- aggregateAcrossCells(copy, ids, average=FALSE)
+    agg2 <- aggregateAcrossCells(copy, ids, statistics="sum")
     expect_identical(reducedDims(agg2), reducedDims(agg))
 
-    agg3 <- aggregateAcrossCells(copy, ids, average="median", dimred.stats="median")
+    agg3 <- aggregateAcrossCells(copy, ids, statistics="median", dimred.stats="median")
     expect_identical(reducedDim(agg3, "PCA"), t(assay(agg3)[1:3,]))
     expect_identical(reducedDim(agg3, "TSNE"), t(assay(agg3)[1:10,]))
     expect_false(identical(agg3, agg))
-
-    agg4 <- aggregateAcrossCells(copy, ids, average="mean")
-    expect_true(identical(agg4, agg))
 
     # Behaves with NAs.
     ids2 <- ids
     failed <- ids2==ids2[1]
     ids2[failed] <- NA
     expect_identical(
-        aggregateAcrossCells(copy, ids2, average=TRUE),
-        aggregateAcrossCells(copy[,!failed], ids[!failed], average=TRUE)
+        aggregateAcrossCells(copy, ids2, statistics="mean"),
+        aggregateAcrossCells(copy[,!failed], ids[!failed], statistics="mean")
     )
 
     # Other options work correctly.
@@ -319,7 +316,7 @@ test_that("Aggregation across cells works correctly for SCEs with DFs", {
     altExp(copy, "THING") <- sce
     counts(altExp(copy)) <- counts(altExp(copy)) * 2
 
-    agg <- aggregateAcrossCells(copy, combined)
+    suppressWarnings(agg <- aggregateAcrossCells(copy, combined))
     expect_identical(counts(agg), assay(ref))
     expect_identical(counts(altExp(agg, "THING")), assay(ref)*2)
     expect_identical(ref$X, altExp(agg)$X)
@@ -331,7 +328,7 @@ test_that("Aggregation across cells works correctly for SCEs with DFs", {
     # Same for reduced dimensions.
     copy <- sce
     reducedDim(copy, "PCA") <- t(assay(sce)[1:3,])
-    agg <- aggregateAcrossCells(copy, combined, average=TRUE)
+    agg <- aggregateAcrossCells(copy, combined, statistics="mean")
     expect_identical(reducedDim(agg, "PCA"), t(assay(agg)[1:3,]))
 })
 

@@ -28,7 +28,7 @@ test_that("readSparseCounts avoids row/column names if requested", {
     rownames(ref2) <- NULL
     expect_identical(ref2, out)
 
-    expect_error(readSparseCounts(ofile, row.names=FALSE), "expected")
+    expect_error(suppressWarnings(readSparseCounts(ofile, row.names=FALSE)), "expected")
 
     # Avoids column names if requested.
     out <- readSparseCounts(ofile, col.names=FALSE, ignore.row=1L)

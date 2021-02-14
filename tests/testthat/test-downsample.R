@@ -172,13 +172,13 @@ test_that("downsampleMatrix responds to various DelayedArray options", {
     setAutoBlockSize(old)
 
     # Setting the realization sink.
-    sink <- RealizationSink(dim(u1)) 
+    sink <- AutoRealizationSink(dim(u1)) 
     set.seed(504)
     sunkF <- downsampleMatrix(u1, 0.211, bycol=FALSE, sink=sink)
     expect_s4_class(sunkF, "DelayedMatrix")
     expect_identical(unname(as.matrix(refF)), as.matrix(sunkF))
 
-    sink <- RealizationSink(dim(u1)) 
+    sink <- AutoRealizationSink(dim(u1)) 
     set.seed(504)
     sunkT <- downsampleMatrix(u1, prop, bycol=TRUE, sink=sink)
     expect_s4_class(sunkT, "DelayedMatrix")

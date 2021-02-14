@@ -272,6 +272,6 @@ setMethod("aggregateAcrossCells", "SingleCellExperiment", function(x, ids, ...,
     }
     collected <- .apply_suffixes(collected, assay.names=reducedDimNames(x)[use.dimred], suffix=suffix)
 
-    reducedDims(y) <- collected
+    reducedDims(y, withDimnames=FALSE) <- collected
     y
 })
