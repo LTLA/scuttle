@@ -197,4 +197,9 @@ test_that("outlier.filter behaves correctly", {
     combined <- c(out, out)
     expect_null(attr(combined, "thresholds"))
     expect_type(combined, "logical")
+
+    # We can use it for filtering.
+    mock <- mockSCE()
+    out <- isOutlier(colSums(counts(mock)), log=TRUE)
+    expect_identical(mock[,out], mock[,as.logical(out)])
 })

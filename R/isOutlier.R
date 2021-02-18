@@ -22,7 +22,7 @@
 #' @param share_medians,share_mads,share_missing,min_diff
 #' Soft-deprecated equivalents of the arguments above.
 #' 
-#' @return An \code{outlier.filter} object of the same length as the \code{metric} argument.
+#' @return An outlier.filter object of the same length as the \code{metric} argument.
 #' This is effectively a logical vector specifying the observations that are considered as outliers.
 #' The chosen thresholds are stored in the \code{"thresholds"} attribute.
 #'
@@ -41,7 +41,7 @@
 #' Missing values trigger a warning and are automatically ignored during estimation of the median and MAD.
 #' The corresponding entries of the output vector are also set to \code{NA} values.
 #'
-#' The returned \code{outlier.filter} object is derived from an ordinary logical vector.
+#' The outlier.filter class is derived from an ordinary logical vector.
 #' The only difference is that any subsetting will not discard the \code{"thresholds"}, which avoids unnecessary loss of information.
 #' Users can simply call \code{\link{as.logical}} to convert this into a logical vector.
 #'
@@ -213,9 +213,12 @@ isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"),
     }
 }
 
+#' @rawNamespace exportClasses(outlier.filter)
+setOldClass(c("outlier.filter", "logical"))
+
 #' @export
 outlier.filter <- function(x) {
-    class(x) <- c("outlier.filter", "logical")
+    class(x) <- "outlier.filter"
     x
 }
 
