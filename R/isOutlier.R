@@ -85,6 +85,7 @@
 #'
 #' @aliases
 #' outlier.filter
+#' outlier.filter-class
 #' [.outlier.filter
 #' @export
 isOutlier <- function(metric, nmads = 3, type = c("both", "lower", "higher"), 
@@ -218,7 +219,7 @@ setOldClass(c("outlier.filter", "logical"))
 
 #' @export
 outlier.filter <- function(x) {
-    class(x) <- "outlier.filter"
+    class(x) <- c("outlier.filter", "logical")
     x
 }
 

@@ -3,6 +3,7 @@
 \name{isOutlier}
 \alias{isOutlier}
 \alias{outlier.filter}
+\alias{outlier.filter-class}
 \alias{[.outlier.filter}
 \title{Identify outlier values}
 \usage{
