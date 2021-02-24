@@ -82,6 +82,8 @@
 #' However, this has known problems when the linear system becomes too large (see \url{https://stat.ethz.ch/pipermail/r-help/2011-August/285855.html}).
 #' In such cases, we set \code{clusters} to break up the linear system into smaller, more manageable components that can be solved separately.
 #' The default \code{max.cluster.size} will arbitrarily break up the cell population (within each cluster, if specified) so that we never pool more than 3000 cells.
+#' Note that this involves appending a suffix like \code{"-1"} to the end of each cluster's name;
+#' this may appear on occasion in warnings or error messages.
 #' 
 #' @section Normalization within and between clusters:
 #' In general, it is more appropriate to pool more similar cells to avoid violating the assumption of a non-DE majority of genes.
@@ -405,6 +407,7 @@ LOWWEIGHT <- 0.000001
 }
 
 #' @importFrom stats median
+#' @importFrom S4Vectors wmsg
 .rescale_clusters <- function(mean.prof, ref.col, min.mean) 
 # Chooses a cluster as a reference and rescales all other clusters to the reference,
 # based on the 'normalization factors' computed between pseudo-cells.
@@ -436,8 +439,8 @@ LOWWEIGHT <- 0.000001
         # Adjusting for systematic differences between clusters.
         rescale.sf <- median(cur.prof/ref.prof, na.rm=TRUE)
         if (!is.finite(rescale.sf) || rescale.sf <= 0) {
-            warning(paste(strwrap(paste0("inter-cluster rescaling factor for cluster ", clust, 
-                " is not strictly positive, reverting to the ratio of average library sizes")), collapse="\n"))
+            warning(wmsg("inter-cluster rescaling factor for cluster ", clust, 
+                " is not strictly positive, reverting to the ratio of average library sizes"))
             rescale.sf <- sum(cur.prof)/sum(ref.prof)
         }
 
@@ -452,32 +455,23 @@ LOWWEIGHT <- 0.000001
 # Limits the maximum cluster size to avoid problems with memory in Matrix::qr().
 # Done by arbitrarily splitting large clusters so that they fall below max.size.
 {
-    if (is.null(max.size)) { 
-        return(clusters) 
-    }
-    
-    new.clusters <- integer(length(clusters))
-    counter <- 1L
-    for (id in unique(clusters)) {
-        current <- id==clusters
-        ncells <- sum(current)
-        
-        if (ncells <= max.size) {
-            new.clusters[current] <- counter
-            counter <- counter+1L
-            next
+    if (!is.null(max.size) && any(table(clusters) > max.size)) { 
+        clusters <- as.character(clusters)
+
+        # NOTE: we must append '-1', even to the clusters that fall below the
+        # max.size, so as to avoid name conflicts, e.g., if one cluster was
+        # called "A-1" and another was called "A", appending "-1" to the latter
+        # but not the former would cause issues.
+        for (id in unique(clusters)) {
+            current <- id==clusters
+            ncells <- sum(current)
+            mult <- ceiling(ncells/max.size)
+            realloc <- rep(seq_len(mult), length.out=ncells)
+            clusters[current] <- sprintf("%s-%s", id, realloc)
         }
-       
-        # Size of output clusters is max.size * N / ceil(N), where N = ncells/max.size.
-        # This is minimal at the smallest N > 1, where output clusters are at least max.size/2. 
-        # Thus, we need max.size/2 >= min.size to guarantee that the output clusters are >= min.size.
-        mult <- ceiling(ncells/max.size)
-        realloc <- rep(seq_len(mult) - 1L + counter, length.out=ncells)
-        new.clusters[current] <- realloc
-        counter <- counter + mult
     }
 
-    factor(new.clusters)
+    clusters
 }
 
 #############################################################

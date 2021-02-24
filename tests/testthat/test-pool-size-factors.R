@@ -314,6 +314,11 @@ test_that("pooledSizeFactors correctly limits cluster sizes", {
     expect_true(all(table(out) <= 6L))
     expect_false(identical(out, clusters))
     expect_true(length(unique(paste0(clusters, out)))==length(unique(out))) # nested
+
+    # No-ops.
+    clusters <- sample(1:5, 51, p=1:5, replace=TRUE)
+    out <- scuttle:::.limit_cluster_size(clusters, 100)
+    expect_identical(out, clusters)
 })
 
 set.seed(20009)
@@ -344,7 +349,7 @@ test_that("pooledSizeFactors is correct with clustering in majority-DE cases", {
 })
 
 set.seed(20010)
-test_that("pooledSizeFactors graceful handles majority zero cases", {
+test_that("pooledSizeFactors gracefully handles majority zeroes during rescaling", {
     dummy <- matrix(0, nrow=1000, ncol=200)
     dummy[1:10,1:100] <- 1
     dummy[10+1:10,100+1:100] <- 2
@@ -384,6 +389,8 @@ test_that("pooledSizeFactors works properly on alternative representations", {
     library(Matrix)
     X <- as(matrix(rpois(100000, lambda=1), ncol=100), "dgCMatrix")
     X_ <- as.matrix(X)
+
+    library(DelayedArray)
     Y <- DelayedArray(X_)
 
     sf1 <- pooledSizeFactors(X_, min.mean=0)

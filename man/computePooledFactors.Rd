@@ -133,6 +133,8 @@ The linear system is solved using the sparse QR decomposition from the \pkg{Matr
 However, this has known problems when the linear system becomes too large (see \url{https://stat.ethz.ch/pipermail/r-help/2011-August/285855.html}).
 In such cases, we set \code{clusters} to break up the linear system into smaller, more manageable components that can be solved separately.
 The default \code{max.cluster.size} will arbitrarily break up the cell population (within each cluster, if specified) so that we never pool more than 3000 cells.
+Note that this involves appending a suffix like \code{"-1"} to the end of each cluster's name;
+this may appear on occasion in warnings or error messages.
 }
 
 \section{Normalization within and between clusters}{
