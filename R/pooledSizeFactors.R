@@ -112,23 +112,23 @@
 #' this is not problematic for within-cluster normalization, as non-expressed genes are simply ignored,
 #' but violates the assumption of a non-DE majority when performing inter-cluster comparisons.
 #' 
-#' @section Dealing with negative size factors:
-#' It is possible for the deconvolution algorithm to yield negative estimates for the size factors.
+#' @section Dealing with non-positive size factors:
+#' It is possible for the deconvolution algorithm to yield negative or zero estimates for the size factors.
 #' These values are obviously nonsensical and \code{computePooledFactors} will raise a warning if they are encountered.
 #' Negative estimates are mostly commonly generated from low quality cells with few expressed features, such that most genes still have zero counts even after pooling.
 #' They may also occur if insufficient filtering of low-abundance genes was performed.
 #' 
-#' To avoid negative size factors, the best solution is to increase the stringency of the filtering.
+#' To avoid these problematic size factors, the best solution is to increase the stringency of the filtering.
 #' \itemize{
-#' \item If only a few negative size factors are present, they are likely to correspond to a few low-quality cells with few expressed features.
+#' \item If only a few negative/zero size factors are present, they are likely to correspond to a few low-quality cells with few expressed features.
 #' Such cells are difficult to normalize reliably under any approach, and can be removed by increasing the stringency of the quality control.
-#' \item If many negative size factors are present, it is probably due to insufficient filtering of low-abundance genes.
+#' \item If many negative/zero size factors are present, it is probably due to insufficient filtering of low-abundance genes.
 #' This results in many zero counts and pooled size factors of zero, and can be fixed by filtering out more genes with a higher \code{min.mean} - see \dQuote{Gene selection} below.
 #' }
 #' Another approach is to increase in the number of \code{sizes} to improve the precision of the estimates.
-#' This reduces the chance of obtaining negative size factors due to estimation error, for cells where the true size factors are very small.
+#' This reduces the chance of obtaining negative/zero size factors due to estimation error, for cells where the true size factors are very small.
 #' 
-#' As a last resort, \code{positive=TRUE} is set by default, which uses \code{\link{cleanSizeFactors}} to coerce any negative estimates to positive values.
+#' As a last resort, \code{positive=TRUE} is set by default, which uses \code{\link{cleanSizeFactors}} to coerce any non-positive estimates to positive values.
 #' This ensures that, at the very least, downstream analysis is possible even if the size factors for affected cells are not accurate.
 #' Users can skip this step by setting \code{positive=FALSE} to perform their own diagnostics or coercions.
 #' 
@@ -350,8 +350,8 @@ NULL
     final.nf <- qr.coef(QR, output)
     final.nf <- final.nf * scaling
 
-    if (any(final.nf < 0)) {
-        warning("encountered negative size factor estimates")
+    if (any(final.nf <= 0)) {
+        warning("encountered non-positive size factor estimates")
         if (positive) {
             num.detected <- colSums(exprs > 0)
             final.nf <- cleanSizeFactors(final.nf, num.detected) 

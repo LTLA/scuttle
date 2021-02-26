@@ -374,10 +374,10 @@ set.seed(20011)
 test_that("setting positive=TRUE behaves properly", {
     lambda <- c(rep(1e-2, 100), 2^rnorm(200))
     dummy <- matrix(rpois(length(lambda)*ngenes, lambda=lambda), nrow=ngenes, ncol=length(lambda), byrow=TRUE)
-    expect_warning(out <- pooledSizeFactors(dummy), "negative")
+    expect_warning(out <- pooledSizeFactors(dummy), "non-positive")
     expect_true(all(out > 0)) 
 
-    expect_warning(out2 <- pooledSizeFactors(dummy, positive=FALSE), "negative")
+    expect_warning(out2 <- pooledSizeFactors(dummy, positive=FALSE), "non-positive")
     expect_true(any(out2 < 0))
 
     okay <- out2 > 0
