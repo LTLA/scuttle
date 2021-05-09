@@ -31,6 +31,8 @@ Added \code{pooledSizeFactors()}, \code{computePooledFactors()}, \code{cleanSize
 
 \item Modified \code{isOutlier()} to now return \code{outlier.filter} objects.
 These are simply logical vectors that preseve the \code{"thresholds"} attribute upon subsetting.
+
+\item Migrated \code{correctGroupSummary()} from \pkg{scater}, to compute corrected versions of group-level summary statistics.
 }}
 
 \section{Version 1.0.0}{\itemize{
