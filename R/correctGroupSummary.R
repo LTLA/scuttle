@@ -10,9 +10,11 @@
 #' @param offset Numeric scalar specifying the offset to use when \code{difference="log"} (default 1) or \code{difference="logit"} (default 0.01).
 #' @param weights A numeric vector containing the weight of each combination, e.g., due to differences in the number of cells used to compute each summary.
 #' If \code{NULL}, all combinations have equal weight.
+#' @param subset.row Logical, integer or character vector specifying the rows in \code{x} to use to compute statistics.
 #' 
-#' @return A numeric matrix with number of rows equal to \code{nrow(x)} and number of columns equal to the number of unique levels in \code{group}.
+#' @return A numeric matrix with number of columns equal to the number of unique levels in \code{group}.
 #' Each column corresponds to a group and contains the averaged statistic across batches.
+#' Each row corresponds to a gene in \code{x} (or that specified by \code{subset.row} if not \code{NULL}).
 #'
 #' @details
 #' Here, we consider group-level summary statistics such as the average expression of all cells or the proportion with detectable expression.
@@ -63,7 +65,11 @@
 #' @export
 #' @importFrom stats lm.fit model.matrix lm.wfit
 #' @importFrom Matrix t
-correctGroupSummary <- function(x, group, block, transform=c("raw", "log", "logit"), offset=NULL, weights=NULL) { 
+correctGroupSummary <- function(x, group, block, transform=c("raw", "log", "logit"), offset=NULL, weights=NULL, subset.row=NULL) { 
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+
     transform <- match.arg(transform)
     if (transform=="log") {
         if (is.null(offset)) {

@@ -10,7 +10,8 @@ correctGroupSummary(
   block,
   transform = c("raw", "log", "logit"),
   offset = NULL,
-  weights = NULL
+  weights = NULL,
+  subset.row = NULL
 )
 }
 \arguments{
@@ -27,10 +28,13 @@ computed by functions such as \code{\link{summarizeAssayByGroup}} - see Examples
 
 \item{weights}{A numeric vector containing the weight of each combination, e.g., due to differences in the number of cells used to compute each summary.
 If \code{NULL}, all combinations have equal weight.}
+
+\item{subset.row}{Logical, integer or character vector specifying the rows in \code{x} to use to compute statistics.}
 }
 \value{
-A numeric matrix with number of rows equal to \code{nrow(x)} and number of columns equal to the number of unique levels in \code{group}.
+A numeric matrix with number of columns equal to the number of unique levels in \code{group}.
 Each column corresponds to a group and contains the averaged statistic across batches.
+Each row corresponds to a gene in \code{x} (or that specified by \code{subset.row} if not \code{NULL}).
 }
 \description{
 Correct the summary statistic for each group for unwanted variation by fitting a linear model and extracting the coefficients.
