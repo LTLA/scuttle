@@ -57,6 +57,21 @@ test_that("correctGroupSummary works with weights", {
     expect_equal(out, ref)
 })
 
+test_that("correctGroupSummary handles the one-gene case", {
+    y <- matrix(rnorm(1000), ncol=100)
+    group <- factor(rep(1:10, each=10))
+    block <- rep(1:10, 10)
+
+    ref <- correctGroupSummary(y, group, block)
+    out <- correctGroupSummary(y[1,,drop=FALSE], group, block)
+    expect_identical(ref[1,,drop=FALSE], out)
+
+    w <- runif(100)
+    ref <- correctGroupSummary(y, group, block, weights=w)
+    out <- correctGroupSummary(y[1,,drop=FALSE], group, block, weights=w)
+    expect_identical(ref[1,,drop=FALSE], out)
+})
+
 test_that("correctGroupSummary respects factor ordering", {
     y <- matrix(rnorm(1000), ncol=100)
     group <- factor(rep(1:10, each=10), 10:1)

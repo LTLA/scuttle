@@ -92,7 +92,11 @@ correctGroupSummary <- function(x, group, block, transform=c("raw", "log", "logi
         fit <- lm.wfit(y=t(x), x=design, w=weights)
     }
 
-    averages <- t(fit$coefficients[seq_len(nlevels(group)),,drop=FALSE])
+    if (nrow(x) > 1) {
+        averages <- t(fit$coefficients[seq_len(nlevels(group)),,drop=FALSE])
+    } else {
+        averages <- rbind(head(fit$coefficients, nlevels(group)))
+    }
     colnames(averages) <- levels(group)
     rownames(averages) <- rownames(x)
 
