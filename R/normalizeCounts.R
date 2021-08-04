@@ -246,6 +246,8 @@ setMethod(".internal_transformer", "ANY", function(x, size.factors, transform, p
 setMethod(".internal_transformer", "dgCMatrix", function(x, size.factors, transform, pseudo.count) {
     if (transform=="log" && pseudo.count!=1) {
         callNextMethod()
+    } else if (!.check_methods(transform, pseudo.count, class(x), "dgCMatrix")) {
+        callNextMethod()
     } else {
         .transform_sparse(x, rep(size.factors, diff(x@p)), transform)
     }
@@ -254,6 +256,8 @@ setMethod(".internal_transformer", "dgCMatrix", function(x, size.factors, transf
 #' @importClassesFrom Matrix dgTMatrix
 setMethod(".internal_transformer", "dgTMatrix", function(x, size.factors, transform, pseudo.count) {
     if (transform=="log" && pseudo.count!=1) {
+        callNextMethod()
+    } else if (!.check_methods(transform, pseudo.count, class(x), "dgTMatrix")) {
         callNextMethod()
     } else {
         .transform_sparse(x, size.factors[x@j+1L], transform)
@@ -270,4 +274,35 @@ setMethod(".internal_transformer", "dgTMatrix", function(x, size.factors, transf
     }
 
     x
+}
+
+.check_methods <- function(transform, pseudo.count, actual, expected) 
+# We want to check whether it is legal to apply this operation to dgCMatrices,
+# as the various methods may have side-effects that are omitted by direct
+# slot manipulation. We do so by verifying that the methods are the same as 
+# the base methods (and thus direct slot modification is equivalent).
+{
+    if (actual != expected) {
+        to.check <- c("/", "t")
+        if (transform=="log") {
+            if (pseudo.count==1) {
+                to.check <- c(to.check, "log1p")
+            } else {
+                to.check <- c(to.check, "log", "+")
+            }
+        } else if (transform=="asinh") {
+            to.check <- c(to.check, "asinh")
+        }
+
+        for (generic in to.check) {
+            left <- selectMethod(generic, actual)
+            left <- as(left, "function")
+            right <- selectMethod(generic, expected)
+            right <- as(right, "function")
+            if (!identical(left, right)) {
+                return(FALSE)
+            }
+        }
+    }
+    TRUE
 }

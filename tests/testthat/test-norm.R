@@ -55,6 +55,33 @@ test_that("normalizeCounts works as expected", {
     expect_identical(out, sub)
 })
 
+test_that("method checker does the right thing", {
+    library(Matrix)
+    setClass("MyDgCMatrix", "dgCMatrix")
+    expect_true(scuttle:::.check_methods("none", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_true(scuttle:::.check_methods("log", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_true(scuttle:::.check_methods("log", 10, "MyDgCMatrix", "dgCMatrix"))
+    expect_true(scuttle:::.check_methods("asinh", 10, "MyDgCMatrix", "dgCMatrix"))
+
+    setMethod("log1p", "MyDgCMatrix", function(x) {
+        cat("YAY!")
+        callNextMethod()
+    })
+    expect_true(scuttle:::.check_methods("none", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_false(scuttle:::.check_methods("log", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_true(scuttle:::.check_methods("log", 10, "MyDgCMatrix", "dgCMatrix"))
+    expect_true(scuttle:::.check_methods("asinh", 10, "MyDgCMatrix", "dgCMatrix"))
+
+    setMethod("t", "MyDgCMatrix", function(x) {
+        cat("WHEE")
+        callNextMethod()
+    })
+    expect_false(scuttle:::.check_methods("none", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_false(scuttle:::.check_methods("log", 1, "MyDgCMatrix", "dgCMatrix"))
+    expect_false(scuttle:::.check_methods("log", 10, "MyDgCMatrix", "dgCMatrix"))
+    expect_false(scuttle:::.check_methods("asinh", 10, "MyDgCMatrix", "dgCMatrix"))
+})
+
 test_that("normalizeCounts handles silly inputs correctly", {
     out <- normalizeCounts(dummy[0,,drop=FALSE], ref, log=FALSE)
     expect_identical(dim(out), c(0L, as.integer(ncells)))
