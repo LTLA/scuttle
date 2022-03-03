@@ -29,7 +29,7 @@ perCellQCMetrics(x, ...)
   ...,
   flatten = TRUE,
   assay.type = "counts",
-  use.altexps = TRUE,
+  use.altexps = NULL,
   percent_top = NULL,
   exprs_values = NULL,
   use_altexps = NULL
@@ -66,7 +66,9 @@ If \code{TRUE}, statistics are computed for all alternative experiments.
 
 Alternatively, an integer or character vector specifying the alternative Experiments to use to compute QC statistics.
 
-Alternatively \code{NULL}, in which case alternative experiments are not used.}
+Alternatively \code{NULL}, in which case we only use alternative experiments that contain the specified \code{assay.type}.
+
+Alternatively \code{FALSE}, in which case alternative experiments are not used.}
 }
 \value{
 A \linkS4class{DataFrame} of QC statistics where each row corresponds to a column in \code{x}.

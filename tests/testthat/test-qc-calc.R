@@ -75,6 +75,13 @@ test_that("perCellQCMetrics works with alternative experiments", {
     
     expect_identical(df$total, df$sum + df$altexps$alpha$sum + df$altexps$bravo$sum)
 
+    # Ignores experiments that don't have the requested assay.
+    copy <- sce
+    assayNames(altExp(copy, "alpha")) <- "FOO"
+    ignored <- perCellQCMetrics(copy, use.altexps=NULL)
+    expect_true(is.null(ignored$altexps_alpha_sum))
+    expect_false(is.null(ignored$altexps_bravo_sum))
+
     # Flattening works as expected.
     flat <- perCellQCMetrics(sce)
     expect_identical(flat$altexps_alpha_sum, df$altexps$alpha$sum)

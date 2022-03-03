@@ -20,8 +20,10 @@
 #' If \code{TRUE}, statistics are computed for all alternative experiments. 
 #'
 #' Alternatively, an integer or character vector specifying the alternative Experiments to use to compute QC statistics.
+#'
+#' Alternatively \code{NULL}, in which case we only use alternative experiments that contain the specified \code{assay.type}.
 #' 
-#' Alternatively \code{NULL}, in which case alternative experiments are not used.
+#' Alternatively \code{FALSE}, in which case alternative experiments are not used.
 #' @param flatten Logical scalar indicating whether the nested \linkS4class{DataFrame}s in the output should be flattened.
 #' @param percent_top,detection_limit,exprs_values,use_altexps Soft deprecated equivalents to the arguments described above.
 #'
@@ -225,22 +227,28 @@ setMethod("perCellQCMetrics", "SummarizedExperiment", function(x, ..., assay.typ
 
 #' @export
 #' @rdname perCellQCMetrics
-#' @importFrom SummarizedExperiment assay
+#' @importFrom SummarizedExperiment assay assayNames
 #' @importFrom SingleCellExperiment altExp altExpNames
 #' @importFrom S4Vectors make_zero_col_DFrame I
 #' @importClassesFrom S4Vectors DataFrame
 setMethod("perCellQCMetrics", "SingleCellExperiment", 
-    function(x, subsets=NULL, percent.top=integer(0), ..., flatten=TRUE, assay.type="counts", use.altexps=TRUE, 
+    function(x, subsets=NULL, percent.top=integer(0), ..., flatten=TRUE, assay.type="counts", use.altexps=NULL, 
         percent_top=NULL, exprs_values=NULL, use_altexps=NULL) 
 {
     assay.type <- .replace(assay.type, exprs_values)
     use.altexps <- .replace(use.altexps, use_altexps)
     percent.top <- .replace(percent.top, percent_top)
 
-    # subsets and percent.top need to be explicitly listed,
-    # because the altexps call sets them to NULL and integer(0).
+    # subsets and percent.top need to be explicitly listed, because the altexps
+    # call sets them to NULL and integer(0), so we can't just pass it in '...'.
     main <- .per_cell_qc_metrics(assay(x, assay.type), subsets=subsets, percent.top=percent.top, flatten=FALSE, ...)
-    use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
+
+    if (is.null(use.altexps)) {
+        keep <- vapply(altExpNames(x), FUN = function(i) assay.type %in% assayNames(altExp(x, i)), TRUE)
+        use.altexps <- which(keep)
+    } else {
+        use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
+    }
 
     alt <- list()
     total <- main$sum
