@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // cumulative_prop
 Rcpp::NumericMatrix cumulative_prop(Rcpp::RObject input, Rcpp::IntegerVector top);
 RcppExport SEXP _scuttle_cumulative_prop(SEXP inputSEXP, SEXP topSEXP) {

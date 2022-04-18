@@ -254,6 +254,7 @@ NULL
     all.norm <- bpmapply(FUN=.per_cluster_normalize, x=frag.x, scaling=frag.scale, 
         MoreArgs=list(sizes=sizes, min.mean=min.mean, positive=positive),
         BPPARAM=BPPARAM, SIMPLIFY=FALSE, USE.NAMES=FALSE)
+    names(all.norm) <- names(indices)
 
     clust.nf <- lapply(all.norm, "[[", i="final.nf")
     clust.profile <- lapply(all.norm, "[[", i="ave.cell")

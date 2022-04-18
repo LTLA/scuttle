@@ -345,6 +345,7 @@ test_that("pooledSizeFactors is correct with clustering in majority-DE cases", {
     out3 <- pooledSizeFactors(dummy, cluster=known.clusters, ref=3)
     expect_equal(out, out3)
 
+    expect_error(pooledSizeFactors(dummy, cluster=as.character(known.clusters), ref="1"), NA) # works with strings
     expect_error(pooledSizeFactors(dummy, cluster=known.clusters, ref="0"), "'ref.clust' not in 'clusters'")
 })
 
