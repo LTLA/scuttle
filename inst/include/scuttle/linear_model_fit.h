@@ -1,9 +1,16 @@
 #ifndef LINEAR_MODEL_FIT_H 
 #define LINEAR_MODEL_FIT_H
 
-#include "Rcpp.h"
+#ifndef USE_FC_LEN_T
+#define USE_FC_LEN_T
+#endif
+#include <Rconfig.h>
 #include "R_ext/BLAS.h"
 #include "R_ext/Lapack.h"
+#ifndef FCONE
+#define FCONE
+#endif
+#include "Rcpp.h"
 
 #include <stdexcept>
 
@@ -22,7 +29,7 @@ public:
         double tmpwork=0;
 
         F77_CALL(dormqr)(&side, &trans, &nobs, &ncol, &ncoef, qrptr, &nobs, 
-            qxptr, work.data(), &nobs, &tmpwork, &lwork, &info); 
+            qxptr, work.data(), &nobs, &tmpwork, &lwork, &info FCONE FCONE); 
         if (info) { 
             throw std::runtime_error("workspace query failed for 'dormqr'");
         }
@@ -34,7 +41,7 @@ public:
 
     void multiply(double* rhs) {
         F77_CALL(dormqr)(&side, &trans, &nobs, &ncol, &ncoef, qrptr, &nobs, 
-            qxptr, rhs, &nobs, work.data(), &lwork, &info); 
+            qxptr, rhs, &nobs, work.data(), &lwork, &info FCONE FCONE); 
         if (info) { 
             throw std::runtime_error("residual calculations failed for 'dormqr'");
         }
