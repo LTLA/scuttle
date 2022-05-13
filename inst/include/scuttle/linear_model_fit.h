@@ -75,7 +75,7 @@ public:
 
     void solve(double* rhs) {
         F77_CALL(dtrtrs)(&uplo, &xtrans, &diag, &(this->ncoef), &(this->ncol), this->qrptr, &(this->nobs), 
-            rhs, &(this->nobs), &(this->info));
+            rhs, &(this->nobs), &(this->info) FCONE FCONE FCONE);
 
         if (this->info) { 
             throw std::runtime_error("coefficient calculations failed for 'dtrtrs'");
