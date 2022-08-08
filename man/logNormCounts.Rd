@@ -83,6 +83,8 @@ Defaults to \code{"logcounts"} when \code{transform="log"}, \code{"ashcounts"} w
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 Only used if \code{size.factors} is not specified.}
 
+\item{size_factors, pseudo_count, center_size_factors, exprs_values}{Deprecated.}
+
 \item{use.altexps, use_altexps}{Deprecated, use \code{\link{applySCE}} instead (see Examples).}
 }
 \value{

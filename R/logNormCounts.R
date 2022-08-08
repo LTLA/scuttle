@@ -12,6 +12,7 @@
 #' Defaults to \code{"logcounts"} when \code{transform="log"}, \code{"ashcounts"} when \code{transform="asinh"}, and \code{"normcounts"} otherwise.
 #' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 #' Only used if \code{size.factors} is not specified.
+#' @param size_factors,pseudo_count,center_size_factors,exprs_values Deprecated. 
 #'
 #' @details
 #' This function is a convenience wrapper around \code{\link{normalizeCounts}}.

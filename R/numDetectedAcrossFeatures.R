@@ -11,7 +11,7 @@
 #'
 #' For the SummarizedExperiment method, further arguments to pass to the ANY method.
 #' @param threshold A numeric scalar specifying the threshold above which a gene is considered to be detected.
-#' @param exprs_values,detection_limit Soft-deprecated equivalents of the arguments above.
+#' @param subset_row,subset_col,detection_limit,exprs_values Soft-deprecated equivalents of the arguments above.
 #' 
 #' @return An integer matrix containing the number of detected expression values in each group of features (row) and cell (column).
 #' If \code{average=TRUE}, this is instead a numeric matrix containing the proportion of detected values.

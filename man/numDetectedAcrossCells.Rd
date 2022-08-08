@@ -54,10 +54,10 @@ If \code{NULL}, nothing is stored.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether summation should be parallelized.}
 
+\item{subset_row, subset_col, detection_limit, store_number, exprs_values}{Soft-deprecated equivalents of the arguments above.}
+
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the matrix of counts
 (or any other expression quantity that can be meaningfully summed).}
-
-\item{exprs_values, detection_limit}{Soft-deprecated equivalents of the arguments above.}
 }
 \value{
 A SummarizedExperiment is returned containing a count matrix in the first assay.
