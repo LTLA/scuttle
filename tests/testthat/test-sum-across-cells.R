@@ -222,31 +222,14 @@ test_that("Aggregation across cells works correctly with altExps", {
     altExp(copy, "THING") <- sce
     counts(altExp(copy)) <- counts(altExp(copy)) * 2
 
+    # Doesn't pass along by default.
     suppressWarnings(agg <- aggregateAcrossCells(copy, ids))
-    expect_identical(counts(altExp(agg, "THING")), counts(agg)*2)
+    expect_identical(altExpNames(agg), character(0))
 
-    agg0 <- applySCE(sce, aggregateAcrossCells, ids=ids, use.altexps=NULL)
+    # But apply'ing works correctly.
+    agg0 <- applySCE(copy, aggregateAcrossCells, ids=ids)
     expect_identical(counts(agg0), counts(agg))
-    expect_identical(altExpNames(agg0), character(0))
-
-    # Subsetting only affects the main experiment.
-    suppressWarnings(agg2 <- aggregateAcrossCells(copy, ids, subset.row=1:5))
-    expect_equal(agg[1:5,], agg2)
-
-    # Other arguments are passed down.
-    suppressWarnings(agg3 <- aggregateAcrossCells(copy, ids, statistics="mean"))
-    ref <- sumCountsAcrossCells(copy, ids, average=TRUE)
-    expect_identical(counts(agg3), assay(ref))
-    expect_identical(counts(altExp(agg3)), assay(ref)*2)
-
-    # Behaves correctly with NAs.
-    ids2 <- ids
-    failed <- ids2==ids2[1]
-    ids2[failed] <- NA
-    expect_identical(
-        suppressWarnings(aggregateAcrossCells(copy, ids2, statistics="mean")),
-        suppressWarnings(aggregateAcrossCells(copy[,!failed], ids[!failed], statistics="mean"))
-    )
+    expect_identical(counts(altExp(agg0, "THING")), counts(agg)*2)
 
     # Other options work correctly.
     agg4 <- applySCE(copy, FUN=aggregateAcrossCells, ids=ids, WHICH=1, use.altexps=NULL)
@@ -316,7 +299,7 @@ test_that("Aggregation across cells works correctly for SCEs with DFs", {
     altExp(copy, "THING") <- sce
     counts(altExp(copy)) <- counts(altExp(copy)) * 2
 
-    suppressWarnings(agg <- aggregateAcrossCells(copy, combined))
+    agg <- applySCE(copy, aggregateAcrossCells, ids=combined)
     expect_identical(counts(agg), assay(ref))
     expect_identical(counts(altExp(agg, "THING")), assay(ref)*2)
     expect_identical(ref$X, altExp(agg)$X)

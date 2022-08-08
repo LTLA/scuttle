@@ -21,6 +21,10 @@
 #' If \code{NULL}, size factors are determined as described in \code{\link{normalizeCounts}}.
 #' \code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
 #'
+#' If \code{x} is a SingleCellExperiment, normalization is not applied to any alternative Experiments.
+#' Users can call \code{\link{applySCE}} to perform the normalization on each alternative Experiment - see Examples.
+#' Any Experiment-specific size factors will be automatically used, otherwise library size-based factors will be derived from the column sums.
+#'
 #' @return 
 #' \code{x} is returned containing the (log-)normalized expression values in an additional assay named as \code{name}.
 #' 
@@ -146,14 +150,6 @@ setMethod("logNormCounts", "SingleCellExperiment", function(x, size.factors=size
 
     if (!is.null(use.altexps) && !isFALSE(use.altexps)) {
         .Deprecated(msg="'use.altexps=' is deprecated.\nUse 'applySCE(x, logNormCounts)' instead.")
-        use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
-        for (i in use.altexps) {
-            tryCatch({
-                altExp(x, i) <- FUN(altExp(x, i), center.size.factors=center.size.factors)
-            }, error=function(err) {
-                stop(paste0(sprintf("failed to normalize 'altExp(x, %s)'\n", deparse(i)), conditionMessage(err)))
-            })
-        }
     }
 
     x

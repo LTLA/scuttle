@@ -1,6 +1,10 @@
 \name{NEWS}
 \title{News for Package \pkg{scuttle}}
 
+\section{Version 1.8.0}{\itemize{
+\item Removed support for \code{use.altexps=} in \code{aggregateAcrossCells()} and \code{logNormCounts()}.
+}}
+
 \section{Version 1.2.0}{\itemize{
 \item Migrated \code{whichNonZero()} to \pkg{beachmat}.
 

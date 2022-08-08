@@ -50,5 +50,5 @@ biocViews:
     DataImport
 LinkingTo: Rcpp, beachmat
 SystemRequirements: C++11
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 NeedsCompilation: yes

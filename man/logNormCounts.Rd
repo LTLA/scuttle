@@ -83,14 +83,6 @@ Defaults to \code{"logcounts"} when \code{transform="log"}, \code{"ashcounts"} w
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying how library size factor calculations should be parallelized.
 Only used if \code{size.factors} is not specified.}
 
-\item{size_factors}{Soft-deprecated equivalents to the arguments described previously.}
-
-\item{pseudo_count}{Soft-deprecated equivalents to the arguments described previously.}
-
-\item{center_size_factors}{Soft-deprecated equivalents to the arguments described previously.}
-
-\item{exprs_values}{Soft-deprecated equivalents to the arguments described previously.}
-
 \item{use.altexps, use_altexps}{Deprecated, use \code{\link{applySCE}} instead (see Examples).}
 }
 \value{
@@ -109,6 +101,10 @@ This makes it easier to perform normalization by avoiding book-keeping errors du
 
 If \code{NULL}, size factors are determined as described in \code{\link{normalizeCounts}}.
 \code{subset.row} and \code{normalize.all} have the same interpretation as for \code{\link{normalizeCounts}}.
+
+If \code{x} is a SingleCellExperiment, normalization is not applied to any alternative Experiments.
+Users can call \code{\link{applySCE}} to perform the normalization on each alternative Experiment - see Examples.
+Any Experiment-specific size factors will be automatically used, otherwise library size-based factors will be derived from the column sums.
 }
 \examples{
 example_sce <- mockSCE()

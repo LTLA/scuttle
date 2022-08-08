@@ -48,10 +48,6 @@ Defaults to all cells with non-\code{NA} entries of \code{ids}.}
 
 \item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying whether summation should be parallelized.}
 
-\item{subset_row}{Soft-deprecated equivalents of the arguments described above.}
-
-\item{subset_col}{Soft-deprecated equivalents of the arguments described above.}
-
 \item{assay.type}{A string or integer scalar specifying the assay of \code{x} containing the matrix of counts
 (or any other expression quantity that can be meaningfully summed).}
 
