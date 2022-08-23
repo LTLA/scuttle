@@ -90,7 +90,7 @@ readSparseCounts <- function(file, sep="\t", quote=NULL, comment.char="", row.na
         gene.names <- first[[row.name.col]]
     }
 
-    output <- list(as(rbind(first[cell.cols]), "dgCMatrix"))
+    output <- list(as(rbind(as.double(first[cell.cols])), "dgCMatrix"))
     it <- 2L
 
     # Reading it in, chunk by chunk (see behavior of nmax= when what= is a list).
