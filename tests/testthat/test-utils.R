@@ -35,47 +35,50 @@ test_that("converting subset vectors to indices is correct", {
 })
 
 test_that("job assignment to workers is correct", {
-    out <- .assignIndicesToWorkers(100, safeBPParam(3))
-    expect_identical(length(out), 3L)
-    expect_true(all(lengths(out) >= floor(100/3)))
-    expect_identical(unlist(out), seq_len(100))
+    for (nc in c(3, 6, 11)) {
+        P <- safeBPParam(nc)
+        n <- bpnworkers(P)
 
-    out <- .assignIndicesToWorkers(100, safeBPParam(6))
-    expect_identical(length(out), 6L)
-    expect_true(all(lengths(out) >= floor(100/6)))
-    expect_identical(unlist(out), seq_len(100))
-
-    out <- .assignIndicesToWorkers(100, safeBPParam(11))
-    expect_identical(length(out), 11L)
-    expect_true(all(lengths(out) >= floor(100/11)))
-    expect_identical(unlist(out), seq_len(100))
+        out <- .assignIndicesToWorkers(100, P)
+        expect_identical(length(out), n)
+        expect_true(all(lengths(out) >= floor(100/n)))
+        expect_identical(unlist(out), seq_len(100))
+    }
 
     # Works with subsetting.
     chosen <- sample(100, 50)
-    out <- .assignIndicesToWorkers(NULL, safeBPParam(11), subset=chosen)
-    expect_identical(length(out), 11L)
-    expect_true(all(lengths(out) >= floor(length(chosen)/11)))
+    P <- safeBPParam(11)
+    n <- bpnworkers(P)
+    out <- .assignIndicesToWorkers(NULL, P, subset=chosen)
+    expect_identical(length(out), n)
+    expect_true(all(lengths(out) >= floor(length(chosen)/n)))
     expect_identical(unlist(out), chosen)
 
     chosen <- sample(LETTERS)
-    out <- .assignIndicesToWorkers(NULL, safeBPParam(5), subset=chosen)
-    expect_identical(length(out), 5L)
-    expect_true(all(lengths(out) >= floor(length(chosen)/5)))
+    P <- safeBPParam(5)
+    n <- bpnworkers(P)
+    out <- .assignIndicesToWorkers(NULL, P, subset=chosen)
+    expect_identical(length(out), n)
+    expect_true(all(lengths(out) >= floor(length(chosen)/n)))
     expect_identical(unlist(out), chosen)
 
     chosen <- rbinom(25, 1, 0.5)==1
-    out <- .assignIndicesToWorkers(NULL, safeBPParam(3), subset=chosen)
-    expect_identical(length(out), 3L)
-    expect_true(all(lengths(out) >= floor(sum(chosen)/3)))
+    P <- safeBPParam(3)
+    n <- bpnworkers(P)
+    out <- .assignIndicesToWorkers(NULL, P, subset=chosen)
+    expect_identical(length(out), n)
+    expect_true(all(lengths(out) >= floor(sum(chosen)/n)))
     expect_identical(unlist(out), which(chosen))
 })
 
 
 test_that("splitting a vector to workers is correct", {
     X <- runif(99)
-    out <- .splitVectorByWorkers(X, safeBPParam(7))
+
+    P <- safeBPParam(7)
+    out <- .splitVectorByWorkers(X, P)
     expect_identical(unlist(out), X)
-    expect_identical(length(out), 7L)
+    expect_identical(length(out), bpnworkers(P))
 
     out <- .splitVectorByWorkers(X, safeBPParam(1))
     expect_identical(out[[1]], X)
@@ -102,13 +105,15 @@ test_that("splitting a vector to workers is correct", {
 test_that("splitting a matrix by row is correct", {
     M <- matrix(rnorm(1000), ncol=10)
 
-    out <- .splitRowsByWorkers(M, safeBPParam(7))
+    P <- safeBPParam(7)
+    out <- .splitRowsByWorkers(M, P)
     expect_identical(do.call(rbind, out), M)
-    expect_identical(length(out), 7L)
+    expect_identical(length(out), bpnworkers(P))
 
-    out <- .splitRowsByWorkers(M, safeBPParam(1))
+    P <- safeBPParam(1)
+    out <- .splitRowsByWorkers(M, P)
     expect_identical(out[[1]], M)
-    expect_identical(length(out), 1L)
+    expect_identical(length(out), bpnworkers(P))
 
     # Behaves with subsetting by row:
     i <- 1:50
@@ -138,13 +143,15 @@ test_that("splitting a matrix by row is correct", {
 test_that("splitting a matrix by column is correct", {
     M <- matrix(rnorm(1000), nrow=20)
 
-    out <- .splitColsByWorkers(M, safeBPParam(8))
+    P <- safeBPParam(8)
+    out <- .splitColsByWorkers(M, P)
     expect_identical(do.call(cbind, out), M)
-    expect_identical(length(out), 8L)
+    expect_identical(length(out), bpnworkers(P))
 
-    out <- .splitColsByWorkers(M, safeBPParam(1))
+    P <- safeBPParam(1)
+    out <- .splitColsByWorkers(M, P)
     expect_identical(out[[1]], M)
-    expect_identical(length(out), 1L)
+    expect_identical(length(out), bpnworkers(P))
 
     # Behaves with subsetting by row:
     i <- 1:10
