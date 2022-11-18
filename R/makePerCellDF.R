@@ -73,6 +73,9 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
     prefix.altexps <- .replace(prefix.altexps, prefix_altexps)
     check.names <- .replace(check.names, check_names)
 
+    # Initialize output list
+    output <- list()
+
     # Collecting the column metadata.
     use.coldata <- .use_names_to_integer_indices(use.coldata, x=x, nameFUN=function(x) colnames(colData(x)), msg="use.coldata")
     if (length(use.coldata)) {
@@ -81,7 +84,7 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
     }
 
     # Collecting feature data
-    output <- list(.harvest_se_by_column(x, features=features, assay.type=assay.type, swap_rownames = swap_rownames))
+    output <- c(output, .harvest_se_by_column(x, features=features, assay.type=assay.type, swap_rownames = swap_rownames))
 
     # Collecting the reduced dimensions.
     use.dimred <- .use_names_to_integer_indices(use.dimred, x=x, nameFUN=reducedDimNames, msg="use.dimred")
