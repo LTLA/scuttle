@@ -17,6 +17,9 @@
 #' Alternatively, a character or integer vector specifying the dimensionality reduction results to use.
 #' @param prefix.altexps Logical scalar indicating whether \code{\link{altExp}}-derived fields should be prefixed with the name of the alternative Experiment.
 #' @param check.names Logical scalar indicating whether column names of the output should be made syntactically valid and unique.
+#' @param swap_rownames Column name of \code{rowData(object)} to be used to
+#'  identify features instead of \code{rownames(object)} when labelling plot
+#'  elements.
 #' @param exprs_values,use_dimred,use_altexps,prefix_altexps,check_names
 #' Soft-deprecated equivalents of the arguments described above.
 #'
