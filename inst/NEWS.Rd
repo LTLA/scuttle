@@ -1,8 +1,11 @@
 \name{NEWS}
 \title{News for Package \pkg{scuttle}}
 
-\section{Version 1.8.0}{\itemize{
+\section{Version 1.8}{\itemize{
 \item Removed support for \code{use.altexps=} in \code{aggregateAcrossCells()} and \code{logNormCounts()}.
+
+\item Added \code{swap.rownames=} option to \code{makePerCellDF()} to allow easy access by \code{rowData} aliases.
+Also moved the extracted features to the end of the data frame for consistency.
 }}
 
 \section{Version 1.2.0}{\itemize{
