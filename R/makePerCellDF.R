@@ -6,7 +6,7 @@
 #' @param x A \linkS4class{SingleCellExperiment} object.
 #' This is expected to have non-\code{NULL} row names.
 #' @param features Character vector specifying the features for which to extract expression profiles across cells.
-#' May also include features in alternative Experiments if permitted by \code{use_altexps}.
+#' May also include features in alternative Experiments if permitted by \code{use.altexps}.
 #' @param assay.type String or integer scalar indicating the assay to use to obtain expression values.
 #' Must refer to a matrix-like object with integer or numeric values.
 #' @param use.coldata Logical scalar indicating whether column metadata of \code{x} should be included.
@@ -17,9 +17,8 @@
 #' Alternatively, a character or integer vector specifying the dimensionality reduction results to use.
 #' @param prefix.altexps Logical scalar indicating whether \code{\link{altExp}}-derived fields should be prefixed with the name of the alternative Experiment.
 #' @param check.names Logical scalar indicating whether column names of the output should be made syntactically valid and unique.
-#' @param swap_rownames Column name of \code{rowData(object)} to be used to
-#'  identify features instead of \code{rownames(object)} when labelling plot
-#'  elements.
+#' @param swap.rownames String specifying the \code{\link{rowData}} column containing the \code{features}.
+#' If \code{NULL}, \code{rownames(x)} is used.
 #' @param exprs_values,use_dimred,use_altexps,prefix_altexps,check_names
 #' Soft-deprecated equivalents of the arguments described above.
 #'
@@ -67,7 +66,7 @@
 #' @importFrom SingleCellExperiment colData reducedDims reducedDimNames altExps altExpNames
 makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
     use.coldata=TRUE, use.dimred=TRUE, use.altexps=TRUE, prefix.altexps=FALSE, check.names=FALSE,
-    swap_rownames = NULL, exprs_values=NULL, use_dimred=NULL, use_altexps=NULL, prefix_altexps=NULL,
+    swap.rownames = NULL, exprs_values=NULL, use_dimred=NULL, use_altexps=NULL, prefix_altexps=NULL,
     check_names=NULL)
 {
     use.dimred <- .replace(use.dimred, use_dimred)
@@ -86,9 +85,6 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
         output <- c(output, list(as.data.frame(cd)))
     }
 
-    # Collecting feature data
-    output <- c(output, .harvest_se_by_column(x, features=features, assay.type=assay.type, swap_rownames = swap_rownames))
-
     # Collecting the reduced dimensions.
     use.dimred <- .use_names_to_integer_indices(use.dimred, x=x, nameFUN=reducedDimNames, msg="use.dimred")
     if (length(use.dimred)) {
@@ -105,14 +101,16 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
         output <- c(output, list(red_vals))
     }
 
-    # Collecting the alternative Experiments.
+    # Collecting feature data from main and alternative Experiments.
+    output <- c(output, .harvest_se_by_column(x, features=features, assay.type=assay.type, swap.rownames = swap.rownames))
+
     use.altexps <- .use_names_to_integer_indices(use.altexps, x=x, nameFUN=altExpNames, msg="use.altexps")
     if (length(use.altexps)) {
         all_alts <- altExps(x)[use.altexps]
         alt_vals <- vector("list", length(all_alts))
 
         for (a in seq_along(alt_vals)) {
-            curalt <- .harvest_se_by_column(all_alts[[a]], features=features, assay.type=assay.type, swap_rownames = swap_rownames)
+            curalt <- .harvest_se_by_column(all_alts[[a]], features=features, assay.type=assay.type, swap.rownames = swap.rownames)
             if (prefix.altexps) {
                 colnames(curalt) <- sprintf("%s.%s", names(all_alts)[a], colnames(curalt))
             }
@@ -131,39 +129,31 @@ makePerCellDF <- function(x, features=NULL, assay.type="logcounts",
     output
 }
 
-#' @importFrom SummarizedExperiment assay
+.empty_df_from_se <- function(x) {
+    data.frame(matrix(0, ncol(x), 0L), row.names=colnames(x))
+}
+
+#' @importFrom SummarizedExperiment assay rowData
 #' @importFrom Matrix t
-.harvest_se_by_column <- function(x, features, assay.type, swap_rownames = NULL) {
-    x <- .swap_rownames(x, swap_rownames = swap_rownames)
-    keep <- rownames(x) %in% features
+.harvest_se_by_column <- function(x, features, assay.type, swap.rownames) {
+    if (is.null(swap.rownames)) {
+        all.feats <- rownames(x)
+    } else if (swap.rownames %in% colnames(rowData(x))) {
+        all.feats <- rowData(x)[,swap.rownames]
+    } else {
+        # Avoid throwing an error for altexps if it doesn't have the swapped rowData.
+        return(.empty_df_from_se(x))
+    }
+
+    keep <- all.feats %in% features
     if (any(keep)) {
         curmat <- assay(x, assay.type, withDimnames=FALSE)[keep,,drop=FALSE]
         curmat <- as.matrix(t(curmat))
         assay_vals <- data.frame(curmat, row.names=colnames(x))
-        colnames(assay_vals) <- rownames(x)[keep]
+        colnames(assay_vals) <- all.feats[keep]
         assay_vals
     } else {
         # Avoid throwing an error for altexps if the feature doesn't even match.
-        data.frame(matrix(0, ncol(x), 0L), row.names=colnames(x))
+        .empty_df_from_se(x)
     }
 }
-
-
-## Using non-standard gene IDs
-# from scater
-.swap_rownames <- function(object, swap_rownames = NULL) {
-    if (is.null(swap_rownames)) {
-        return(object)
-    }
-    rownames(object) <- .get_rowData_column(object, swap_rownames)
-    object
-}
-
-# from scater
-.get_rowData_column <- function(object, column) {
-    if (!column %in% colnames(rowData(object))) {
-        stop("Cannot find column ", column, " in rowData")
-    }
-    rowData(object)[[column]]
-}
-
