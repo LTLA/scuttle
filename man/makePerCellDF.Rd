@@ -13,6 +13,7 @@ makePerCellDF(
   use.altexps = TRUE,
   prefix.altexps = FALSE,
   check.names = FALSE,
+  swap.rownames = NULL,
   exprs_values = NULL,
   use_dimred = NULL,
   use_altexps = NULL,
@@ -25,7 +26,7 @@ makePerCellDF(
 This is expected to have non-\code{NULL} row names.}
 
 \item{features}{Character vector specifying the features for which to extract expression profiles across cells.
-May also include features in alternative Experiments if permitted by \code{use_altexps}.}
+May also include features in alternative Experiments if permitted by \code{use.altexps}.}
 
 \item{assay.type}{String or integer scalar indicating the assay to use to obtain expression values.
 Must refer to a matrix-like object with integer or numeric values.}
@@ -42,6 +43,9 @@ Alternatively, a character or integer vector specifying the alternative experime
 \item{prefix.altexps}{Logical scalar indicating whether \code{\link{altExp}}-derived fields should be prefixed with the name of the alternative Experiment.}
 
 \item{check.names}{Logical scalar indicating whether column names of the output should be made syntactically valid and unique.}
+
+\item{swap.rownames}{String specifying the \code{\link{rowData}} column containing the \code{features}.
+If \code{NULL}, \code{rownames(x)} is used.}
 
 \item{exprs_values, use_dimred, use_altexps, prefix_altexps, check_names}{Soft-deprecated equivalents of the arguments described above.}
 }
