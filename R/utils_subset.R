@@ -4,6 +4,9 @@
 ## Converts a subsetting vector into a integer equivalent.
 ## Requires some care to handle logical/character vectors.
 {
+    if (is.factor(subset)) {
+        subset <- as.character(subset)
+    }
     if (is.na(byrow)) {
         dummy <- seq_along(target)
         names(dummy) <- names(target)

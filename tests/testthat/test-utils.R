@@ -28,6 +28,10 @@ test_that("converting subset vectors to indices is correct", {
     expect_identical(.subset2index(seq_along(V) %in% 10:15, V, byrow=NA), 10:15)
     expect_error(.subset2index(1000:2000, V, byrow=NA), "invalid")
 
+    # Factors:
+    expect_identical(.subset2index(factor(rownames(M)[4:5]), M), 4:5)
+    expect_identical(.subset2index(factor(colnames(M)[10:5]), M, byrow=FALSE), 10:5)
+
     # Edge cases.
     expect_identical(.subset2index(numeric(0), M, byrow=FALSE), integer(0))
     expect_identical(.subset2index(character(0), M, byrow=FALSE), integer(0))
