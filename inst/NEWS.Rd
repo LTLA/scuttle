@@ -1,7 +1,11 @@
 \name{NEWS}
 \title{News for Package \pkg{scuttle}}
 
-\section{Version 1.8}{\itemize{
+\section{Version 1.10}{\itemize{
+\item \code{.subset2index} now converts factor inputs to character vectors, rather than treating them as integers.
+}}
+
+\section{Version 1.8.0}{\itemize{
 \item Removed support for \code{use.altexps=} in \code{aggregateAcrossCells()} and \code{logNormCounts()}.
 
 \item Added \code{swap.rownames=} option to \code{makePerCellDF()} to allow easy access by \code{rowData} aliases.
