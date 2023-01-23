@@ -105,28 +105,64 @@ NULL
         x <- x[subset.row,,drop=FALSE]
     }
 
-    lost <- is.na(ids)
-    ids <- ids[!lost]
-    if (any(lost)) {
-        x <- x[,!lost,drop=FALSE]
-    }
+    if (is(x, "dgCMatrix") && all(statistics %in% c("sum", "mean", "num.detected", "prop.detected"))) {
+        # Fast path hack to get around DelayedArray's inefficiencies.
+        collected <- list()
+        f <- factor(ids) # automatically drops unused levels.
+        g <- as.integer(f) - 1L
+        ngroups <- nlevels(f)
+        freq <- tabulate(g + 1L, ngroups)
+        names(freq) <- levels(f)
 
-    # Drop unused levels, as the subsequent mapping step to preserve the type of 'ids'
-    # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
-    by.group <- split(seq_along(ids), ids, drop=TRUE)
+        if ("sum" %in% statistics || "mean" %in% statistics) {
+            summed <- sparse_aggregate_sum(x@x, x@i, x@p, g, ngroups, nrow(x))
+            if ("sum" %in% statistics) {
+                collected$sum <- summed
+            }
+            if ("mean" %in% statistics) {
+                collected$mean <- t(t(summed) / freq)
+            }
+        }
 
-    out <- rowBlockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
-        statistics=statistics, threshold=threshold, BPPARAM=BPPARAM)
+        if ("num.detected" %in% statistics || "prop.detected" %in% statistics) {
+            detected <- sparse_aggregate_detected(x@x, x@i, x@p, g, ngroups, nrow(x))
+            if ("num.detected" %in% statistics) {
+                collected$num.detected <- detected
+            }
+            if ("prop.detected" %in% statistics) {
+                collected$prop.detected <- t(t(detected) / freq)
+            }
+        }
 
-    collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
-    names(collected) <- names(out[[1]])
+        for (i in seq_along(collected)) {
+            rownames(collected[[i]]) <- rownames(x)
+            colnames(collected[[i]]) <- levels(f)
+        }
 
-    freq <- lengths(by.group)
-    if ("mean" %in% statistics) {
-        collected$mean <- t(t(collected$sum)/freq)
-    }
-    if ("prop.detected" %in% statistics) {
-        collected$prop.detected <- t(t(collected$num.detected)/freq)
+    } else {
+        lost <- is.na(ids)
+        ids <- ids[!lost]
+        if (any(lost)) {
+            x <- x[,!lost,drop=FALSE]
+        }
+
+        # Drop unused levels, as the subsequent mapping step to preserve the type of 'ids'
+        # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
+        by.group <- split(seq_along(ids), ids, drop=TRUE)
+
+        out <- rowBlockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
+            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM)
+
+        collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
+        names(collected) <- names(out[[1]])
+
+        freq <- lengths(by.group)
+        if ("mean" %in% statistics) {
+            collected$mean <- t(t(collected$sum)/freq)
+        }
+        if ("prop.detected" %in% statistics) {
+            collected$prop.detected <- t(t(collected$num.detected)/freq)
+        }
     }
 
     list(summary=collected[statistics], freq=freq)

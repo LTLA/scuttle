@@ -72,6 +72,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sparse_aggregate_sum
+Rcpp::NumericMatrix sparse_aggregate_sum(Rcpp::NumericVector x, Rcpp::IntegerVector i, Rcpp::IntegerVector p, Rcpp::IntegerVector groupings, int ngroups, int nrows);
+RcppExport SEXP _scuttle_sparse_aggregate_sum(SEXP xSEXP, SEXP iSEXP, SEXP pSEXP, SEXP groupingsSEXP, SEXP ngroupsSEXP, SEXP nrowsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type i(iSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type groupings(groupingsSEXP);
+    Rcpp::traits::input_parameter< int >::type ngroups(ngroupsSEXP);
+    Rcpp::traits::input_parameter< int >::type nrows(nrowsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_aggregate_sum(x, i, p, groupings, ngroups, nrows));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sparse_aggregate_detected
+Rcpp::NumericMatrix sparse_aggregate_detected(Rcpp::NumericVector x, Rcpp::IntegerVector i, Rcpp::IntegerVector p, Rcpp::IntegerVector groupings, int ngroups, int nrows);
+RcppExport SEXP _scuttle_sparse_aggregate_detected(SEXP xSEXP, SEXP iSEXP, SEXP pSEXP, SEXP groupingsSEXP, SEXP ngroupsSEXP, SEXP nrowsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type i(iSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type groupings(groupingsSEXP);
+    Rcpp::traits::input_parameter< int >::type ngroups(ngroupsSEXP);
+    Rcpp::traits::input_parameter< int >::type nrows(nrowsSEXP);
+    rcpp_result_gen = Rcpp::wrap(sparse_aggregate_detected(x, i, p, groupings, ngroups, nrows));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -91,6 +121,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
+    {"_scuttle_sparse_aggregate_sum", (DL_FUNC) &_scuttle_sparse_aggregate_sum, 6},
+    {"_scuttle_sparse_aggregate_detected", (DL_FUNC) &_scuttle_sparse_aggregate_detected, 6},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };

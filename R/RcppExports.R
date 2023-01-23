@@ -21,6 +21,14 @@ pool_size_factors <- function(exprs, pseudo_cell, order, pool_sizes) {
     .Call(`_scuttle_pool_size_factors`, exprs, pseudo_cell, order, pool_sizes)
 }
 
+sparse_aggregate_sum <- function(x, i, p, groupings, ngroups, nrows) {
+    .Call(`_scuttle_sparse_aggregate_sum`, x, i, p, groupings, ngroups, nrows)
+}
+
+sparse_aggregate_detected <- function(x, i, p, groupings, ngroups, nrows) {
+    .Call(`_scuttle_sparse_aggregate_detected`, x, i, p, groupings, ngroups, nrows)
+}
+
 sum_row_counts <- function(counts, genes, runs) {
     .Call(`_scuttle_sum_row_counts`, counts, genes, runs)
 }

@@ -9,16 +9,33 @@ library(DelayedArray)
 set.seed(10003)
 test_that("we can summarise counts at cell cluster level", {
     ids <- sample(ncol(sce)/2, ncol(sce), replace=TRUE)
+    expect_false(is(counts(sce), "dgCMatrix")) # i.e., not fastpath.
     out <- sumCountsAcrossCells(sce, ids)
 
     expect_identical(assay(out), colsum(counts(sce), ids))
     expect_identical(colnames(out), as.character(sort(unique(ids)))) # numeric ordering is preserved.
     expect_identical(sort(unique(ids)), out$ids)
 
+    # Works without the SCE.
     out2 <- sumCountsAcrossCells(counts(sce), ids)
     expect_identical(out, out2)
 
-    # Robust to column names.
+    # Works with the sparse fastpath.
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, ids)
+    expect_identical(outc, out)
+
+    # Doesn't store numbers if we don't ask.
+    out <- sumCountsAcrossCells(sce, ids, store.number=NULL)
+    expect_null(out$ncells)
+})
+
+test_that("sumCountsAcrossCells handles names correctly", {
+    ids <- sample(ncol(sce)/2, ncol(sce), replace=TRUE)
+    out <- sumCountsAcrossCells(sce, ids)
+
+    # Ignores column names.
     copy <- sce
     colnames(copy) <- paste0("CELL", seq_len(ncol(copy)))
     expect_identical(sumCountsAcrossCells(copy, ids), out)
@@ -28,40 +45,74 @@ test_that("we can summarise counts at cell cluster level", {
     assayNames(alt) <- "whee"
     out2 <- sumCountsAcrossCells(alt, ids, assay.type="whee")
     expect_identical(out, out2)
+})
+
+test_that("sumCountsAcrossCells respects existing levels correctly", {
+    ids <- sample(ncol(sce)/2, ncol(sce), replace=TRUE)
+    out <- sumCountsAcrossCells(sce, ids)
+    out <- out[,ncol(out):1]
+    out$ids <- as.character(out$ids)
 
     # Respects levels properly.
     fids <- factor(ids, levels=rev(sort(unique(ids))))
     fout <- sumCountsAcrossCells(sce, fids)
-    fout <- fout[,ncol(fout):1]
-    fout$ids <- as.integer(levels(fout$ids))[fout$ids]
+    fout$ids <- as.character(fout$ids)
     expect_identical(out, fout)
+
+    # And same for the fastpath.
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, fids)
+    outc$ids <- as.character(outc$ids)
+    expect_identical(out, outc)
+})
+
+test_that("sumCountsAcrossCells drops unused levels", {
+    ids <- sample(ncol(sce)/2, ncol(sce), replace=TRUE)
+    out <- sumCountsAcrossCells(sce, ids)
+    out$ids <- as.character(out$ids)
 
     # Drops unused levels.
     fids <- factor(ids, levels=1:100)
     fout <- sumCountsAcrossCells(sce, fids)
     expect_identical(fout$ids, sort(unique(fids)))
-    fout$ids <- as.integer(fout$ids)
+    fout$ids <- as.character(fout$ids)
     expect_identical(out, fout)
 
-    # Handles NA's correctly.
-    ids2 <- sample(LETTERS, ncol(sce), replace=TRUE)
+    # Same for the fastpath
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, fids)
+    outc$ids <- as.character(outc$ids)
+    expect_identical(out, outc)
+})
+
+test_that("sumCountsAcrossCells handles NA's correctly", {
+    ids <- sample(LETTERS, ncol(sce), replace=TRUE)
+    out <- sumCountsAcrossCells(sce, ids)
+
+    ids2 <- ids
+    ids2[ids2=="A"] <- NA
     out2 <- sumCountsAcrossCells(sce, ids2)
 
-    ids3 <- ids2
-    ids3[ids3=="A"] <- NA
-    out3 <- sumCountsAcrossCells(sce, ids3)
+    expect_identical(out[,setdiff(colnames(out), "A")], out2)
 
-    expect_identical(out2[,setdiff(colnames(out2), "A")], out3)
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, ids2)
+    expect_identical(out2, outc)
 
+    # What if everything is NA?
     all.na <- ids
     all.na[] <- NA
-    out3 <- sumCountsAcrossCells(sce, all.na)
-    expect_identical(ncol(out3), 0L)
-    expect_identical(rownames(out3), rownames(sce))
+    out2 <- sumCountsAcrossCells(sce, all.na)
+    expect_identical(ncol(out2), 0L)
+    expect_identical(rownames(out2), rownames(sce))
 
-    # Doesn't store numbers fi we don't ask.
-    out <- sumCountsAcrossCells(sce, ids, store.number=NULL)
-    expect_null(out$ncells)
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, all.na)
+    expect_identical(out2, outc)
 })
 
 set.seed(10004)
@@ -129,9 +180,18 @@ test_that("by-cell count summarization works with various average types", {
     out3 <- sumCountsAcrossCells(sce, ids, average="mean")
     expect_identical(out2, out3)
 
+    # Checking the fast path.
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    outc <- sumCountsAcrossCells(copy, ids, average="mean")
+    expect_identical(out2, outc)
+
     # Handles medianizing.
     out4 <- sumCountsAcrossCells(sce, ids, average="median")
     expect_false(identical(out2, out4))
+
+    out4c <- sumCountsAcrossCells(copy, ids, average="median") # doesn't trigger fastpath, as we must go row-by-row.
+    expect_identical(out4, out4c)
 
     # 'none' is the same as FALSE.
     expect_identical(ref, sumCountsAcrossCells(sce, ids, average="none"))
@@ -439,19 +499,25 @@ test_that("Aggregation across cells works correctly for SEs", {
 test_that("numDetectedAcrossCells works as expected", {
     ids <- sample(LETTERS[1:5], ncol(sce), replace=TRUE)
 
+    expect_false(is(assay(sce), "dgCMatrix")) # i.e., not fastpath.
     out <- numDetectedAcrossCells(counts(sce), ids)
     expect_equal(assay(out), colsum((counts(sce) > 0)+0, ids))
     expect_identical(out$ids, colnames(out))
-    out <- numDetectedAcrossCells(counts(sce), ids, average=TRUE)
-    expect_identical(assay(out), t(t(colsum((counts(sce) > 0)+0, ids))/as.integer(table(ids))))
+    aout <- numDetectedAcrossCells(counts(sce), ids, average=TRUE)
+    expect_identical(assay(aout), t(t(colsum((counts(sce) > 0)+0, ids))/as.integer(table(ids))))
 
-    # Checking that it works direclty with SCEs.
-    expect_equal(numDetectedAcrossCells(counts(sce), ids),
-        numDetectedAcrossCells(sce, ids))
-    expect_equal(numDetectedAcrossCells(counts(sce), ids, average=TRUE),
-        numDetectedAcrossCells(sce, ids, average=TRUE))
+    # Checking that we're dealing with the fastpth. 
+    copy <- sce
+    assay(copy) <- as(assay(copy), "dgCMatrix")
+    out2 <- numDetectedAcrossCells(counts(copy), ids)
+    expect_identical(out, out2)
+    aout2 <- numDetectedAcrossCells(counts(copy), ids, average=TRUE)
+    expect_identical(aout, aout2)
+})
 
-    # Checking that subsetting works.
+test_that("numDetectedAcrossCells works with subsetting", {
+    ids <- sample(LETTERS[1:5], ncol(sce), replace=TRUE)
+
     expect_identical(numDetectedAcrossCells(counts(sce), ids, subset.row=10:1),
         numDetectedAcrossCells(counts(sce), ids)[10:1,])
 
@@ -461,12 +527,18 @@ test_that("numDetectedAcrossCells works as expected", {
     ids[c(1,3,5,6)] <- NA
     expect_identical(numDetectedAcrossCells(counts(sce), ids),
         numDetectedAcrossCells(counts(sce)[,!is.na(ids)], ids[!is.na(ids)]))
+})
+
+test_that("numDetectedAcrossCells works with other inputs", {
+    ids <- sample(LETTERS[1:5], ncol(sce), replace=TRUE)
+
+    # Checking that it works direclty with SCEs.
+    expect_equal(numDetectedAcrossCells(counts(sce), ids), numDetectedAcrossCells(sce, ids))
+    expect_equal(numDetectedAcrossCells(counts(sce), ids, average=TRUE), numDetectedAcrossCells(sce, ids, average=TRUE))
 
     # Comparing to sumCountsAcrossCells.
-    expect_equal(numDetectedAcrossCells(counts(sce), ids),
-        sumCountsAcrossCells((counts(sce) > 0)+0, ids))
-    expect_equal(numDetectedAcrossCells(counts(sce), ids, average=TRUE),
-        sumCountsAcrossCells((counts(sce) > 0)+0, ids, average=TRUE))
+    expect_equal(numDetectedAcrossCells(counts(sce), ids), sumCountsAcrossCells((counts(sce) > 0)+0, ids))
+    expect_equal(numDetectedAcrossCells(counts(sce), ids, average=TRUE), sumCountsAcrossCells((counts(sce) > 0)+0, ids, average=TRUE))
 })
 
 test_that("numDetectedAcrossCells handles other matrix classes", {
