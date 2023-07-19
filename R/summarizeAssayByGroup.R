@@ -42,7 +42,7 @@
 #' \item \code{"median"}, the median of all values in each group.
 #' This makes the most sense for normalized and/or transformed assays, 
 #' usually generated from large counts where discreteness is less of an issue.
-#' \item \code{"num.detected"} and \code{"prop.detected"}, the number and proportion of values in each group that are non-zero.#
+#' \item \code{"num.detected"} and \code{"prop.detected"}, the number and proportion of values in each group that are non-zero.
 #' This makes the most sense for raw counts or sparsity-preserving transformations.
 #' }
 #'
