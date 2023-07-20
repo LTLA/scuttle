@@ -4,8 +4,8 @@ Authors@R: c(
         person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
         person("Davis", "McCarthy", role="aut")
     )
-Version: 1.11.0
-Date: 2022-01-22
+Version: 1.11.1
+Date: 2022-07-20
 License: GPL-3
 Title: Single-Cell RNA-Seq Analysis Utilities
 Description: 
