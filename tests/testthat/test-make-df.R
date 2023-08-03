@@ -111,7 +111,7 @@ test_that("makePer*DF functions work for non-ordinary matrices", {
     expect_identical(df1$Gene_0100, unname(logcounts(example_sce)["Gene_0100",]))
 
     df1 <- makePerFeatureDF(example_sce, cells=c("Cell_001", "Cell_010", "Cell_100"))
-    expect_identical(df1$Cell_001, unname(logcounts(example_sce)[,"Cell_001",]))
-    expect_identical(df1$Cell_010, unname(logcounts(example_sce)[,"Cell_010",]))
-    expect_identical(df1$Cell_100, unname(logcounts(example_sce)[,"Cell_100",]))
+    expect_identical(df1$Cell_001, unname(logcounts(example_sce)[,"Cell_001"]))
+    expect_identical(df1$Cell_010, unname(logcounts(example_sce)[,"Cell_010"]))
+    expect_identical(df1$Cell_100, unname(logcounts(example_sce)[,"Cell_100"]))
 })
