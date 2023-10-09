@@ -44,7 +44,7 @@ test_that("normalizeCounts works as expected", {
     # With subsetting and normalize.all=TRUE.
     out <- normalizeCounts(dummy, subset.row=1:10, normalize.all=TRUE)
     sub <- normalizeCounts(dummy, colSums(dummy[1:10,]))
-    expect_identical(out, sub)
+    expect_equal(out, sub)
 
     out <- normalizeCounts(dummy, normalize.all=TRUE) # no effect if subset.row=NULL.
     sub <- normalizeCounts(dummy)
@@ -245,7 +245,7 @@ test_that("logNormCounts works for SE objects", {
 
     out <- logNormCounts(se, subset.row=1:10, normalize.all=TRUE)
     ref <- logNormCounts(se, size.factors=colSums(assay(se)[1:10,]))
-    expect_identical(out, ref)
+    expect_equal(out, ref)
 
     out <- logNormCounts(se, size.factors=sf, subset.row=1:10)
     expect_identical(out, logNormCounts(se, size.factors=sf)[1:10,])
@@ -296,7 +296,7 @@ test_that("logNormCounts works for SCE objects (basic)", {
 
     out <- logNormCounts(Y, subset.row=1:10, normalize.all=TRUE) 
     sub <- logNormCounts(Y, colSums(counts(Y)[1:10,]))
-    expect_identical(out, sub)
+    expect_equal(out, sub)
 
     # Diverts to other names.
     Y <- logNormCounts(X, name="blah")

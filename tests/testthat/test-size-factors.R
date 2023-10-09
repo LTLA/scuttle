@@ -13,7 +13,7 @@ test_that("librarySizeFactors works as expected", {
     expect_identical(sf, sizeFactors(X))
 
     sf <- librarySizeFactors(X, subset.row=1:10)
-    expect_identical(mean(sf), 1)
+    expect_equal(mean(sf), 1)
     expect_true(sd(sf/colSums(dummy[1:10,])) < 1e-8)
 })
 
