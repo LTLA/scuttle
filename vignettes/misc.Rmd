@@ -102,7 +102,8 @@ In this manner, we never attempt to load the entire dataset in dense format to m
 ```{r}
 # Mocking up a dataset to demonstrate:
 outfile <- tempfile()
-write.table(counts(sce)[1:100,], file=outfile, sep="\t", quote=FALSE)
+write.table(as.matrix(counts(sce)[1:100,]), 
+    file=outfile, sep="\t", quote=FALSE)
 
 # Reading it in as a sparse matrix:
 output <- readSparseCounts(outfile)
