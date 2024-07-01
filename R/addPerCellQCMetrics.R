@@ -36,7 +36,21 @@
 #' @importFrom SummarizedExperiment colData colData<-
 addPerCellQCMetrics <- function(x, ...) {
     colData(x) <- cbind(colData(x), perCellQCMetrics(x, ...))
+    rowData(x) <- cbind(rowData(x), featureSelected(x, ...))
     x
+}
+
+
+featureSelected <- function(x, ...) {
+  if (missing(assay.type) && missing(subsets)) {
+    return(NULL)
+  }
+  dummy <- vector("logical", nrow(assay(x, assay.type)))
+  subsets_logical <- lapply(subsets, FUN = function(x, target) {
+    target[dummy] <- TRUE
+    target
+  }, target = dummy)
+  DataFrame(simplify2array(subsets_logical))
 }
 
 #' @export
