@@ -34,24 +34,35 @@
 #' @export
 #' @importFrom BiocGenerics cbind
 #' @importFrom SummarizedExperiment colData colData<-
+#' @importFrom SummarizedExperiment rowData rowData<-
 addPerCellQCMetrics <- function(x, ...) {
     colData(x) <- cbind(colData(x), perCellQCMetrics(x, ...))
-    rowData(x) <- cbind(rowData(x), featureSelected(x, ...))
+    features <- featureSelected(x, ...)
+    if (!is.null(features)) {
+      rowData(x) <- cbind(rowData(x), features)
+    }
     x
 }
 
+#' @export
+#' @rdname featureSelected
+setGeneric("featureSelected", function(x, ...) standardGeneric("featureSelected"))
 
-featureSelected <- function(x, ...) {
-  if (missing(assay.type) && missing(subsets)) {
+#' @export
+#' @rdname featureSelected
+setMethod("featureSelected", "SummarizedExperiment", function(x, ..., subsets) {
+  if (missing(subsets) || is.null(subsets)) {
     return(NULL)
   }
-  dummy <- vector("logical", nrow(assay(x, assay.type)))
+  dummy <- vector("logical", nrow(x))
+  
   subsets_logical <- lapply(subsets, FUN = function(x, target) {
-    target[dummy] <- TRUE
+    target[x] <- TRUE
     target
   }, target = dummy)
   DataFrame(simplify2array(subsets_logical))
-}
+})
+
 
 #' @export
 #' @rdname addPerCellQCMetrics
