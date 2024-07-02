@@ -204,25 +204,27 @@ test_that("we can compute standard QC metrics across multiple cores", {
 
 #######################################################################
 # addPerCellQCMetrics works: 
+
 test_that("addPerCellQCMetrics adds rowData columns", {
-    # Three types of using subsets
     genes_numeric <- 1:5
     genes_names <- c("Gene_0001", "Gene_2000")
     genes_logical <- vector("logical", nrow(original))
     genes_logical[sample(nrow(original), 5)] <- TRUE
     
-    subsets <- list(numeric = genes_numeric,
-                    logical = genes_logical,
-                    names = genes_names)
-    out_sce <- addPerCellQCMetrics(original, subsets =  subsets)
+    subsets <- list(numeric = genes_numeric, logical = genes_logical, names = genes_names)
+    out_sce <- addPerCellQCMetrics(original, subsets = subsets)
     rd <- rowData(out_sce)
-    expect_equal(ncol(rd), length(subsets))
-    expect_equal(colnames(rd), names(subsets))
-    expect_equal(colSums(as.matrix(rd[, names(subsets)])),
-                 c("numeric" = length(genes_numeric), 
-                   "logical" = sum(genes_logical), 
-                   names = length(genes_names)))
-    
-    # colData is modified
-    expect_gt(ncol(colData(out_sce)), 3)
+
+    expect_identical(rd$subset_numeric, seq_len(nrow(original)) %in% subsets$numeric)
+    expect_identical(rd$subset_logical, subsets$logical)
+    expect_identical(rd$subset_names, rownames(original) %in% subsets$names)
+
+    out_sce <- addPerCellQCMetrics(original, subsets = subsets, subset.prefix=NULL)
+    expect_null(rd$subset_numeric)
+    expect_null(rd$subset_logical)
+    expect_null(rd$subset_names)
+
+    # Checking that the colData is modified
+    expect_type(out_sce$sum, "double")
+    expect_type(out_sce$detected, "double")
 })
