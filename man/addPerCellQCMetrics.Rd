@@ -7,16 +7,20 @@
 \alias{addPerFeatureQC}
 \title{Add QC metrics to a SummarizedExperiment}
 \usage{
-addPerCellQCMetrics(x, ...)
+addPerCellQCMetrics(x, subsets = NULL, ...)
 
 addPerFeatureQCMetrics(x, ...)
 
-addPerCellQC(x, ...)
+addPerCellQC(x, subsets = NULL, ...)
 
 addPerFeatureQC(x, ...)
 }
 \arguments{
 \item{x}{A \linkS4class{SummarizedExperiment} object or one of its subclasses.}
+
+\item{subsets}{A named list containing one or more vectors 
+(a character vector of cell names, a logical vector, or a numeric vector of indices),
+used to identify interesting sample subsets such as negative control wells.}
 
 \item{...}{For \code{addPerCellQCMetrics}, further arguments to pass to \code{\link{perCellQCMetrics}}.
 
@@ -24,6 +28,8 @@ For \code{addPerFeatureQCMetrics}, further arguments to pass to \code{\link{perF
 }
 \value{
 \code{x} is returned with the QC metrics added to the row or column metadata.
+
+If possible the subsets are appended to the rowData of the \code{\link{SingleCellExperiment}} or \code{\link{SummarizedExperiment}}.
 }
 \description{
 Convenient utilities to compute QC metrics and add them to a \linkS4class{SummarizedExperiment}'s row or column metadata.
@@ -39,16 +45,20 @@ These can be considered to be soft-deprecated in favor of the longer forms.
 }
 \examples{
 example_sce <- mockSCE()
-example_sce <- addPerCellQCMetrics(example_sce)
+example_sce <- addPerCellQCMetrics(example_sce,
+                                   subsets = list(group1 = 1:5,
+                                            group2 = c("Gene_0001", "Gene_2000"))
+)
 colData(example_sce)
 
 example_sce <- addPerFeatureQCMetrics(example_sce)
 rowData(example_sce)
+
 
 }
 \seealso{
 \code{\link{perCellQCMetrics}} and \code{\link{perFeatureQCMetrics}}, which do the actual work.
 }
 \author{
-Aaron Lun
+Aaron Lun, Lluís Revilla Sancho
 }
