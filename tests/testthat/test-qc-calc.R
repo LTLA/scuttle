@@ -220,6 +220,7 @@ test_that("addPerCellQCMetrics adds rowData columns", {
     expect_identical(rd$subset_names, rownames(original) %in% subsets$names)
 
     out_sce <- addPerCellQCMetrics(original, subsets = subsets, subset.prefix=NULL)
+    rd <- rowData(out_sce)
     expect_null(rd$subset_numeric)
     expect_null(rd$subset_logical)
     expect_null(rd$subset_names)
