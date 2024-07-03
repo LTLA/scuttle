@@ -215,15 +215,15 @@ test_that("addPerCellQCMetrics adds rowData columns", {
     out_sce <- addPerCellQCMetrics(original, subsets = subsets)
     rd <- rowData(out_sce)
 
-    expect_identical(rd$subset_numeric, seq_len(nrow(original)) %in% subsets$numeric)
-    expect_identical(rd$subset_logical, subsets$logical)
-    expect_identical(rd$subset_names, rownames(original) %in% subsets$names)
+    expect_identical(rd$subsets_numeric, seq_len(nrow(original)) %in% subsets$numeric)
+    expect_identical(rd$subsets_logical, subsets$logical)
+    expect_identical(rd$subsets_names, rownames(original) %in% subsets$names)
 
     out_sce <- addPerCellQCMetrics(original, subsets = subsets, subset.prefix=NULL)
     rd <- rowData(out_sce)
-    expect_null(rd$subset_numeric)
-    expect_null(rd$subset_logical)
-    expect_null(rd$subset_names)
+    expect_null(rd$subsets_numeric)
+    expect_null(rd$subsets_logical)
+    expect_null(rd$subsets_names)
 
     # Checking that the colData is modified
     expect_type(out_sce$sum, "double")

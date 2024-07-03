@@ -7,11 +7,11 @@
 \alias{addPerFeatureQC}
 \title{Add QC metrics to a SummarizedExperiment}
 \usage{
-addPerCellQCMetrics(x, subsets = NULL, ..., subset.prefix = "subset_")
+addPerCellQCMetrics(x, subsets = NULL, ..., subset.prefix = "subsets_")
 
 addPerFeatureQCMetrics(x, ...)
 
-addPerCellQC(x, subsets = NULL, ..., subset.prefix = "subset_")
+addPerCellQC(x, subsets = NULL, ..., subset.prefix = "subsets_")
 
 addPerFeatureQC(x, ...)
 }
