@@ -201,3 +201,31 @@ test_that("we can compute standard QC metrics across multiple cores", {
     expect_equal(perFeatureQCMetrics(original, subset=list(set=1:10), flatten=FALSE), 
         perFeatureQCMetrics(original, subset=list(set=1:10), BPPARAM=safeBPParam(3), flatten=FALSE))
 })
+
+#######################################################################
+# addPerCellQCMetrics works: 
+
+test_that("addPerCellQCMetrics adds rowData columns", {
+    genes_numeric <- 1:5
+    genes_names <- c("Gene_0001", "Gene_2000")
+    genes_logical <- vector("logical", nrow(original))
+    genes_logical[sample(nrow(original), 5)] <- TRUE
+    
+    subsets <- list(numeric = genes_numeric, logical = genes_logical, names = genes_names)
+    out_sce <- addPerCellQCMetrics(original, subsets = subsets)
+    rd <- rowData(out_sce)
+
+    expect_identical(rd$subsets_numeric, seq_len(nrow(original)) %in% subsets$numeric)
+    expect_identical(rd$subsets_logical, subsets$logical)
+    expect_identical(rd$subsets_names, rownames(original) %in% subsets$names)
+
+    out_sce <- addPerCellQCMetrics(original, subsets = subsets, subset.prefix=NULL)
+    rd <- rowData(out_sce)
+    expect_null(rd$subsets_numeric)
+    expect_null(rd$subsets_logical)
+    expect_null(rd$subsets_names)
+
+    # Checking that the colData is modified
+    expect_type(out_sce$sum, "double")
+    expect_type(out_sce$detected, "double")
+})

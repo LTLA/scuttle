@@ -1,6 +1,10 @@
 \name{NEWS}
 \title{News for Package \pkg{scuttle}}
 
+\section{Version 1.16}{\itemize{
+\item \code{addPerCellQCMetrics()} will (optionally) add the feature subset identities to the row data of the SingleCellExperiment.
+}}
+
 \section{Version 1.10}{\itemize{
 \item \code{.subset2index} now converts factor inputs to character vectors, rather than treating them as integers.
 }}
