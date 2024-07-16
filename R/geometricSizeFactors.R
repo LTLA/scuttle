@@ -48,8 +48,8 @@
 #' summary(geometricSizeFactors(example_sce))
 NULL
 
-#' @importFrom Matrix colMeans
 #' @importFrom BiocParallel SerialParam
+#' @importFrom MatrixGenerics colMeans
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .geometric_size_factors <- function(x, subset.row=NULL, pseudo.count=1, BPPARAM=SerialParam()) {
     if (!is.null(subset.row)) {

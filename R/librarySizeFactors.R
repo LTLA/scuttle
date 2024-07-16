@@ -50,8 +50,8 @@
 #' summary(librarySizeFactors(example_sce))
 NULL
 
-#' @importFrom Matrix colSums colMeans
 #' @importFrom BiocParallel SerialParam
+#' @importFrom MatrixGenerics colSums colMeans
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .library_size_factors <- function(x, subset.row=NULL, geometric=FALSE, BPPARAM=SerialParam(),
     subset_row=NULL, pseudo_count=1) 

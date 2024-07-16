@@ -61,9 +61,8 @@
 #' summary(medianSizeFactors(example_sce))
 NULL
 
+#' @importFrom MatrixGenerics rowMeans colMedians
 #' @importFrom DelayedArray DelayedArray
-#' @importFrom DelayedMatrixStats colMedians
-#' @importFrom Matrix rowMeans
 .median_size_factors <- function(x, subset.row=NULL, reference=NULL, subset_row=NULL) {
     subset.row <- .replace(subset.row, subset_row)
 
