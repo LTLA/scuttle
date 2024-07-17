@@ -279,8 +279,8 @@ NULL
 }
 
 #' @export
-#' @importFrom Matrix colSums
 #' @importFrom stats median
+#' @importFrom MatrixGenerics colSums
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .guessMinMean <- function(x, min.mean, BPPARAM) { 
     # Choosing a mean filter based on the data type and then filtering:
@@ -310,8 +310,9 @@ NULL
 # Internal functions.
 #############################################################
 
-#' @importFrom DelayedArray is_sparse
-#' @importFrom Matrix qr qr.coef colSums
+#' @importFrom Matrix qr qr.coef
+#' @importFrom S4Arrays is_sparse
+#' @importFrom MatrixGenerics colSums
 .per_cluster_normalize <- function(x, sizes, min.mean=NULL, positive=FALSE, scaling=NULL) 
 # Computes the normalization factors _within_ each cluster,
 # along with the reference pseudo-cell used for normalization. 

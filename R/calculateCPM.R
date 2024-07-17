@@ -34,7 +34,7 @@
 #' str(cpm(example_sce))
 NULL
 
-#' @importFrom Matrix colSums
+#' @importFrom MatrixGenerics colSums
 .calculate_cpm <- function(x, size.factors=NULL, subset.row=NULL, size_factors=NULL, subset_row=NULL) {
     size.factors <- .replace(size.factors, size_factors)
     subset.row <- .replace(subset.row, subset_row)

@@ -132,7 +132,7 @@ downsampleBatches <- function(..., batch=NULL, block=NULL, method=c("median", "m
     }
 }
 
-#' @importFrom Matrix colSums
+#' @importFrom MatrixGenerics colSums
 .multi_object_downsample <- function(mats, FUN, bycol) {
     lib.sizes <- lapply(mats, colSums)
     measure <- vapply(lib.sizes, FUN, 0)

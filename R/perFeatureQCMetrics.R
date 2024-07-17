@@ -109,12 +109,11 @@ NULL
     full.info
 }
 
-#' @importFrom Matrix rowMeans
-#' @importClassesFrom Matrix sparseMatrix
-#' @importClassesFrom DelayedArray SparseArraySeed
+#' @importFrom MatrixGenerics rowMeans
+#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .per_feature_qc <- function(x, cellcon, limit) {
-    if (is(x, "SparseArraySeed")) {
-        x <- as(x, "sparseMatrix")
+    if (is(x, "COO_SparseMatrix")) {
+        x <- as(x, "SVT_SparseMatrix")
     }
 
     detected <- x > limit
@@ -125,7 +124,6 @@ NULL
     )
 
     cellcons <- lapply(cellcon, function(i) {
-        # TODO: switch to MatrixGenerics when that finally becomes available.
         list(
             sum=unname(rowMeans(x[,i,drop=FALSE])),
             detected=unname(rowMeans(detected[,i,drop=FALSE]))

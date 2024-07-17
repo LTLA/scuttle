@@ -50,7 +50,7 @@
 NULL
 
 #' @importFrom BiocParallel register bpparam SerialParam
-#' @importFrom Matrix rowMeans
+#' @importFrom MatrixGenerics rowMeans
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .calculate_average <- function(x, size.factors=NULL, subset.row=NULL, BPPARAM = SerialParam(),
     size_factors=NULL, subset_row=NULL)

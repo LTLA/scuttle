@@ -180,12 +180,11 @@ NULL
     full.info
 }
 
-#' @importFrom Matrix colSums 
-#' @importClassesFrom Matrix sparseMatrix
-#' @importClassesFrom DelayedArray SparseArraySeed
+#' @importFrom MatrixGenerics colSums
+#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .per_cell_qc <- function(x, featcon, top, limit) {
-    if (is(x, "SparseArraySeed")) {
-        x <- as(x, "sparseMatrix")
+    if (is(x, "COO_SparseMatrix")) {
+        x <- as(x, "SVT_SparseMatrix")
     }
 
     detected <- x > limit
@@ -197,7 +196,6 @@ NULL
     )
 
     featcons <- lapply(featcon, function(i) {
-        # TODO: switch to MatrixGenerics when that finally becomes available.
         list(
             sum=unname(colSums(x[i,,drop=FALSE])),
             detected=unname(colSums(detected[i,,drop=FALSE]))

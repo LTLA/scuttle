@@ -168,13 +168,11 @@ NULL
     list(summary=collected[statistics], freq=freq)
 }
 
-#' @importFrom Matrix rowSums
-#' @importFrom DelayedMatrixStats rowMedians 
-#' @importClassesFrom Matrix sparseMatrix
-#' @importClassesFrom DelayedArray SparseArraySeed
+#' @importFrom MatrixGenerics rowSums rowMedians
+#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .summarize_assay_internal <- function(x, by.group, statistics, threshold) {
-    if (is(x, "SparseArraySeed")) {
-        x <- as(x, "sparseMatrix")
+    if (is(x, "COO_SparseMatrix")) {
+        x <- as(x, "SVT_SparseMatrix")
     }
 
     collated <- list()
