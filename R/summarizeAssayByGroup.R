@@ -183,6 +183,7 @@ NULL
     }
 
     if ("median" %in% statistics) {
+        # This should auto-lookup the various *MatrixStats packages if they're installed.
         out <- lapply(by.group, function(i) rowMedians(x[,i,drop=FALSE]))
         out <- .cbind_empty(out, x)
         rownames(out) <- rownames(x)

@@ -78,7 +78,8 @@ NULL
         x <- x[i,,drop=FALSE]
     }
 
-    sf.amb <- colMedians(DelayedArray(x/reference))
+    # This should auto-lookup the various *MatrixStats packages if they're installed.
+    sf.amb <- colMedians(x/reference)
     sf.amb/mean(sf.amb)
 }       
 
