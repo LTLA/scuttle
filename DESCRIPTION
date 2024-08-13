@@ -4,8 +4,8 @@ Authors@R: c(
         person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
         person("Davis", "McCarthy", role="aut")
     )
-Version: 1.15.3
-Date: 2024-08-10
+Version: 1.15.4
+Date: 2024-08-13
 License: GPL-3
 Title: Single-Cell RNA-Seq Analysis Utilities
 Description: 
@@ -36,7 +36,7 @@ Suggests:
     scRNAseq,
     rmarkdown,
     testthat,
-    SparseMatrixStats,
+    sparseMatrixStats,
     DelayedMatrixStats,
     scran
 VignetteBuilder: knitr
