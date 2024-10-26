@@ -3,6 +3,8 @@
 
 \section{Version 1.16}{\itemize{
 \item \code{addPerCellQCMetrics()} will (optionally) add the feature subset identities to the row data of the SingleCellExperiment.
+
+\item Added \code{uniquifyDataFrameByGroup()} to collapse grouped rows in a DataFrame into their unique values.
 }}
 
 \section{Version 1.10}{\itemize{
