@@ -238,7 +238,6 @@ test_that("test that na.rm works correctly", {
     }
     # Prepare data
     sce <- mockSCE()
-    assayNames(sce) <- "counts"
     ids <- sample(LETTERS, nrow(sce), replace = TRUE)
     # Create a data with NAs
     n_value <- nrow(sce)*ncol(sce)

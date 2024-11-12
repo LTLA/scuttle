@@ -554,3 +554,52 @@ test_that("numDetectedAcrossCells handles other matrix classes", {
     delayed <- DelayedArray(thing)
     expect_equal(numDetectedAcrossCells(delayed, ids), ref)
 })
+
+test_that("test that na.rm works correctly", {
+    # Calculate average and sum for each column group
+    summary_FUN_cols <- function(x, ids){
+        # Loop through groups and calculate statistics
+        groups <- unique(ids) |> sort()
+        res <- lapply(groups, function(group){
+            mat_sub <- assay(x[, ids == group ])
+            list(
+                sum = rowSums(mat_sub, na.rm = FALSE),
+                sum_na = rowSums(mat_sub, na.rm = TRUE),
+                mean = rowMeans(mat_sub, na.rm = FALSE),
+                mean_na = rowMeans(mat_sub, na.rm = TRUE)
+            )
+        })
+        # Combine results for each statistic across groups
+        res <- lapply(c("sum", "sum_na", "mean", "mean_na"), function(stat){
+            do.call(cbind, lapply(res, `[[`, stat))
+        })
+        names(res) <- c("sum", "sum_na", "mean", "mean_na")
+        return(res)
+    }
+    # Prepare data
+    sce <- mockSCE()
+    ids <- sample(LETTERS, ncol(sce), replace=TRUE)
+    # Create a data with NAs
+    n_value <- nrow(sce)*ncol(sce)
+    prob <- runif(1, 0, 0.1)
+    sce_na <- sce
+    assay(sce_na)[c(1, 5, 3, 6)] <- NA
+    # Test without NAs
+    res <- summarizeAssayByGroup(sce, ids = ids, na.rm = FALSE)
+    res_na <- summarizeAssayByGroup(sce, ids = ids, na.rm = TRUE)
+    ref <- summary_FUN_cols(sce, ids)
+    #
+    expect_equal(assay(res, "sum"), ref[["sum"]], check.attributes = FALSE)
+    expect_equal(assay(res_na, "sum"), ref[["sum_na"]], check.attributes = FALSE)
+    expect_equal(assay(res, "mean"), ref[["mean"]], check.attributes = FALSE)
+    expect_equal(assay(res_na, "mean"), ref[["mean_na"]], check.attributes = FALSE)
+    # Test with NAs
+    res <- summarizeAssayByGroup(sce_na, ids = ids, na.rm = FALSE)
+    res_na <- summarizeAssayByGroup(sce_na, ids = ids, na.rm = TRUE)
+    ref <- summary_FUN_cols(sce_na, ids)
+    #
+    expect_equal(assay(res, "sum"), ref[["sum"]], check.attributes = FALSE)
+    expect_equal(assay(res_na, "sum"), ref[["sum_na"]], check.attributes = FALSE)
+    expect_equal(assay(res, "mean"), ref[["mean"]], check.attributes = FALSE)
+    expect_equal(assay(res_na, "mean"), ref[["mean_na"]], check.attributes = FALSE)
+})
