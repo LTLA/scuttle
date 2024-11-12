@@ -214,3 +214,57 @@ test_that("numDetectedAcrossFeatures handles other matrix classes", {
     delayed <- DelayedArray(thing)
     expect_equal(numDetectedAcrossFeatures(delayed, ids), ref)
 })
+
+test_that("test that na.rm works correctly", {
+    # Calculate average and sum for each row group
+    summary_FUN_rows <- function(x, ids){
+        # Loop through groups and calculate statistics
+        groups <- unique(ids) |> sort()
+        res <- lapply(groups, function(group) {
+            mat_sub <- x[ids == group, ]
+            list(
+                sum = colSums(mat_sub, na.rm = FALSE),
+                sum_na = colSums(mat_sub, na.rm = TRUE),
+                mean = colMeans(mat_sub, na.rm = FALSE),
+                mean_na = colMeans(mat_sub, na.rm = TRUE)
+            )
+        })
+        # Combine results for each statistic across groups
+        res <- lapply(c("sum", "sum_na", "mean", "mean_na"), function(stat) {
+            do.call(rbind, lapply(res, `[[`, stat))
+        })
+        names(res) <- c("sum", "sum_na", "mean", "mean_na")
+        return(res)
+    }
+    # Prepare data
+    sce <- mockSCE()
+    assayNames(sce) <- "counts"
+    ids <- sample(LETTERS, nrow(sce), replace = TRUE)
+    # Create a data with NAs
+    n_value <- nrow(sce)*ncol(sce)
+    prob <- runif(1, 0, 0.1)
+    sce_na <- sce
+    assay(sce_na)[c(1, 5, 3, 6)] <- NA
+    # Test without NAs
+    res_sum <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = FALSE, na.rm = FALSE)
+    res_sum_na <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = FALSE, na.rm = TRUE)
+    res_mean <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = TRUE, na.rm = FALSE)
+    res_mean_na <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = TRUE, na.rm = TRUE)
+    ref <- summary_FUN_rows(assay(sce), ids)
+    #
+    expect_equal(res_sum, ref[["sum"]], check.attributes = FALSE)
+    expect_equal(res_sum_na, ref[["sum_na"]], check.attributes = FALSE)
+    expect_equal(res_mean, ref[["mean"]], check.attributes = FALSE)
+    expect_equal(res_mean_na, ref[["mean_na"]], check.attributes = FALSE)
+    # Test with NAs
+    res_sum <- sumCountsAcrossFeatures(assay(sce_na), ids = ids, average = FALSE, na.rm = FALSE)
+    res_sum_na <- sumCountsAcrossFeatures(assay(sce_na), ids = ids, average = FALSE, na.rm = TRUE)
+    res_mean <- sumCountsAcrossFeatures(assay(sce_na), ids = ids, average = TRUE, na.rm = FALSE)
+    res_mean_na <- sumCountsAcrossFeatures(assay(sce_na), ids = ids, average = TRUE, na.rm = TRUE)
+    ref <- summary_FUN_rows(assay(sce_na), ids)
+    #
+    expect_equal(res_sum, ref[["sum"]], check.attributes = FALSE)
+    expect_equal(res_sum_na, ref[["sum_na"]], check.attributes = FALSE)
+    expect_equal(res_mean, ref[["mean"]], check.attributes = FALSE)
+    expect_equal(res_mean_na, ref[["mean_na"]], check.attributes = FALSE)
+})
