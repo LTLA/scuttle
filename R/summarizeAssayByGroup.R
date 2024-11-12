@@ -156,16 +156,40 @@ NULL
         collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
         names(collected) <- names(out[[1]])
 
-        freq <- lengths(by.group)
+        # Calculate frequency matrix with dimensions genes*cells and apply
+        # that to get average abundance and proportion of detected genes.
+        freq <- .calculate_frequency(x, by.group, ...)
         if ("mean" %in% statistics) {
-            collected$mean <- t(t(collected$sum)/freq)
+            collected$mean <- collected$sum/freq
         }
         if ("prop.detected" %in% statistics) {
-            collected$prop.detected <- t(t(collected$num.detected)/freq)
+            collected$prop.detected <- collected$num.detected/freq
         }
+        # Convert frequencies to single vector so that it can be stored to
+        # colData. Calculate average which is an integer for each group
+        # when there are no NAs.
+        freq <- colMeans(freq)
+        freq <- if(all(freq %% 1 == 0)) as.integer(freq) else freq
     }
 
     list(summary=collected[statistics], freq=freq)
+}
+
+# This function calculates the number of cells within a specific group in which each gene was detected.
+.calculate_frequency <- function(x, by.group, na.rm = FALSE, ...){
+    # If na.rm is specified, we take account only values that are not NA.
+    # Otherwise the frequency is just the number of features in each group.
+    if( na.rm ){
+        x <- !is.na(x)
+        freq <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
+        freq <- do.call(cbind, freq)
+    } else{
+        # To ensure that the output is in similar format, frequencies are
+        # converted into matrix.
+        freq <- lengths(by.group)
+        freq <- matrix(rep(freq, nrow(x)), nrow=nrow(x), byrow = TRUE)
+    }
+    return(freq)
 }
 
 #' @importFrom MatrixGenerics rowSums rowMedians
