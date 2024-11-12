@@ -40,7 +40,7 @@ NULL
 #' @importFrom SummarizedExperiment assayNames<-
 .nexprs_across_cells <- function(x, ids, subset.row=NULL, subset.col=NULL, 
     store.number="ncells", average=FALSE, threshold=0, BPPARAM=SerialParam(),
-    subset_row=NULL, subset_col=NULL, store_number=NULL, detection_limit=NULL)
+    subset_row=NULL, subset_col=NULL, store_number=NULL, detection_limit=NULL, ...)
 {
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
@@ -54,7 +54,7 @@ NULL
     }
 
     output <- summarizeAssayByGroup(x, ids, subset.row=subset.row, subset.col=subset.col,
-        statistics=stat, store.number=store.number, threshold=threshold, BPPARAM=BPPARAM)
+        statistics=stat, store.number=store.number, threshold=threshold, BPPARAM=BPPARAM, ...)
 
     if (average) {
         assayNames(output) <- "average"
