@@ -33,14 +33,14 @@ NULL
 #' @importFrom BiocParallel SerialParam 
 .nexprs_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, 
     average=FALSE, threshold=0, BPPARAM=SerialParam(), 
-    subset_row=NULL, subset_col=NULL, detection_limit=NULL)
+    subset_row=NULL, subset_col=NULL, detection_limit=NULL, ...)
 {
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     threshold <- .replace(threshold, detection_limit)
 
     .sum_across_features(x, ids, subset.row=subset.row, subset.col=subset.col, 
-        average=average, BPPARAM=BPPARAM, modifier=function(x) x > threshold)
+        average=average, BPPARAM=BPPARAM, modifier=function(x) x > threshold, ...)
 } 
 
 #' @export

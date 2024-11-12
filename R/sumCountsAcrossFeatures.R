@@ -66,16 +66,18 @@ NULL
 
 #' @importFrom BiocParallel SerialParam 
 .sum_counts_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, 
-    average=FALSE, BPPARAM=SerialParam(), subset_row=NULL, subset_col=NULL) 
+    average=FALSE, BPPARAM=SerialParam(), subset_row=NULL, subset_col=NULL, ...) 
 {
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
-    .sum_across_features(x, ids, subset.row=subset.row, subset.col=subset.col, average=average, BPPARAM=BPPARAM)
+    .sum_across_features(x, ids, subset.row=subset.row, subset.col=subset.col, average=average, BPPARAM=BPPARAM, ...)
 }
 
 #' @importFrom BiocParallel SerialParam
 #' @importFrom beachmat colBlockApply
-.sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
+.sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL, na.rm = na_rm, na_rm = FALSE, ...) {
+    if( !(is.logical(na.rm) && length(na.rm) == 1L) ) stop("'na.rm' must be TRUE or FALSE.")
+    #
     if (is.list(ids)) {
         ids <- lapply(ids, FUN=.subset2index, target=x, byrow=TRUE)
         runs <- lengths(ids)
@@ -106,14 +108,10 @@ NULL
         x <- modifier(x)
     }
 
-    out_list <- colBlockApply(x, BPPARAM=BPPARAM, FUN=sum_row_counts, genes=genes, runs=runs)
+    out_list <- colBlockApply(x, BPPARAM=BPPARAM, FUN=sum_row_counts, genes=genes, runs=runs, average=average, na_rm = na.rm, ...)
     out <- do.call(cbind, out_list)
     rownames(out) <- names
     colnames(out) <- colnames(x)
-
-    if (average) {
-        out <- out/runs
-    }
 
     out
 }

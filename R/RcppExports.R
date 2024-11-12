@@ -29,7 +29,7 @@ sparse_aggregate_detected <- function(x, i, p, groupings, ngroups, nrows) {
     .Call(`_scuttle_sparse_aggregate_detected`, x, i, p, groupings, ngroups, nrows)
 }
 
-sum_row_counts <- function(counts, genes, runs) {
-    .Call(`_scuttle_sum_row_counts`, counts, genes, runs)
+sum_row_counts <- function(counts, genes, runs, average = FALSE, na_rm = FALSE) {
+    .Call(`_scuttle_sum_row_counts`, counts, genes, runs, average, na_rm)
 }
 

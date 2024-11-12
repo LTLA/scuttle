@@ -103,14 +103,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // sum_row_counts
-Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
-RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
+Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs, bool average, bool na_rm);
+RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP, SEXP averageSEXP, SEXP na_rmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type counts(countsSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type genes(genesSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type runs(runsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sum_row_counts(counts, genes, runs));
+    Rcpp::traits::input_parameter< bool >::type average(averageSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(sum_row_counts(counts, genes, runs, average, na_rm));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -123,7 +125,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
     {"_scuttle_sparse_aggregate_sum", (DL_FUNC) &_scuttle_sparse_aggregate_sum, 6},
     {"_scuttle_sparse_aggregate_detected", (DL_FUNC) &_scuttle_sparse_aggregate_detected, 6},
-    {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
+    {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 5},
     {NULL, NULL, 0}
 };
 
