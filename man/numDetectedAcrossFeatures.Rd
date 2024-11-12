@@ -18,7 +18,8 @@ numDetectedAcrossFeatures(x, ...)
   BPPARAM = SerialParam(),
   subset_row = NULL,
   subset_col = NULL,
-  detection_limit = NULL
+  detection_limit = NULL,
+  ...
 )
 
 \S4method{numDetectedAcrossFeatures}{SummarizedExperiment}(x, ..., assay.type = "counts", exprs_values = NULL)

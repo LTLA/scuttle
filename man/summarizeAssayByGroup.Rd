@@ -16,7 +16,8 @@ summarizeAssayByGroup(x, ...)
   statistics = c("mean", "sum", "num.detected", "prop.detected", "median"),
   store.number = "ncells",
   threshold = 0,
-  BPPARAM = SerialParam()
+  BPPARAM = SerialParam(),
+  ...
 )
 
 \S4method{summarizeAssayByGroup}{SummarizedExperiment}(x, ..., assay.type = "counts")

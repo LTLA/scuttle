@@ -16,7 +16,8 @@ sumCountsAcrossFeatures(x, ...)
   average = FALSE,
   BPPARAM = SerialParam(),
   subset_row = NULL,
-  subset_col = NULL
+  subset_col = NULL,
+  ...
 )
 
 \S4method{sumCountsAcrossFeatures}{SummarizedExperiment}(x, ..., assay.type = "counts", exprs_values = NULL)

@@ -20,7 +20,8 @@ numDetectedAcrossCells(x, ...)
   subset_row = NULL,
   subset_col = NULL,
   store_number = NULL,
-  detection_limit = NULL
+  detection_limit = NULL,
+  ...
 )
 
 \S4method{numDetectedAcrossCells}{SummarizedExperiment}(x, ..., assay.type = "counts", exprs_values = NULL)

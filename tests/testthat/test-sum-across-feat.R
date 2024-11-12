@@ -241,9 +241,10 @@ test_that("test that na.rm works correctly", {
     ids <- sample(LETTERS, nrow(sce), replace = TRUE)
     # Create a data with NAs
     n_value <- nrow(sce)*ncol(sce)
-    prob <- runif(1, 0, 0.1)
+    prob <- runif(1, 0, 0.05)
     sce_na <- sce
-    assay(sce_na)[c(1, 5, 3, 6)] <- NA
+    ind <- sample(c(TRUE, FALSE), size = length(assay(sce_na)), replace = TRUE, prob = c(prob, 1 - prob))
+    assay(sce_na)[ind] <- NA
     # Test without NAs
     res_sum <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = FALSE, na.rm = FALSE)
     res_sum_na <- sumCountsAcrossFeatures(assay(sce), ids = ids, average = FALSE, na.rm = TRUE)
