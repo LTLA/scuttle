@@ -78,12 +78,12 @@ NULL
 #' @importFrom SummarizedExperiment SummarizedExperiment
 .summarize_assay_by_group <- function(x, ids, subset.row=NULL, subset.col=NULL,
     statistics=c("mean", "sum", "num.detected", "prop.detected", "median"),
-    store.number="ncells", threshold=0, BPPARAM=SerialParam()) 
+    store.number="ncells", threshold=0, BPPARAM=SerialParam(), ...) 
 {
     new.ids <- .process_ids(x, ids, subset.col)
     sum.out <- .summarize_assay(x, ids=new.ids, subset.row=subset.row,
         statistics=match.arg(statistics, several.ok=TRUE),
-        threshold=threshold, BPPARAM=BPPARAM)
+        threshold=threshold, BPPARAM=BPPARAM, ...)
 
     mat.out <- sum.out$summary
     mapping <- match(colnames(mat.out[[1]]), as.character(new.ids))
@@ -100,7 +100,7 @@ NULL
 
 #' @importFrom BiocParallel SerialParam 
 #' @importFrom beachmat rowBlockApply
-.summarize_assay <- function(x, ids, statistics, threshold=0, subset.row=NULL, BPPARAM=SerialParam()) {
+.summarize_assay <- function(x, ids, statistics, threshold=0, subset.row=NULL, BPPARAM=SerialParam(), ...) {
     if (!is.null(subset.row)) {
         x <- x[subset.row,,drop=FALSE]
     }
@@ -151,7 +151,7 @@ NULL
         by.group <- split(seq_along(ids), ids, drop=TRUE)
 
         out <- rowBlockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
-            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM)
+            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM, ...)
 
         collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
         names(collected) <- names(out[[1]])
@@ -170,7 +170,7 @@ NULL
 
 #' @importFrom MatrixGenerics rowSums rowMedians
 #' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
-.summarize_assay_internal <- function(x, by.group, statistics, threshold) {
+.summarize_assay_internal <- function(x, by.group, statistics, threshold, ...) {
     if (is(x, "COO_SparseMatrix")) {
         x <- as(x, "SVT_SparseMatrix")
     }
@@ -178,20 +178,20 @@ NULL
     collated <- list()
     
     if ("sum" %in% statistics || "mean" %in% statistics) {
-        out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
+        out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE], ...))
         collated$sum <- .cbind_empty(out, x)
     }
 
     if ("median" %in% statistics) {
         # This should auto-lookup the various *MatrixStats packages if they're installed.
-        out <- lapply(by.group, function(i) rowMedians(x[,i,drop=FALSE]))
+        out <- lapply(by.group, function(i) rowMedians(x[,i,drop=FALSE], ...))
         out <- .cbind_empty(out, x)
         rownames(out) <- rownames(x)
         collated$median <- out
     }
 
     if ("num.detected" %in% statistics || "prop.detected" %in% statistics) {
-        out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE] > threshold))
+        out <- lapply(by.group, function(i) rowSums((x[,i,drop=FALSE] > threshold), ...))
         collated$num.detected <- .cbind_empty(out, x)
     }
 
