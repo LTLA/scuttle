@@ -137,6 +137,7 @@ NULL
     threshold = 0, BPPARAM=SerialParam(), flatten=TRUE, 
     percent_top=NULL, detection_limit=NULL)
 {
+    .Deprecated(old="perCellQCMetrics", new="scrapper::perCellRnaQcMetrics")
     threshold <- .replace(threshold, detection_limit)
     percent.top <- .replace(percent.top, percent_top)
 

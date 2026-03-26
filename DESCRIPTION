@@ -39,7 +39,8 @@ Suggests:
     sparseMatrixStats,
     DelayedMatrixStats,
     scran
-VignetteBuilder: knitr
+VignetteBuilder:
+    knitr
 biocViews: 
     ImmunoOncology, 
     SingleCell, 
@@ -52,7 +53,10 @@ biocViews:
     Sequencing, 
     Software, 
     DataImport
-LinkingTo: Rcpp, beachmat
+LinkingTo:
+    Rcpp,
+    assorthead,
+    beachmat
 SystemRequirements: C++11
 RoxygenNote: 7.3.2
 Encoding: UTF-8

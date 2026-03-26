@@ -34,6 +34,7 @@
 #' @importFrom SummarizedExperiment assays<- rowData rowData<- rowRanges<- assayNames
 #' @importFrom GenomicRanges GRangesList GRanges
 aggregateAcrossFeatures <- function(x, ids, ..., use.assay.type="counts", use_exprs_values=NULL) {
+    .Deprecated(new="scrapper::aggregateAcrossGenes.se")
     use.assay.type <- .replace(use.assay.type, use_exprs_values)
 
     collected <- list()

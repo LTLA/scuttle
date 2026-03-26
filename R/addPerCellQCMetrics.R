@@ -43,6 +43,7 @@
 #' @importFrom BiocGenerics cbind
 #' @importFrom SummarizedExperiment colData colData<- rowData rowData<-
 addPerCellQCMetrics <- function(x, subsets = NULL, ..., subset.prefix = "subsets_") {
+    .Deprecated(new="scrapper::quickRnaQc.se")
     colData(x) <- cbind(colData(x), perCellQCMetrics(x, subsets = subsets, ...))
 
     if (!is.null(subset.prefix) && length(subsets)) {

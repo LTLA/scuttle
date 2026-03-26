@@ -112,6 +112,8 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ..., 
     subset.row=NULL, subset.col=NULL, store.number="ncells", coldata.merge=NULL, use.assay.type="counts",
     subset_row=NULL, subset_col=NULL, store_number="ncells", coldata_merge=NULL, use_exprs_values=NULL)
 {
+    .Deprecated(new="scrapper::aggregateAcrossCells.se")
+
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     store.number <- .replace(store.number, store_number)
