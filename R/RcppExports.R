@@ -5,16 +5,12 @@ cumulative_prop <- function(input, top) {
     .Call(`_scuttle_cumulative_prop`, input, top)
 }
 
-downsample_column <- function(input, prop) {
-    .Call(`_scuttle_downsample_column`, input, prop)
+downsample <- function(input, prop_global, prop_column, num_threads) {
+    .Call(`_scuttle_downsample`, input, prop_global, prop_column, num_threads)
 }
 
-downsample_matrix <- function(rmat, total, required) {
-    .Call(`_scuttle_downsample_matrix`, rmat, total, required)
-}
-
-fit_linear_model <- function(qr, qraux, exprs, get_coefs) {
-    .Call(`_scuttle_fit_linear_model`, qr, qraux, exprs, get_coefs)
+fit_linear_model <- function(qr, qraux, exprs, get_coefs, nthreads) {
+    .Call(`_scuttle_fit_linear_model`, qr, qraux, exprs, get_coefs, nthreads)
 }
 
 pool_size_factors <- function(exprs, pseudo_cell, order, pool_sizes) {

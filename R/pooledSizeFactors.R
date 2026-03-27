@@ -378,6 +378,7 @@ NULL
 LOWWEIGHT <- 0.000001
 
 #' @importFrom Matrix sparseMatrix
+#' @importFrom beachmat initializeCpp
 .create_linear_system <- function(cur.exprs, ave.cell, sphere, pool.sizes) 
 # Does the heavy lifting of computing pool-based size factors 
 # and creating the linear system out of the equations for each pool.
@@ -385,7 +386,7 @@ LOWWEIGHT <- 0.000001
     row.dex <- col.dex <- output <- vector("list", 2L)
 
     # Creating the linear system with the requested pool sizes.
-    out <- pool_size_factors(cur.exprs, ave.cell, sphere - 1L, pool.sizes)
+    out <- pool_size_factors(initializeCpp(cur.exprs), ave.cell, sphere - 1L, pool.sizes)
     row.dex[[1]] <- out[[1]] + 1L
     col.dex[[1]] <- out[[2]] + 1L
     output[[1]]<- out[[3]]

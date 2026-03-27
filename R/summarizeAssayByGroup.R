@@ -99,7 +99,7 @@ NULL
 }
 
 #' @importFrom BiocParallel SerialParam 
-#' @importFrom beachmat rowBlockApply
+#' @importFrom DelayedArray rowAutoGrid blockApply
 .summarize_assay <- function(x, ids, statistics, threshold=0, subset.row=NULL, BPPARAM=SerialParam()) {
     if (!is.null(subset.row)) {
         x <- x[subset.row,,drop=FALSE]
@@ -150,8 +150,9 @@ NULL
         # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
         by.group <- split(seq_along(ids), ids, drop=TRUE)
 
-        out <- rowBlockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
-            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM)
+        out <- blockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
+            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM,
+            as.sparse=NA, grid=rowAutoGrid(x))
 
         collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
         names(collected) <- names(out[[1]])
@@ -171,10 +172,6 @@ NULL
 #' @importFrom MatrixGenerics rowSums rowMedians
 #' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .summarize_assay_internal <- function(x, by.group, statistics, threshold) {
-    if (is(x, "COO_SparseMatrix")) {
-        x <- as(x, "SVT_SparseMatrix")
-    }
-
     collated <- list()
     
     if ("sum" %in% statistics || "mean" %in% statistics) {

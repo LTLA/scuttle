@@ -1,112 +1,135 @@
-#include "Rcpp.h"
-#include "beachmat3/beachmat.h"
-#include "scuttle/downsample_vector.h"
-#include <deque>
+#include "Rtatami.h"
 
-// [[Rcpp::export]]
-Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop) {
-    auto mat = beachmat::read_lin_block(input);
-    const size_t ngenes = mat->get_nrow();
-    const size_t ncells = mat->get_ncol();
-    Rcpp::RNGScope _rng; 
+#include "tatami_stats/tatami_stats.hpp"
 
-    // Always return a sparse matrix for memory efficiency: we assume that
-    // downsampling will increase sparsity sufficiently that, e.g., file-backed
-    // matrices can be represented fully in memory.
-    std::deque<std::pair<std::pair<int, int>, double> > store;
+#include <vector>
+#include <cmath>
+#include <iostream>
 
-    if (mat->is_sparse()) {
-        auto smat = beachmat::promote_to_sparse(mat);
-        std::vector<int> work_i(ngenes);
-        std::vector<double> work_x(ngenes);
+//[[Rcpp::export]]
+Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, int num_threads) {
+    Rtatami::BoundNumericPointer ptr(input);
 
-        auto pIt=prop.begin();
-        for (size_t i=0; i<ncells; ++i, ++pIt) {
-            // note that the sparse_index contract for 'indices' guarantees
-            // that elements are added to 'store' in an already-sorted manner.
-            auto indices = smat->get_col(i, work_x.data(), work_i.data());
-
-            scuttle::downsample_vector(indices.x, indices.x + indices.n, work_x.begin(), *pIt);
-            for (size_t j = 0; j < indices.n; ++j) {
-                if (work_x[j]) {
-                    store.push_back(std::make_pair(std::make_pair(i, indices.i[j]), work_x[j]));
-                }
-            }
-        }
-
-    } else {
-        std::vector<double> workspace(ngenes);
-        auto pIt=prop.begin();
-        for (size_t i=0; i<ncells; ++i, ++pIt) {
-            auto ptr = mat->get_col(i, workspace.data());
-            scuttle::downsample_vector(ptr, ptr + ngenes, workspace.data(), *pIt);
-
-            for (size_t j = 0; j < ngenes; ++j) {
-                if (workspace[j]) {
-                    store.push_back(std::make_pair(std::make_pair(i, j), workspace[j]));
-                }
-            }
-        }
-    }
-
-    return beachmat::as_gCMatrix<Rcpp::NumericVector>(ngenes, ncells, store);
-}
-
-// [[Rcpp::export]]
-Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double required) {
-    auto mat = beachmat::read_lin_block(rmat);
-    const size_t ngenes=mat->get_nrow();
-    const size_t ncells=mat->get_ncol();
-
-    Rcpp::RNGScope _rng; 
-    scuttle::downsample_vector_part downsampler(total, required, false);
-    double subtotal = 0;
-
-    // Always return a sparse matrix for memory efficiency: we assume that
-    // downsampling will increase sparsity sufficiently that, e.g., file-backed
-    // matrices can be represented fully in memory.
-    std::deque<std::pair<std::pair<int, int>, double> > store;
-
-    if (mat->is_sparse()) {
-        auto smat = beachmat::promote_to_sparse(mat);
-        std::vector<int> work_i(ngenes);
-        std::vector<double> work_x(ngenes);
-
-        for (size_t i=0; i<ncells; ++i) {
-            // note that the sparse_index contract for 'indices' guarantees
-            // that elements are added to 'store' in an already-sorted manner.
-            auto indices = smat->get_col(i, work_x.data(), work_i.data());
-
-            // do this before downsampling; contents in ptr may be overwritten!
-            subtotal += std::accumulate(indices.x, indices.x + indices.n, 0.0); 
-
-            downsampler(indices.x, indices.x + indices.n, work_x.begin());
-            for (size_t j = 0; j < indices.n; ++j) {
-                if (work_x[j]) {
-                    store.push_back(std::make_pair(std::make_pair(i, indices.i[j]), work_x[j]));
-                }
-            }
-        }
-    } else {
-        std::vector<double> workspace(ngenes);
-        for (size_t i=0; i<ncells; ++i) {
-            auto ptr = mat->get_col(i, workspace.data());
-
-            // do this before downsampling; contents in ptr may be overwritten!
-            subtotal += std::accumulate(ptr, ptr + ngenes, 0.0); 
-
-            downsampler(ptr, ptr + ngenes, workspace.data());
-
-            for (size_t j = 0; j < ngenes; ++j) {
-                if (workspace[j]) {
-                    store.push_back(std::make_pair(std::make_pair(i, j), workspace[j]));
-                }
-            }
-        }
-    }
-
-    return Rcpp::List::create(
-        beachmat::as_gCMatrix<Rcpp::NumericVector>(ngenes, ncells, store),
-        Rcpp::NumericVector::create(subtotal)
+    // Truncating and replacing negative values with zero.
+    tatami::DelayedUnaryIsometricOperation<double, double, int> mat(
+        std::make_shared<tatami::DelayedUnaryIsometricOperation<double, double, int> >(
+            ptr->ptr,
+            std::make_shared<tatami::DelayedUnaryIsometricRoundHelper<double, double, int> >()
+        ),
+        std::make_shared<tatami::DelayedUnaryIsometricSubstituteLessThanScalarHelper<double, double, int, double> >(0., 0.)
     );
+
+    tatami_stats::sums::Options opt;
+    opt.num_threads = num_threads;
+    auto colsums = tatami_stats::sums::by_column(mat, opt);
+
+    const int ngenes = mat.nrow();
+    const int ncells = mat.ncol();
+
+    // Computing cumulative sums to mitigate problems from loss of precision at very large counts.
+    std::vector<double> partials;
+    double required = 0;
+    Rcpp::NumericVector prop_col;
+    if (!prop_column.isNull()) {
+        prop_col = Rcpp::NumericVector(prop_column);
+        if (prop_col.size() != ncells) {
+            throw std::runtime_error("length of 'prop' should equal number of columns");
+        }
+    } else {
+        partials.resize(colsums.size());
+        double last = 0;
+        for (int c = 0; c < ncells; ++c) {
+            auto idx = ncells - c - 1;
+            partials[idx] = last + colsums[idx];
+            last = partials[idx];
+        }
+        required = std::round(last * prop_global);
+    }
+
+    Rcpp::List output(ncells);
+    std::vector<double> down_x;
+    down_x.reserve(ngenes);
+    std::vector<int> down_i;
+    down_i.reserve(ngenes);
+
+    // Can't easily parallelize as we're using a global RNG... oh well.
+    // I suppose we could do so by switching to PCG32; for global sampling,
+    // we can hierarchically sample the number in each column before sampling within each column.
+    if (mat.is_sparse()) {
+        std::vector<int> work_i(ngenes);
+        std::vector<double> work_x(ngenes);
+        auto ext = tatami::consecutive_extractor<true>(mat, false, 0, ncells);
+
+        for (int c = 0; c < ncells; ++c) {
+            auto range = ext->fetch(work_x.data(), work_i.data());
+            down_i.clear();
+            down_x.clear();
+
+            const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
+            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
+            double accumulated_total = 0, accumulated_used = 0;
+
+            for (int i = 0; i < range.number; ++i) {
+                accumulated_total += range.value[i];
+                if (accumulated_total > current_total || accumulated_used >= current_required) {
+                    break;
+                }
+
+                const auto out = Rf_rhyper(range.value[i], current_total - accumulated_total, current_required - accumulated_used);
+                accumulated_used += out;
+                if (out > 0) {
+                    down_i.push_back(range.index[i]);
+                    down_x.push_back(out);
+                }
+            }
+
+            output[c] = Rcpp::List::create(
+                Rcpp::NumericVector(down_x.begin(), down_x.end()),
+                Rcpp::IntegerVector(down_i.begin(), down_i.end())
+            );
+
+            if (prop_column.isNull()) {
+                required -= accumulated_used;
+            }
+        }
+
+    } else {
+        std::vector<double> work_x(ngenes);
+        auto ext = tatami::consecutive_extractor<false>(mat, false, 0, ncells);
+
+        for (int c = 0; c < ncells; ++c) {
+            const auto ptr = ext->fetch(work_x.data());
+            down_i.clear();
+            down_x.clear();
+
+            const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
+            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
+            double accumulated_total = 0, accumulated_used = 0;
+
+            for (int i = 0; i < ngenes; ++i) {
+                accumulated_total += ptr[i];
+                if (accumulated_total > current_total || accumulated_used >= current_required) {
+                    break;
+                }
+
+                const auto out = Rf_rhyper(ptr[i], current_total - accumulated_total, current_required - accumulated_used);
+                accumulated_used += out;
+                if (out > 0) {
+                    down_i.push_back(i);
+                    down_x.push_back(out);
+                }
+            }
+
+            output[c] = Rcpp::List::create(
+                Rcpp::NumericVector(down_x.begin(), down_x.end()),
+                Rcpp::IntegerVector(down_i.begin(), down_i.end())
+            );
+
+            if (prop_column.isNull()) {
+                required -= accumulated_used;
+            }
+        }
+    }
+
+    return output;
 }

@@ -9,7 +9,8 @@ fitLinearModel(
   design,
   get.coefs = TRUE,
   subset.row = NULL,
-  BPPARAM = SerialParam(),
+  num.threads = 1,
+  BPPARAM = NULL,
   rank.error = TRUE
 )
 }
@@ -23,7 +24,9 @@ This should be of full column rank.}
 
 \item{subset.row}{An integer, character or logical vector indicating the rows of \code{x} to use for model fitting.}
 
-\item{BPPARAM}{A \linkS4class{BiocParallelParam} object specifying the parallelization backend to use.}
+\item{num.threads}{Integer specifying the number of threads for model fitting.}
+
+\item{BPPARAM}{Deprecated, use \code{num.threads} instead.}
 
 \item{rank.error}{Logical scalar indicating whether to throw an error when \code{design} is not of full rank.}
 }

@@ -4,21 +4,23 @@
 \alias{downsampleMatrix}
 \title{Downsample a count matrix}
 \usage{
-downsampleMatrix(x, prop, bycol = TRUE, sink = NULL)
+downsampleMatrix(x, prop, bycol = TRUE, sink = NULL, num.threads = 1)
 }
 \arguments{
-\item{x}{An integer or numeric matrix-like object containing counts.}
+\item{x}{An integer or numeric matrix-like object containing non-negative counts.
+Non-integer values will be rounded up and negative values will be set to zero.}
 
 \item{prop}{A numeric scalar or, if \code{bycol=TRUE}, a vector of length \code{ncol(x)}.
 All values should lie in [0, 1] specifying the downsampling proportion for the matrix or for each cell.}
 
 \item{bycol}{A logical scalar indicating whether downsampling should be performed on a column-by-column basis.}
 
-\item{sink}{A \linkS4class{RealizationSink} object specifying the format of the downsampled matrix should be returned.}
+\item{sink}{Deprecated and ignored.}
+
+\item{num.threads}{Integer specifying the number of threads for the initial column sums.}
 }
 \value{
-An numeric matrix-like object of downsampled counts.
-This is a \linkS4class{dgCMatrix} unless \code{sink} is set, in which case it is a \linkS4class{DelayedMatrix}.
+An numeric matrix-like object of downsampled counts as a \link[SparseArray]{SVT_SparseMatrix}.
 }
 \description{
 Downsample a count matrix to a desired proportion, either on a whole-matrix or per-cell basis.
@@ -39,12 +41,7 @@ This yields a new matrix where the total count across all cells is equal to \cod
 The new total count for each cell may not be exactly equal to \code{prop} times the original value,
 which may or may not be more appropriate than \code{bycol=TRUE} for particular applications.
 
-By default, the output format will be a dense matrix for an ordinary matrix \code{x},
-and a sparse matrix for any sparse format (i.e., if \code{is_sparse(x)} returns \code{TRUE}).
-This can be overridden to specify custom formats with \code{sink}, e.g., for HDF5-backed matrices,
-which may be helpful for dealing with large matrices where the downsampled result may not fit in memory.
-
-Note that this function was originally implemented in the \pkg{scater} package as \code{downsampleCounts},
+This function was originally implemented in the \pkg{scater} package as \code{downsampleCounts},
 was moved to the \pkg{DropletUtils} package as \code{downsampleMatrix},
 and finally found a home here.
 }

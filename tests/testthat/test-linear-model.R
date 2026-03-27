@@ -41,8 +41,6 @@ test_that("fitLinearModel works with the options", {
     expect_identical(sub$mean, ref$mean[50:1])
     expect_identical(sub$variance, ref$variance[50:1])
 
-    par <- fitLinearModel(y, design, BPPARAM=BiocParallel::SnowParam(3))
-    expect_identical(ref, par)
     par <- fitLinearModel(y, design, BPPARAM=safeBPParam(2))
     expect_identical(ref, par)
 

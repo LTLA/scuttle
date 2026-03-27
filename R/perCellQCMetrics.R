@@ -129,10 +129,11 @@
 #' @name perCellQCMetrics
 NULL
 
-#' @importFrom beachmat colBlockApply
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bpmapply SerialParam
 #' @importClassesFrom S4Vectors DataFrame
+#' @importFrom DelayedArray blockApply colAutoGrid
+#' @importFrom beachmat initializeCpp
 .per_cell_qc_metrics <- function(x, subsets = NULL, percent.top = integer(0),
     threshold = 0, BPPARAM=SerialParam(), flatten=TRUE, 
     percent_top=NULL, detection_limit=NULL)
@@ -147,7 +148,7 @@ NULL
     percent.top <- sort(as.integer(percent.top))
 
     # Computing all QC metrics, with cells split across workers. 
-    bp.out <- colBlockApply(x, FUN=.per_cell_qc, featcon=subsets, top=percent.top, limit=threshold, BPPARAM=BPPARAM)
+    bp.out <- blockApply(x, FUN=.per_cell_qc, featcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=NA, grid=colAutoGrid(x))
 
     # Aggregating across cores.
     full.info <- DataFrame(
@@ -156,7 +157,7 @@ NULL
         row.names=colnames(x)
     )
 
-    pct <- do.call(cbind, lapply(bp.out, FUN=function(x) x[[1]][[3]]))
+    pct <- cumulative_prop(initializeCpp(x), percent.top)
     rownames(pct) <- percent.top
     full.info$percent.top <- t(pct)/full.info$sum * 100
 
@@ -181,18 +182,13 @@ NULL
 }
 
 #' @importFrom MatrixGenerics colSums
-#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
-.per_cell_qc <- function(x, featcon, top, limit) {
-    if (is(x, "COO_SparseMatrix")) {
-        x <- as(x, "SVT_SparseMatrix")
-    }
-
+#' @importFrom beachmat initializeCpp
+.per_cell_qc <- function(x, featcon, limit) {
     detected <- x > limit
 
     full <- list(
         sum=unname(colSums(x)),
-        detected=unname(colSums(detected)),
-        prop=cumulative_prop(x, top)
+        detected=unname(colSums(detected))
     )
 
     featcons <- lapply(featcon, function(i) {
