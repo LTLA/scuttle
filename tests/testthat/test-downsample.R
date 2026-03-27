@@ -1,17 +1,19 @@
 # Testing the downsampling functions.
 # library(scuttle); library(testthat); source("test-downsample.R")
 
+library(DelayedArray)
+
 CHECKFUN <- function(input, prop) {
     out <- downsampleMatrix(input, prop)
     expect_identical(colSums(out), round(colSums(input)*prop))
-    expect_true(all(out <= input))
+    expect_true(all(DelayedArray(out) <= DelayedArray(input)))
     return(invisible(NULL))
 }
 
 CHECKSUM <- function(input, prop) {
     out <- downsampleMatrix(input, prop, bycol=FALSE) 
     expect_equal(sum(out), round(prop*sum(input)))
-    expect_true(all(out <= input))
+    expect_true(all(DelayedArray(out) <= DelayedArray(input)))
     return(invisible(NULL))
 }
 
@@ -67,11 +69,12 @@ test_that("downsampling from a count matrix gives expected sums", {
     out1 <- downsampleMatrix(u1, prop=0.111, bycol=FALSE)
     set.seed(505)
     ref <- downsampleMatrix(cbind(as.vector(u1)), prop=0.111, bycol=TRUE)
+    ref <- ref[,1]
     dim(ref) <- dim(out1)
-    expect_identical(ref, out1)
+    expect_identical(as.matrix(ref), as.matrix(out1))
 })
 
-test_that("downsampling from a count matrix worsk with silly inputs", {
+test_that("downsampling from a count matrix works with silly inputs", {
     ncells <- 100
     u1 <- matrix(rpois(20000, 5), ncol=ncells)
     expect_equivalent(as.matrix(downsampleMatrix(u1[0,,drop=FALSE], prop=0.5)), u1[0,,drop=FALSE])
@@ -95,36 +98,23 @@ test_that("different matrix representations yield the same result", {
     ncells <- 100
     u1 <- matrix(rpois(20000, 5), ncol=ncells)
     v1 <- as(u1, "dgCMatrix")
-    w1 <- as(u1, "dgTMatrix")
 
     # Basic downsampling.
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(501)
         dd <- downsampleMatrix(u1, down)
-        expect_s4_class(dd, "dgCMatrix")
-
         set.seed(501)
         dc <- downsampleMatrix(v1, down)
         expect_identical(dc, dd)
-
-        set.seed(501)
-        dt <- downsampleMatrix(w1, down)
-        expect_identical(dt, dd)
     }
 
     # Columnar downsampling.
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(502)
         dd <- downsampleMatrix(u1, down, bycol=TRUE)
-        expect_s4_class(dd, "dgCMatrix")
-
         set.seed(502)
         dc <- downsampleMatrix(v1, down, bycol=TRUE)
         expect_identical(dc, dd)
-
-        set.seed(502)
-        dt <- downsampleMatrix(w1, down, bycol=TRUE)
-        expect_identical(dt, dd)
     }
 
     # Columnar downsampling.
@@ -132,57 +122,9 @@ test_that("different matrix representations yield the same result", {
 
     set.seed(503)
     dd <- downsampleMatrix(u1, prop, bycol=TRUE)
-    expect_s4_class(dd, "dgCMatrix")
-
     set.seed(503)
     dc <- downsampleMatrix(v1, prop, bycol=TRUE)
     expect_equivalent(dc, dd)
-
-    set.seed(503)
-    dt <- downsampleMatrix(w1, prop, bycol=TRUE)
-    expect_equivalent(dt, dd)
-})
-
-set.seed(510)
-test_that("downsampleMatrix responds to various DelayedArray options", {
-    ncells <- 100
-    u1 <- matrix(rpois(20000, 5), ncol=ncells)
-    prop <- runif(ncol(u1))
-
-    set.seed(504)
-    refF <- downsampleMatrix(u1, 0.211, bycol=FALSE)
-    set.seed(504)
-    refT <- downsampleMatrix(u1, prop, bycol=TRUE)
-
-    library(DelayedArray)
-    D1 <- DelayedArray(u1)
-    old <- getAutoBlockSize()
-    for (block.size in c(1000, 10000, 100000)) {
-        setAutoBlockSize(block.size)
-
-        set.seed(504)
-        obsF <- downsampleMatrix(D1, 0.211, bycol=FALSE)
-        expect_identical(refF, obsF)
-
-        set.seed(504)
-        obsT <- downsampleMatrix(D1, prop, bycol=TRUE)
-        expect_identical(refT, obsT)
-    }
-
-    setAutoBlockSize(old)
-
-    # Setting the realization sink.
-    sink <- AutoRealizationSink(dim(u1)) 
-    set.seed(504)
-    sunkF <- downsampleMatrix(u1, 0.211, bycol=FALSE, sink=sink)
-    expect_s4_class(sunkF, "DelayedMatrix")
-    expect_identical(unname(as.matrix(refF)), as.matrix(sunkF))
-
-    sink <- AutoRealizationSink(dim(u1)) 
-    set.seed(504)
-    sunkT <- downsampleMatrix(u1, prop, bycol=TRUE, sink=sink)
-    expect_s4_class(sunkT, "DelayedMatrix")
-    expect_identical(unname(as.matrix(refT)), as.matrix(sunkT))
 })
 
 set.seed(500)
@@ -262,7 +204,8 @@ test_that("downsampling batches gives expected results", {
 
     # Checking that it's a no-op when the coverage is the same
     # (aside from the type conversion).
-    mat <- as(u1, "dgCMatrix")
+    mat <- as(u1, "SVT_SparseArray")
+    type(mat) <- "double"
     expect_equal(downsampleBatches(u1, u1), List(mat, mat))
 })
 

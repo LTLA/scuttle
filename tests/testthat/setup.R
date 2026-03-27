@@ -11,6 +11,7 @@ normed <- logNormCounts(sce)
 # Because SnowParam() is too slow, yet MulticoreParam() fails on Windows.
 # See discussion at https://github.com/Bioconductor/BiocParallel/issues/98.
 safeBPParam <- function(nworkers) {
+    nworkers <- min(nworkers, 2)
     if (.Platform$OS.type=="windows") {
         BiocParallel::SnowParam(nworkers)
     } else {

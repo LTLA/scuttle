@@ -3,6 +3,7 @@
 #' Downsample a count matrix to a desired proportion, either on a whole-matrix or per-cell basis.
 #' 
 #' @param x An integer or numeric matrix-like object containing non-negative counts.
+#' Non-integer values will be rounded up and negative values will be set to zero.
 #' @param prop A numeric scalar or, if \code{bycol=TRUE}, a vector of length \code{ncol(x)}.
 #' All values should lie in [0, 1] specifying the downsampling proportion for the matrix or for each cell.
 #' @param bycol A logical scalar indicating whether downsampling should be performed on a column-by-column basis.
@@ -62,6 +63,17 @@ downsampleMatrix <- function(x, prop, bycol = TRUE, sink = NULL, num.threads = 1
         column.prop <- NULL
     }
 
-    raw.out <- downsample(initializeCpp(x), global.prop, column.prop, num.threads)
-    new("SVT_SparseArray", SVT = raw.out, type = "double", dim = dim(x), dimnames = dimnames(x)) 
+    if (any(dim(x) == 0)) {
+        raw.out <- NULL
+    } else {
+        raw.out <- downsample(initializeCpp(x), global.prop, column.prop, num.threads)
+    }
+
+    new(
+        "SVT_SparseMatrix",
+        SVT = raw.out,
+        type = "double",
+        dim = dim(x),
+        dimnames = list(rownames(x), colnames(x))
+    )
 }

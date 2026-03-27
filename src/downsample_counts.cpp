@@ -4,17 +4,27 @@
 
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 //[[Rcpp::export]]
 Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, int num_threads) {
     Rtatami::BoundNumericPointer ptr(input);
-    const auto& mat = *(ptr->ptr);
-    const int ngenes = mat.nrow();
-    const int ncells = mat.ncol();
+
+    // Truncating and replacing negative values with zero.
+    tatami::DelayedUnaryIsometricOperation<double, double, int> mat(
+        std::make_shared<tatami::DelayedUnaryIsometricOperation<double, double, int> >(
+            ptr->ptr,
+            std::make_shared<tatami::DelayedUnaryIsometricRoundHelper<double, double, int> >()
+        ),
+        std::make_shared<tatami::DelayedUnaryIsometricSubstituteLessThanScalarHelper<double, double, int, double> >(0., 0.)
+    );
 
     tatami_stats::sums::Options opt;
     opt.num_threads = num_threads;
     auto colsums = tatami_stats::sums::by_column(mat, opt);
+
+    const int ngenes = mat.nrow();
+    const int ncells = mat.ncol();
 
     // Computing cumulative sums to mitigate problems from loss of precision at very large counts.
     std::vector<double> partials;
@@ -33,7 +43,7 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             partials[idx] = last + colsums[idx];
             last = partials[idx];
         }
-        required = last * prop_global;
+        required = std::round(last * prop_global);
     }
 
     Rcpp::List output(ncells);
@@ -56,12 +66,12 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             down_x.clear();
 
             const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
-            const double current_required = (prop_column.isNull() ? required : current_total * prop_col[c]);
+            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
             double accumulated_total = 0, accumulated_used = 0;
 
             for (int i = 0; i < range.number; ++i) {
                 accumulated_total += range.value[i];
-                if (accumulated_total >= current_total || accumulated_used >= current_required) {
+                if (accumulated_total > current_total || accumulated_used >= current_required) {
                     break;
                 }
 
@@ -93,12 +103,12 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             down_x.clear();
 
             const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
-            const double current_required = (prop_column.isNull() ? required : current_total * prop_col[c]);
+            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
             double accumulated_total = 0, accumulated_used = 0;
 
             for (int i = 0; i < ngenes; ++i) {
                 accumulated_total += ptr[i];
-                if (accumulated_total >= current_total || accumulated_used >= current_required) {
+                if (accumulated_total > current_total || accumulated_used >= current_required) {
                     break;
                 }
 

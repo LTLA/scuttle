@@ -37,7 +37,11 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
     // Checking the input sizes.
     const auto nsizes = pool_sizes.size();
     if (nsizes == 0) {
-        return Rcpp::List::create(Rcpp::IntegerVector(0), Rcpp::IntegerVector(0), Rcpp::NumericVector(0));
+        return Rcpp::List::create(
+            Rcpp::IntegerVector(0),
+            Rcpp::IntegerVector(0),
+            Rcpp::NumericVector(0)
+        );
     }
 
     int last_size = -1, total_size = 0;
@@ -48,15 +52,15 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
         if (s < last_size) { 
             throw std::runtime_error("sizes should be sorted"); 
         }
-        total_size+=s;
-        last_size=s;
+        total_size += s;
+        last_size = s;
     }
 
     if (!sanisizer::is_equal(ngenes, pseudo_cell.size())) { 
         throw std::runtime_error("length of pseudo-cell vector is not the same as the number of cells"); 
     }
 
-    // THis is equivalent to 'order.size() < ncells * 2 - 1', but without the risk of overflow in the RHS.
+    // This check is equivalent to 'order.size() < ncells * 2 - 1', but without the risk of overflow in the RHS.
     if (
         sanisizer::is_less_than(order.size(), ncells) || 
         sanisizer::is_less_than(order.size() - ncells, ncells - 1)
@@ -131,12 +135,9 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
      ******************************/
 
     auto rowIt = row_num.begin(), colIt = col_num.begin();
-    auto orIt = order.begin();
-    const bool is_even = bool(ngenes%2==0);
-    const int halfway = int(ngenes/2);
 
     // Running through the sliding windows.
-    for (int win=0; win < ncells; ++win) {
+    for (int win = 0; win < ncells; ++win) {
         std::fill(combined.begin(), combined.end(), 0);
 
         /* Rotating; effectively moves the first element of 'collected' to the end.
@@ -146,9 +147,7 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
         quick_rotate(xptrs);
         quick_rotate(work_xptrs);
 
-        if (!is_sparse) {
-            xptrs.back() = dense_ext->fetch(work_xptrs.back());
-        } else {
+        if (is_sparse) {
             quick_rotate(iptrs);
             quick_rotate(work_iptrs);
             quick_rotate(nnzero);
@@ -157,15 +156,17 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
             xptrs.back() = idxs.value;
             iptrs.back() = idxs.index;
             nnzero.back() = idxs.number;
+        } else {
+            xptrs.back() = dense_ext->fetch(work_xptrs.back());
         }
 
         int index = 0;
         int rownum = win; // Setting the row so that all pools with the same SIZE form consecutive equations.
         for (auto psIt = pool_sizes.begin(); psIt != pool_sizes.end(); ++psIt, rownum += ncells) { 
             const int& SIZE = (*psIt);
-            std::fill(rowIt, rowIt + SIZE, rownum);
+            std::fill_n(rowIt, SIZE, rownum);
             rowIt += SIZE;
-            std::copy(orIt, orIt + SIZE, colIt);
+            std::copy_n(order.begin() + win, SIZE, colIt);
             colIt += SIZE;
 
             for (; index<SIZE; ++index) {
