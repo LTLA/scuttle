@@ -110,12 +110,7 @@ NULL
 }
 
 #' @importFrom MatrixGenerics rowMeans
-#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .per_feature_qc <- function(x, cellcon, limit) {
-    if (is(x, "COO_SparseMatrix")) {
-        x <- as(x, "SVT_SparseMatrix")
-    }
-
     detected <- x > limit
 
     full <- list(

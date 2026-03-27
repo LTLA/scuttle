@@ -21,41 +21,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// downsample_column
-Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop);
-RcppExport SEXP _scuttle_downsample_column(SEXP inputSEXP, SEXP propSEXP) {
+// downsample
+Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, int num_threads);
+RcppExport SEXP _scuttle_downsample(SEXP inputSEXP, SEXP prop_globalSEXP, SEXP prop_columnSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type input(inputSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type prop(propSEXP);
-    rcpp_result_gen = Rcpp::wrap(downsample_column(input, prop));
-    return rcpp_result_gen;
-END_RCPP
-}
-// downsample_matrix
-Rcpp::RObject downsample_matrix(Rcpp::RObject rmat, double total, double required);
-RcppExport SEXP _scuttle_downsample_matrix(SEXP rmatSEXP, SEXP totalSEXP, SEXP requiredSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::RObject >::type rmat(rmatSEXP);
-    Rcpp::traits::input_parameter< double >::type total(totalSEXP);
-    Rcpp::traits::input_parameter< double >::type required(requiredSEXP);
-    rcpp_result_gen = Rcpp::wrap(downsample_matrix(rmat, total, required));
+    Rcpp::traits::input_parameter< double >::type prop_global(prop_globalSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type prop_column(prop_columnSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample(input, prop_global, prop_column, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // fit_linear_model
-Rcpp::RObject fit_linear_model(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, Rcpp::RObject exprs, bool get_coefs);
-RcppExport SEXP _scuttle_fit_linear_model(SEXP qrSEXP, SEXP qrauxSEXP, SEXP exprsSEXP, SEXP get_coefsSEXP) {
+Rcpp::RObject fit_linear_model(Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, Rcpp::RObject exprs, bool get_coefs, int nthreads);
+RcppExport SEXP _scuttle_fit_linear_model(SEXP qrSEXP, SEXP qrauxSEXP, SEXP exprsSEXP, SEXP get_coefsSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type qr(qrSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type qraux(qrauxSEXP);
     Rcpp::traits::input_parameter< Rcpp::RObject >::type exprs(exprsSEXP);
     Rcpp::traits::input_parameter< bool >::type get_coefs(get_coefsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_linear_model(qr, qraux, exprs, get_coefs));
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_linear_model(qr, qraux, exprs, get_coefs, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,9 +107,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
-    {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 2},
-    {"_scuttle_downsample_matrix", (DL_FUNC) &_scuttle_downsample_matrix, 3},
-    {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 4},
+    {"_scuttle_downsample", (DL_FUNC) &_scuttle_downsample, 4},
+    {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 5},
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
     {"_scuttle_sparse_aggregate_sum", (DL_FUNC) &_scuttle_sparse_aggregate_sum, 6},
     {"_scuttle_sparse_aggregate_detected", (DL_FUNC) &_scuttle_sparse_aggregate_detected, 6},

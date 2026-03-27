@@ -7,7 +7,8 @@
 #' This should be of full column rank.
 #' @param get.coefs A logical scalar indicating whether the coefficients should be returned.
 #' @param subset.row An integer, character or logical vector indicating the rows of \code{x} to use for model fitting.
-#' @param BPPARAM A \linkS4class{BiocParallelParam} object specifying the parallelization backend to use.
+#' @param num.threads Integer specifying the number of threads for model fitting.
+#' @param BPPARAM Deprecated, use \code{num.threads} instead.
 #' @param rank.error Logical scalar indicating whether to throw an error when \code{design} is not of full rank.
 #'
 #' @return
@@ -42,10 +43,10 @@
 #' head(output$variance)
 #'
 #' @author Aaron Lun
+#'
 #' @export
-#' @importFrom BiocParallel bplapply SerialParam
-#' @importFrom beachmat rowBlockApply
-fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=SerialParam(), rank.error=TRUE) {
+#' @importFrom beachmat initializeCpp
+fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, num.threads = 1, BPPARAM = NULL, rank.error=TRUE) {
     QR <- .ranksafeQR(design, error=rank.error)
 
     if (!is.null(subset.row)) {
@@ -64,17 +65,20 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM=S
         }
 
     } else {
-        bp.out <- rowBlockApply(x, FUN=fit_linear_model, qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, BPPARAM=BPPARAM)
+        if (!is.null(BPPARAM)) {
+            num.threads <- BiocParallel::bpnworkers(BPPARAM)
+        }
+        bp.out <- fit_linear_model(initializeCpp(x), qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, nthreads=num.threads)
 
-        all.means <- unlist(lapply(bp.out, "[[", i=2))
-        all.vars <- unlist(lapply(bp.out, "[[", i=3))
+        all.means <- bp.out[[2]]
+        all.vars <- bp.out[[3]]
         names(all.means) <- names(all.vars) <- rownames(x)
 
         resid.df <- nrow(design) - ncol(design) # guaranteed to be full rank at this point.
         output <- list(mean=all.means, variance=all.vars, residual.df=resid.df)
 
         if (get.coefs) {
-            all.coefs <- do.call(cbind, lapply(bp.out, "[[", i=1))
+            all.coefs <- bp.out[[1]]
             all.coefs[QR$pivot,] <- all.coefs
             dimnames(all.coefs) <- list(colnames(design), rownames(x))
             output <- c(list(coefficients=t(all.coefs)), output)

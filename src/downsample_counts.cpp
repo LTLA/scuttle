@@ -6,7 +6,7 @@
 #include <cmath>
 
 //[[Rcpp::export]]
-Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, unsigned long long seed, int num_threads) {
+Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, int num_threads) {
     Rtatami::BoundNumericPointer ptr(input);
     const auto& mat = *(ptr->ptr);
     const int ngenes = mat.nrow();
@@ -22,12 +22,16 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
     Rcpp::NumericVector prop_col;
     if (!prop_column.isNull()) {
         prop_col = Rcpp::NumericVector(prop_column);
+        if (prop_col.size() != ncells) {
+            throw std::runtime_error("length of 'prop' should equal number of columns");
+        }
     } else {
         partials.resize(colsums.size());
         double last = 0;
         for (int c = 0; c < ncells; ++c) {
-            partials[ncells - c + 1] = last + colsums[ncells - c + 1];
-            last = partials[ncells - c + 1];
+            auto idx = ncells - c - 1;
+            partials[idx] = last + colsums[idx];
+            last = partials[idx];
         }
         required = last * prop_global;
     }
@@ -57,19 +61,15 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
 
             for (int i = 0; i < range.number; ++i) {
                 accumulated_total += range.value[i];
-                if (accumulated_total >= current_total) {
+                if (accumulated_total >= current_total || accumulated_used >= current_required) {
                     break;
                 }
 
                 const auto out = Rf_rhyper(range.value[i], current_total - accumulated_total, current_required - accumulated_used);
+                accumulated_used += out;
                 if (out > 0) {
                     down_i.push_back(range.index[i]);
                     down_x.push_back(out);
-                }
-
-                accumulated_used += out;
-                if (accumulated_used >= current_required) {
-                    break;
                 }
             }
 
@@ -98,19 +98,15 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
 
             for (int i = 0; i < ngenes; ++i) {
                 accumulated_total += ptr[i];
-                if (accumulated_total >= current_total) {
+                if (accumulated_total >= current_total || accumulated_used >= current_required) {
                     break;
                 }
 
                 const auto out = Rf_rhyper(ptr[i], current_total - accumulated_total, current_required - accumulated_used);
+                accumulated_used += out;
                 if (out > 0) {
                     down_i.push_back(i);
                     down_x.push_back(out);
-                }
-
-                accumulated_used += out;
-                if (accumulated_used >= current_required) {
-                    break;
                 }
             }
 
@@ -118,6 +114,10 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
                 Rcpp::NumericVector(down_x.begin(), down_x.end()),
                 Rcpp::IntegerVector(down_i.begin(), down_i.end())
             );
+
+            if (prop_column.isNull()) {
+                required -= accumulated_used;
+            }
         }
     }
 

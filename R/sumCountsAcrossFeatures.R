@@ -74,7 +74,7 @@ NULL
 }
 
 #' @importFrom BiocParallel SerialParam
-#' @importFrom beachmat colBlockApply
+#' @importFrom beachmat initializeCpp
 .sum_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, average=FALSE, BPPARAM=SerialParam(), modifier=NULL) {
     if (is.list(ids)) {
         ids <- lapply(ids, FUN=.subset2index, target=x, byrow=TRUE)
@@ -106,8 +106,7 @@ NULL
         x <- modifier(x)
     }
 
-    out_list <- colBlockApply(x, BPPARAM=BPPARAM, FUN=sum_row_counts, genes=genes, runs=runs)
-    out <- do.call(cbind, out_list)
+    out <- sum_row_counts(initializeCpp(x), genes=genes, runs=runs)
     rownames(out) <- names
     colnames(out) <- colnames(x)
 
