@@ -52,8 +52,11 @@ biocViews:
     Sequencing, 
     Software, 
     DataImport
-LinkingTo: Rcpp, beachmat
-SystemRequirements: C++11
+LinkingTo:
+    Rcpp,
+    beachmat,
+    assorthead
+SystemRequirements: C++17
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 NeedsCompilation: yes
