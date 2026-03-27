@@ -80,7 +80,7 @@ NULL
     subsets <- lapply(subsets, FUN = .subset2index, target = x, byrow = FALSE)
 
     # Computing all QC metrics, with cells split across workers.
-    bp.out <- blockApply(x, FUN=.per_feature_qc, cellcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=TRUE, grid=rowAutoGrid(x))
+    bp.out <- blockApply(x, FUN=.per_feature_qc, cellcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=NA, grid=rowAutoGrid(x))
 
     # Aggregating across cores.
     full.info <- DataFrame(

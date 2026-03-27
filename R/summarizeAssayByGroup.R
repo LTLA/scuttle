@@ -152,7 +152,7 @@ NULL
 
         out <- blockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
             statistics=statistics, threshold=threshold, BPPARAM=BPPARAM,
-            as.sparse=TRUE, grid=rowAutoGrid(x))
+            as.sparse=NA, grid=rowAutoGrid(x))
 
         collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
         names(collected) <- names(out[[1]])
@@ -172,10 +172,6 @@ NULL
 #' @importFrom MatrixGenerics rowSums rowMedians
 #' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
 .summarize_assay_internal <- function(x, by.group, statistics, threshold) {
-    if (is(x, "COO_SparseMatrix")) {
-        x <- as(x, "SVT_SparseMatrix")
-    }
-
     collated <- list()
     
     if ("sum" %in% statistics || "mean" %in% statistics) {

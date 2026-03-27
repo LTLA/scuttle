@@ -148,7 +148,7 @@ NULL
     percent.top <- sort(as.integer(percent.top))
 
     # Computing all QC metrics, with cells split across workers. 
-    bp.out <- blockApply(x, FUN=.per_cell_qc, featcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=TRUE, grid=colAutoGrid(x))
+    bp.out <- blockApply(x, FUN=.per_cell_qc, featcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=NA, grid=colAutoGrid(x))
 
     # Aggregating across cores.
     full.info <- DataFrame(
