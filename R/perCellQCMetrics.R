@@ -156,7 +156,7 @@ NULL
         row.names=colnames(x)
     )
 
-    pct <- cumulative_prop(initializeCpp(x), top)
+    pct <- cumulative_prop(initializeCpp(x), percent.top)
     rownames(pct) <- percent.top
     full.info$percent.top <- t(pct)/full.info$sum * 100
 
