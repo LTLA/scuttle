@@ -7,7 +7,8 @@
 downsampleMatrix(x, prop, bycol = TRUE, sink = NULL, num.threads = 1)
 }
 \arguments{
-\item{x}{An integer or numeric matrix-like object containing non-negative counts.}
+\item{x}{An integer or numeric matrix-like object containing non-negative counts.
+Non-integer values will be rounded up and negative values will be set to zero.}
 
 \item{prop}{A numeric scalar or, if \code{bycol=TRUE}, a vector of length \code{ncol(x)}.
 All values should lie in [0, 1] specifying the downsampling proportion for the matrix or for each cell.}

@@ -1,12 +1,22 @@
+#ifndef USE_FC_LEN_T
+#define USE_FC_LEN_T
+#endif
+#include <Rconfig.h>
+#include "R_ext/BLAS.h"
+#include "R_ext/Lapack.h"
+#ifndef FCONE
+#define FCONE
+#endif
+
 #include "Rcpp.h"
 #include "Rtatami.h"
-#include "scuttle/linear_model_fit.h"
+
+#include "sanisizer/sanisizer.hpp"
 
 #include <stdexcept>
 #include <algorithm>
 #include <vector>
 #include <cstddef>
-#include <optional>
 
 // [[Rcpp::export(rng=false)]]
 Rcpp::RObject fit_linear_model (Rcpp::NumericMatrix qr, Rcpp::NumericVector qraux, Rcpp::RObject exprs, bool get_coefs, int nthreads) {

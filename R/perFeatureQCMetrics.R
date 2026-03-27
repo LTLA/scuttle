@@ -65,9 +65,9 @@
 #' @name perFeatureQCMetrics
 NULL
 
-#' @importFrom beachmat rowBlockApply
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bplapply SerialParam
+#' @importFrom DelayedArray blockApply rowAutoGrid
 #' @importClassesFrom S4Vectors DFrame 
 .per_feature_qc_metrics <- function(x, subsets = NULL, threshold = 0, BPPARAM=SerialParam(), flatten=TRUE,
     detection_limit=NULL) 
@@ -80,7 +80,7 @@ NULL
     subsets <- lapply(subsets, FUN = .subset2index, target = x, byrow = FALSE)
 
     # Computing all QC metrics, with cells split across workers.
-    bp.out <- rowBlockApply(x, FUN=.per_feature_qc, cellcon=subsets, limit=threshold, BPPARAM=BPPARAM)
+    bp.out <- blockApply(x, FUN=.per_feature_qc, cellcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=TRUE, grid=rowAutoGrid(x))
 
     # Aggregating across cores.
     full.info <- DataFrame(

@@ -132,7 +132,8 @@ NULL
 #' @importFrom S4Vectors DataFrame make_zero_col_DFrame
 #' @importFrom BiocParallel bpmapply SerialParam
 #' @importClassesFrom S4Vectors DataFrame
-#' @importFrom beachmat initializeCpp colBlockApply
+#' @importFrom DelayedArray blockApply colAutoGrid
+#' @importFrom beachmat initializeCpp
 .per_cell_qc_metrics <- function(x, subsets = NULL, percent.top = integer(0),
     threshold = 0, BPPARAM=SerialParam(), flatten=TRUE, 
     percent_top=NULL, detection_limit=NULL)
@@ -147,7 +148,7 @@ NULL
     percent.top <- sort(as.integer(percent.top))
 
     # Computing all QC metrics, with cells split across workers. 
-    bp.out <- colBlockApply(x, FUN=.per_cell_qc, featcon=subsets, limit=threshold, BPPARAM=BPPARAM)
+    bp.out <- blockApply(x, FUN=.per_cell_qc, featcon=subsets, limit=threshold, BPPARAM=BPPARAM, as.sparse=TRUE, grid=colAutoGrid(x))
 
     # Aggregating across cores.
     full.info <- DataFrame(
