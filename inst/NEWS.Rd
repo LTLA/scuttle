@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{scuttle}}
 
+\section{Version 1.22}{\itemize{
+\item Improved the efficiency of the downsampling algorithm in \code{downsampleMatrix()}, which will change the results slightly.
+In addition, the function now returns a \code{SVT_SparseMatrix} for all inputs.
+
+\item Support multi-threading in \code{fitLinearModel()}.
+}}
+
 \section{Version 1.16}{\itemize{
 \item \code{addPerCellQCMetrics()} will (optionally) add the feature subset identities to the row data of the SingleCellExperiment.
 
