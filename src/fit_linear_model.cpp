@@ -79,7 +79,7 @@ Rcpp::RObject fit_linear_model (Rcpp::NumericMatrix qr, Rcpp::NumericVector qrau
     Rcpp::NumericMatrix coefs((get_coefs ? ncoefs : 0), (get_coefs ? ngenes : 0));
     double* cptr = coefs.begin();
 
-    tatami::parallelize([&](int t, int start, int length) -> void {
+    tatami::parallelize([&](int, int start, int length) -> void {
         std::vector<double> work(lwork);
         auto ext = tatami::consecutive_extractor<false>(emat, true, start, length);
         std::vector<double> buffer(nobs);

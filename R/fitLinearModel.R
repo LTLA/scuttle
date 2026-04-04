@@ -7,8 +7,8 @@
 #' This should be of full column rank.
 #' @param get.coefs A logical scalar indicating whether the coefficients should be returned.
 #' @param subset.row An integer, character or logical vector indicating the rows of \code{x} to use for model fitting.
-#' @param num.threads Integer specifying the number of threads for model fitting.
-#' @param BPPARAM Deprecated, use \code{num.threads} instead.
+#' @param BPPARAM A \link[BiocParallel]{BiocParallelParam} object specifying how calculations should be parallelized across rows of \code{x}.
+#' If \code{NULL}, no parallelization is performed.
 #' @param rank.error Logical scalar indicating whether to throw an error when \code{design} is not of full rank.
 #'
 #' @return
@@ -45,8 +45,8 @@
 #' @author Aaron Lun
 #'
 #' @export
-#' @importFrom beachmat initializeCpp
-fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, num.threads = 1, BPPARAM = NULL, rank.error=TRUE) {
+#' @importFrom DelayedArray blockApply rowAutoGrid
+fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, BPPARAM = NULL, rank.error=TRUE) {
     QR <- .ranksafeQR(design, error=rank.error)
 
     if (!is.null(subset.row)) {
@@ -66,9 +66,28 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, num.threa
 
     } else {
         if (!is.null(BPPARAM)) {
-            num.threads <- BiocParallel::bpnworkers(BPPARAM)
+            bp.out2 <- blockApply(
+                x,
+                FUN = fit_linear_model2,
+                grid = rowAutoGrid(x),
+                qr = QR$qr,
+                qraux = QR$qraux,
+                get_coefs = get.coefs,
+                BPPARAM = BPPARAM
+            )
+
+            bp.out <- list(
+                NULL,
+                unlist(lapply(bp.out2, function(x) x[[2]])),
+                unlist(lapply(bp.out2, function(x) x[[3]]))
+            )
+            if (get.coefs) {
+                bp.out[[1]] <- do.call(cbind, lapply(bp.out2, function(x) x[[1]]))
+            }
+
+        } else {
+            bp.out <- fit_linear_model2(initializeCpp(x), qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs)
         }
-        bp.out <- fit_linear_model(initializeCpp(x), qr=QR$qr, qraux=QR$qraux, get_coefs=get.coefs, nthreads=num.threads)
 
         all.means <- bp.out[[2]]
         all.vars <- bp.out[[3]]
@@ -86,6 +105,12 @@ fitLinearModel <- function(x, design, get.coefs=TRUE, subset.row=NULL, num.threa
     }
 
     output
+}
+
+#' @importFrom beachmat initializeCpp
+fit_linear_model2 <- function(x, ...) {
+    # Hard-coding the number of threads at 1 because of problems with non-thread-safe LAPACK.
+    fit_linear_model(initializeCpp(x), ..., nthreads=1)
 }
 
 #' @export
