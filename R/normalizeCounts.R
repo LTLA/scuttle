@@ -1,6 +1,9 @@
 #' Compute normalized expression values
 #'
+#' @description
 #' Compute (log-)normalized expression values by dividing counts for each cell by the corresponding size factor.
+#' 
+#' This has been deprecated in favor of the \code{normalizeCounts} function in the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix-like object containing counts for cells in the columns and features in the rows.
 #'
@@ -130,6 +133,7 @@ setMethod("normalizeCounts", "ANY", function(x, size.factors=NULL,
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL,
     subset_row=NULL, down_target=NULL, down_prop=NULL)
 {
+    .Deprecated(old = "normalizeCounts", new = "scrapper::normalizeCounts")
     subset.row <- .replace(subset.row, subset_row)
     size.factors <- .replace(size.factors, size_factors)
     center.size.factors <- .replace(center.size.factors, center_size_factors)

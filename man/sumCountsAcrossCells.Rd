@@ -65,7 +65,8 @@ For DataFrame \code{ids}, each column corresponds to a unique combination of lev
 }
 \description{
 Sum counts or average expression values for each feature across groups of cells.
-This function is deprecated; use \code{\link{summarizeAssayByGroup}} instead.
+
+This function is deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 }
 \details{
 These functions provide a convenient method for summing or averaging expression values across multiple columns for each feature.

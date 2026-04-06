@@ -86,6 +86,8 @@ This has the same dimensions as \code{x}, unless \code{subset.row} is specified 
 }
 \description{
 Compute (log-)normalized expression values by dividing counts for each cell by the corresponding size factor.
+
+This has been deprecated in favor of the \code{normalizeCounts} function in the \pkg{scrapper} package.
 }
 \details{
 Normalized expression values are computed by dividing the counts for each cell by the size factor for that cell.

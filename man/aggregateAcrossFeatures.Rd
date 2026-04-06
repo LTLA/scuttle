@@ -39,6 +39,8 @@ This behavior assumes that \code{ids} specifies gene sets such that any existing
 \description{
 Sum together expression values (by default, counts) for each feature set 
 in each cell of a \linkS4class{SummarizedExperiment} object.
+
+This has been deprecated in favor of the \code{aggregateAcrossFeatures.se} function in the \pkg{scrapper} package.
 }
 \examples{
 example_sce <- mockSCE()

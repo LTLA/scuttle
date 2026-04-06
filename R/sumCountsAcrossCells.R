@@ -1,7 +1,9 @@
 #' Sum expression across groups of cells
 #' 
+#' @description
 #' Sum counts or average expression values for each feature across groups of cells.
-#' This function is deprecated; use \code{\link{summarizeAssayByGroup}} instead.
+#' 
+#' This function is deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix of expression values (usually counts) containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
@@ -79,6 +81,7 @@ NULL
     store.number="ncells", average=FALSE, BPPARAM=SerialParam(), 
     subset_row=NULL, subset_col=NULL, store_number=NULL)
 {
+    .Deprecated(old = "sumCountsAcrossCells", new = "scrapper::aggregateAcrossCells")
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     store.number <- .replace(store.number, store_number)

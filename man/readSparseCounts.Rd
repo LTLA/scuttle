@@ -46,6 +46,8 @@ A dgCMatrix containing double-precision values (usually counts) for each row (ge
 }
 \description{
 Reads a sparse count matrix from file containing a dense tabular format.
+
+This has been deprecated in favor of the \code{readSparseCSV} function from the \pkg{SparseArray} package.
 }
 \details{
 This function provides a convenient method for reading dense arrays from flat files into a sparse matrix in memory.

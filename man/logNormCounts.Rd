@@ -95,6 +95,8 @@ These are centered if \code{center.size.factors=TRUE}.
 }
 \description{
 Compute log-transformed normalized expression values from a count matrix in a \linkS4class{SingleCellExperiment} object.
+
+This has been deprecated in favor of the \code{normalizeRnaCounts.se} function in the \pkg{scrapper} package.
 }
 \details{
 This function is a convenience wrapper around \code{\link{normalizeCounts}}.

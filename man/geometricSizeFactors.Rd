@@ -47,6 +47,8 @@ For \code{computeGeometricFactors}, \code{x} is returned containing the size fac
 }
 \description{
 Define per-cell size factors from the geometric mean of counts per cell.
+
+This has been deprecated in favor of the \code{computeClrm1Factors} function in the \pkg{scrapper} package.
 }
 \details{
 The geometric mean provides an alternative measure of the average coverage per cell,

@@ -1,6 +1,9 @@
 #' Compute library size factors
 #' 
+#' @description
 #' Define per-cell size factors from the library sizes (i.e., total sum of counts per cell).
+#'
+#' This has been deprecated in favor of the \code{centerSizeFactors} function in the \pkg{scrapper} package.
 #'
 #' @param x For \code{librarySizeFactors}, a numeric matrix of counts with one row per feature and column per cell.
 #' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing such counts.
@@ -56,6 +59,7 @@ NULL
 .library_size_factors <- function(x, subset.row=NULL, geometric=FALSE, BPPARAM=SerialParam(),
     subset_row=NULL, pseudo_count=1) 
 {
+    .Deprecated(old = "librarySizeFactors", new = "scrapper::centerSizeFactors")
     subset.row <- .replace(subset.row, subset_row)
 
     if (!is.null(subset.row)) {

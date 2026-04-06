@@ -1,6 +1,9 @@
 #' Compute log-normalized expression values
 #'
+#' @description
 #' Compute log-transformed normalized expression values from a count matrix in a \linkS4class{SingleCellExperiment} object.
+#'
+#' This has been deprecated in favor of the \code{normalizeRnaCounts.se} function in the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment} object containing a count matrix.
 #' @inheritParams normalizeCounts
@@ -74,6 +77,7 @@ setMethod("logNormCounts", "SummarizedExperiment", function(x, size.factors=NULL
     assay.type="counts", name=NULL, BPPARAM=SerialParam(), 
     size_factors=NULL, pseudo_count=NULL, center_size_factors=NULL, exprs_values=NULL)
 {
+    .Deprecated(old = "logNormCounts", new = "scrapper::normalizeRnaCounts.se")
     size.factors <- .replace(size.factors, size_factors)
     pseudo.count <- .replace(pseudo.count, pseudo_count)
     center.size.factors <- .replace(center.size.factors, center_size_factors)

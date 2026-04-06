@@ -1,7 +1,10 @@
 #' Summarize an assay by group 
 #' 
+#' @description
 #' From an assay matrix, compute summary statistics for groups of cells.
 #' A typical example would be to compute various summary statistics for clusters.
+#'
+#' This has been deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
@@ -80,6 +83,7 @@ NULL
     statistics=c("mean", "sum", "num.detected", "prop.detected", "median"),
     store.number="ncells", threshold=0, BPPARAM=SerialParam()) 
 {
+    .Deprecated(old = "summarizeAssayByGroup", new = "scrapper::aggregateAcrossCells")
     new.ids <- .process_ids(x, ids, subset.col)
     sum.out <- .summarize_assay(x, ids=new.ids, subset.row=subset.row,
         statistics=match.arg(statistics, several.ok=TRUE),

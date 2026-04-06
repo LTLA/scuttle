@@ -65,6 +65,8 @@ QC statistics and filtering information for all remaining cells are stored in th
 }
 \description{
 A convenient utility that identifies low-quality cells based on frequently used QC metrics.
+
+This has been deprecated in favor of the \code{quickRnaQc.se} function in the \pkg{scrapper} package.
 }
 \details{
 For DataFrame \code{x}, this function simply calls \code{\link{perCellQCFilters}}.

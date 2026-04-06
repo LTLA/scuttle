@@ -1,6 +1,9 @@
 #' Add QC metrics to a SummarizedExperiment
 #'
+#' @description
 #' Convenient utilities to compute QC metrics and add them to a \linkS4class{SummarizedExperiment}'s row or column metadata.
+#'
+#' This has been deprecated in favor of the \code{quickRnaQc.se} function in the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{SummarizedExperiment} object or one of its subclasses.
 #' @inheritParams perCellQCMetrics
@@ -43,6 +46,7 @@
 #' @importFrom BiocGenerics cbind
 #' @importFrom SummarizedExperiment colData colData<- rowData rowData<-
 addPerCellQCMetrics <- function(x, subsets = NULL, ..., subset.prefix = "subsets_") {
+    .Deprecated(new = "scrapper::quickRnaQc.se")
     colData(x) <- cbind(colData(x), perCellQCMetrics(x, subsets = subsets, ...))
 
     if (!is.null(subset.prefix) && length(subsets)) {

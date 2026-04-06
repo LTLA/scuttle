@@ -1,8 +1,9 @@
 #' Number of detected expression values per group of cells
 #' 
-#' Computes the number of detected expression values (by default, defined as non-zero counts) 
-#' for each feature in each group of cells.
-#' This function is deprecated: use \code{\link{summarizeAssayByGroup}} instead.
+#' @description
+#' Computes the number of detected expression values (by default, defined as non-zero counts) for each feature in each group of cells.
+#'
+#' This function has been deprecated in favor of the \code{computeRnaQcMetrics} function from the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix of counts containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a count matrix.
@@ -42,6 +43,7 @@ NULL
     store.number="ncells", average=FALSE, threshold=0, BPPARAM=SerialParam(),
     subset_row=NULL, subset_col=NULL, store_number=NULL, detection_limit=NULL)
 {
+    .Deprecated(old = "numDetectedAcrossCells", new = "scrapper::computeRnaQcMetrics")
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     store.number <- .replace(store.number, store_number)

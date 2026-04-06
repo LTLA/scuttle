@@ -5,7 +5,7 @@
 \item Improved the efficiency of the downsampling algorithm in \code{downsampleMatrix()}, which will change the results slightly.
 In addition, the function now returns a \code{SVT_SparseMatrix} for all inputs.
 
-\item Support multi-threading in \code{fitLinearModel()}.
+\item Deprecate all functions that have more efficient counterparts in \pkg{scrapper}.
 }}
 
 \section{Version 1.16}{\itemize{

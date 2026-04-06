@@ -1,7 +1,10 @@
 #' Aggregate feature sets in a SummarizedExperiment
 #' 
+#' @description
 #' Sum together expression values (by default, counts) for each feature set 
 #' in each cell of a \linkS4class{SummarizedExperiment} object.
+#'
+#' This has been deprecated in favor of the \code{aggregateAcrossFeatures.se} function in the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{SummarizedExperiment} containing an expression matrix.
 #' @inheritParams sumCountsAcrossFeatures
@@ -34,6 +37,7 @@
 #' @importFrom SummarizedExperiment assays<- rowData rowData<- rowRanges<- assayNames
 #' @importFrom GenomicRanges GRangesList GRanges
 aggregateAcrossFeatures <- function(x, ids, ..., use.assay.type="counts", use_exprs_values=NULL) {
+    .Deprecated(new = "scrapper::aggregateAcrossFeatures.se")
     use.assay.type <- .replace(use.assay.type, use_exprs_values)
 
     collected <- list()

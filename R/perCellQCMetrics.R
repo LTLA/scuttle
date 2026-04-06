@@ -1,6 +1,9 @@
 #' Per-cell quality control metrics
 #'
+#' @description
 #' Compute per-cell quality control metrics for a count matrix or a \linkS4class{SingleCellExperiment}.
+#'
+#' This function has been deprecated in favor of the \code{computeRnaQcMetrics} function from the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix of counts with cells in columns and features in rows.
 #' 
@@ -138,6 +141,7 @@ NULL
     threshold = 0, BPPARAM=SerialParam(), flatten=TRUE, 
     percent_top=NULL, detection_limit=NULL)
 {
+    .Deprecated(old = "perCellQCMetrics", new = "scrapper::computeRnaQcMetrics")
     threshold <- .replace(threshold, detection_limit)
     percent.top <- .replace(percent.top, percent_top)
 

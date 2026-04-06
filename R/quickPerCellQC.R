@@ -1,6 +1,9 @@
 #' Quick cell-level QC
 #'
+#' @description
 #' A convenient utility that identifies low-quality cells based on frequently used QC metrics.
+#'
+#' This has been deprecated in favor of the \code{quickRnaQc.se} function in the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{DataFrame} containing per-cell QC statistics, as computed by \code{\link{perCellQCMetrics}}.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object that can be used to create such a DataFrame via \code{\link{perCellQCMetrics}}.
@@ -62,6 +65,7 @@ setGeneric("quickPerCellQC", function(x, ...) standardGeneric("quickPerCellQC"))
 setMethod("quickPerCellQC", "ANY", function(x, sum.field="sum", detected.field="detected", sub.fields=NULL, 
     ..., lib_size=NULL, n_features=NULL, percent_subsets=NULL) 
 {
+    .Deprecated(old = "quickPerCellQC", new = "scrapper::quickRnaQc.se")
     sum.field <- .replace(sum.field, lib_size)
     detected.field <- .replace(detected.field, n_features)
     sub.fields <- .replace(sub.fields, percent_subsets)

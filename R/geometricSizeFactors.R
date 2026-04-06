@@ -1,6 +1,10 @@
 #' Compute geometric size factors
 #' 
+#' @description
 #' Define per-cell size factors from the geometric mean of counts per cell.
+#'
+#' This has been deprecated in favor of the \code{computeClrm1Factors} function in the \pkg{scrapper} package.
+
 #'
 #' @param x For \code{geometricSizeFactors}, a numeric matrix of counts with one row per feature and column per cell.
 #' Alternatively, a \linkS4class{SummarizedExperiment} or \linkS4class{SingleCellExperiment} containing such counts.
@@ -52,6 +56,7 @@ NULL
 #' @importFrom MatrixGenerics colMeans
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .geometric_size_factors <- function(x, subset.row=NULL, pseudo.count=1, BPPARAM=SerialParam()) {
+    .Deprecated(old = "geometricSizeFactors", new = "scrapper::computeClrm1Factors")
     if (!is.null(subset.row)) {
        x <- x[subset.row,,drop=FALSE]
     }

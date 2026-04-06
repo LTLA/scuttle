@@ -1,6 +1,9 @@
 #' Read sparse count matrix from file
 #'
+#' @description
 #' Reads a sparse count matrix from file containing a dense tabular format.
+#'
+#' This has been deprecated in favor of the \code{readSparseCSV} function from the \pkg{SparseArray} package.
 #'
 #' @param file A string containing a file path to a count table, or a connection object opened in read-only text mode.
 #' @param sep A string specifying the delimiter between fields in \code{file}.
@@ -43,6 +46,7 @@
 #' @importFrom utils tail read.table
 readSparseCounts <- function(file, sep="\t", quote=NULL, comment.char="", row.names=TRUE, col.names=TRUE, 
     ignore.row=0L, skip.row=0L, ignore.col=0L, skip.col=0L, chunk=1000L) {
+    .Deprecated(new = "SparseArray::readSparseCSV")
     if (is.character(file)) { 
         fhandle <- file(file, open='r')
         on.exit(close(fhandle))

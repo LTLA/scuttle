@@ -56,6 +56,8 @@ Rows are ordered according to \code{levels(ids)}.
 }
 \description{
 Sum together expression values (by default, counts) for each feature set in each cell.
+
+This function is deprecated in favor of the \code{aggregateAcrossFeatures} function in the \pkg{scrapper} package.
 }
 \details{
 This function provides a convenient method for aggregating counts across multiple rows for each cell.

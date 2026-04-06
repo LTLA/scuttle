@@ -53,6 +53,8 @@ For \code{computeLibraryFactors}, \code{x} is returned containing the size facto
 }
 \description{
 Define per-cell size factors from the library sizes (i.e., total sum of counts per cell).
+
+This has been deprecated in favor of the \code{centerSizeFactors} function in the \pkg{scrapper} package.
 }
 \details{
 Library sizes are converted into size factors by scaling them so that their mean across cells is unity.

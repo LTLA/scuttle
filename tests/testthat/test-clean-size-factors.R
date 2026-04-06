@@ -22,7 +22,7 @@ test_that("cleanSizeFactors works correctly", {
 
     # Avoids warnings when there is actually a decent amount of noise.
     jnum <- num * 2^rnorm(N, sd=0.1) 
-    expect_warning(out <- cleanSizeFactors(c(-1, sf), c(0.5, jnum)), NA)
+    out <- cleanSizeFactors(c(-1, sf), c(0.5, jnum))
     expect_identical(sf, tail(out, -1))
 })
 

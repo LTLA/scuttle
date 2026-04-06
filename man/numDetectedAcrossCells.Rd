@@ -67,9 +67,9 @@ The identities of the levels for each column are reported in the \code{\link{col
 If \code{average=TRUE}, the assay is instead a numeric matrix containing the proportion of detected values.
 }
 \description{
-Computes the number of detected expression values (by default, defined as non-zero counts) 
-for each feature in each group of cells.
-This function is deprecated: use \code{\link{summarizeAssayByGroup}} instead.
+Computes the number of detected expression values (by default, defined as non-zero counts) for each feature in each group of cells.
+
+This function has been deprecated in favor of the \code{computeRnaQcMetrics} function from the \pkg{scrapper} package.
 }
 \examples{
 example_sce <- mockSCE()

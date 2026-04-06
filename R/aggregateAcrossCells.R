@@ -1,7 +1,10 @@
 #' Aggregate data across groups of cells
 #' 
+#' @description
 #' Sum counts or average expression values for each feature across groups of cells,
 #' while also aggregating values in the \code{\link{colData}} and other fields in a SummarizedExperiment.
+#'
+#' This has been deprecated in favor of the \code{aggregateAcrossCells.se} function in the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{SingleCellExperiment} or \linkS4class{SummarizedExperiment}
 #' containing one or more matrices of expression values to be aggregated;
@@ -112,6 +115,7 @@ setMethod("aggregateAcrossCells", "SummarizedExperiment", function(x, ids, ..., 
     subset.row=NULL, subset.col=NULL, store.number="ncells", coldata.merge=NULL, use.assay.type="counts",
     subset_row=NULL, subset_col=NULL, store_number="ncells", coldata_merge=NULL, use_exprs_values=NULL)
 {
+    .Deprecated(old = "aggregateAcrossCells", new = "scrapper::aggregateAcrossCells.se")
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     store.number <- .replace(store.number, store_number)

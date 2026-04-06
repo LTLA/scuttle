@@ -59,6 +59,8 @@ For DataFrame \code{ids}, each column corresponds to a unique combination of lev
 \description{
 From an assay matrix, compute summary statistics for groups of cells.
 A typical example would be to compute various summary statistics for clusters.
+
+This has been deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 }
 \details{
 These functions provide a convenient method for summing or averaging expression values across multiple columns for each feature.

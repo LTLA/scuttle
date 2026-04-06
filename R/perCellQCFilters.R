@@ -1,6 +1,9 @@
 #' Compute filters for low-quality cells
 #'
+#' @description
 #' Identifies low-quality cells as outliers for frequently used QC metrics.
+#'
+#' This function has been deprecated in favor of the \code{suggestRnaQcThresholds} function from the \pkg{scrapper} package.
 #'
 #' @param x A \linkS4class{DataFrame} containing per-cell QC statistics, as computed by \code{\link{perCellQCMetrics}}.
 #' @param sum.field String specifying the column of \code{x} containing the library size for each cell.
@@ -52,6 +55,7 @@
 #' @export
 #' @importFrom S4Vectors DataFrame
 perCellQCFilters <- function(x, sum.field="sum", detected.field="detected", sub.fields=NULL, ...) {
+    .Deprecated(new = "scrapper::suggestRnaQcThresholds")
     output <- DataFrame(
         low_lib_size=isOutlier(x[[sum.field]], log=TRUE, type="lower", ...),
         low_n_features=isOutlier(x[[detected.field]], log=TRUE, type="lower", ...)

@@ -93,6 +93,8 @@ If \code{flatten=TRUE}, nested matrices and DataFrames are flattened to remove t
 }
 \description{
 Compute per-cell quality control metrics for a count matrix or a \linkS4class{SingleCellExperiment}.
+
+This function has been deprecated in favor of the \code{computeRnaQcMetrics} function from the \pkg{scrapper} package.
 }
 \details{
 This function calculates useful QC metrics for identification and removal of potentially problematic cells.

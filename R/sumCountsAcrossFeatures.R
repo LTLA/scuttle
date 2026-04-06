@@ -1,6 +1,9 @@
 #' Sum counts across feature sets
-#' 
+#'
+#' @description
 #' Sum together expression values (by default, counts) for each feature set in each cell.
+#'
+#' This function is deprecated in favor of the \code{aggregateAcrossFeatures} function in the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix of counts containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a count matrix.
@@ -68,6 +71,8 @@ NULL
 .sum_counts_across_features <- function(x, ids, subset.row=NULL, subset.col=NULL, 
     average=FALSE, BPPARAM=SerialParam(), subset_row=NULL, subset_col=NULL) 
 {
+    .Deprecated(old = "sumCountsAcrossFeatures", new = "aggregateAcrossFeatures")
+
     subset.row <- .replace(subset.row, subset_row)
     subset.col <- .replace(subset.col, subset_col)
     .sum_across_features(x, ids, subset.row=subset.row, subset.col=subset.col, average=average, BPPARAM=BPPARAM)

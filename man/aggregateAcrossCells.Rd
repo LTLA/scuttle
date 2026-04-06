@@ -99,6 +99,8 @@ Column metadata are also aggregated according to the rules in \code{coldata.merg
 \description{
 Sum counts or average expression values for each feature across groups of cells,
 while also aggregating values in the \code{\link{colData}} and other fields in a SummarizedExperiment.
+
+This has been deprecated in favor of the \code{aggregateAcrossCells.se} function in the \pkg{scrapper} package.
 }
 \details{
 This function summarizes the assay values in \code{x} for each group in \code{ids} using \code{\link{summarizeAssayByGroup}}

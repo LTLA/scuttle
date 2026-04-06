@@ -19,6 +19,8 @@ Each column corresponds to a column of \code{x} and contains the unique value fo
 \description{
 Obtain unique values for groups of rows in a \linkS4class{DataFrame}.
 This is used by \code{\link{aggregateAcrossCells}} to obtain \code{\link{colData}} for the aggregated SummarizedExperiment.
+
+This has been deprecated in favor of the \code{aggregateColData} function in the \pkg{scrapper} package.
 }
 \examples{
 x <- DataFrame(

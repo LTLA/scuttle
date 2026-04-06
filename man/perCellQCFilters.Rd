@@ -33,6 +33,8 @@ with the final \code{discard} column indicating whether the cell should be disca
 }
 \description{
 Identifies low-quality cells as outliers for frequently used QC metrics.
+
+This function has been deprecated in favor of the \code{suggestRnaQcThresholds} function from the \pkg{scrapper} package.
 }
 \details{
 This function simply calls \code{\link{isOutlier}} on the various QC metrics in \code{x}.

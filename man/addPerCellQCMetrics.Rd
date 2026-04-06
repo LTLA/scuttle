@@ -34,6 +34,8 @@ If \code{NULL}, these subset identity columns are not added to the \code{\link{r
 }
 \description{
 Convenient utilities to compute QC metrics and add them to a \linkS4class{SummarizedExperiment}'s row or column metadata.
+
+This has been deprecated in favor of the \code{quickRnaQc.se} function in the \pkg{scrapper} package.
 }
 \details{
 These functions are simply wrappers around \code{\link{perCellQCMetrics}} and \code{\link{perFeatureQCMetrics}}, respectively.
