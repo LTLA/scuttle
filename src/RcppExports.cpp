@@ -10,6 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// aggregate_across_cells
+SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected);
+RcppExport SEXP _scuttle_aggregate_across_cells(SEXP xSEXP, SEXP groupsSEXP, SEXP num_groupsSEXP, SEXP do_sumSEXP, SEXP do_detectedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_groups(num_groupsSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_sum(do_sumSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_detected(do_detectedSEXP);
+    rcpp_result_gen = Rcpp::wrap(aggregate_across_cells(x, groups, num_groups, do_sum, do_detected));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cumulative_prop
 Rcpp::NumericMatrix cumulative_prop(Rcpp::RObject input, Rcpp::IntegerVector top);
 RcppExport SEXP _scuttle_cumulative_prop(SEXP inputSEXP, SEXP topSEXP) {
@@ -62,36 +76,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// sparse_aggregate_sum
-Rcpp::NumericMatrix sparse_aggregate_sum(Rcpp::NumericVector x, Rcpp::IntegerVector i, Rcpp::IntegerVector p, Rcpp::IntegerVector groupings, int ngroups, int nrows);
-RcppExport SEXP _scuttle_sparse_aggregate_sum(SEXP xSEXP, SEXP iSEXP, SEXP pSEXP, SEXP groupingsSEXP, SEXP ngroupsSEXP, SEXP nrowsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type i(iSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type p(pSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type groupings(groupingsSEXP);
-    Rcpp::traits::input_parameter< int >::type ngroups(ngroupsSEXP);
-    Rcpp::traits::input_parameter< int >::type nrows(nrowsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_aggregate_sum(x, i, p, groupings, ngroups, nrows));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sparse_aggregate_detected
-Rcpp::NumericMatrix sparse_aggregate_detected(Rcpp::NumericVector x, Rcpp::IntegerVector i, Rcpp::IntegerVector p, Rcpp::IntegerVector groupings, int ngroups, int nrows);
-RcppExport SEXP _scuttle_sparse_aggregate_detected(SEXP xSEXP, SEXP iSEXP, SEXP pSEXP, SEXP groupingsSEXP, SEXP ngroupsSEXP, SEXP nrowsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type i(iSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type p(pSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type groupings(groupingsSEXP);
-    Rcpp::traits::input_parameter< int >::type ngroups(ngroupsSEXP);
-    Rcpp::traits::input_parameter< int >::type nrows(nrowsSEXP);
-    rcpp_result_gen = Rcpp::wrap(sparse_aggregate_detected(x, i, p, groupings, ngroups, nrows));
-    return rcpp_result_gen;
-END_RCPP
-}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -106,12 +90,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 5},
     {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
     {"_scuttle_downsample", (DL_FUNC) &_scuttle_downsample, 4},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 5},
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
-    {"_scuttle_sparse_aggregate_sum", (DL_FUNC) &_scuttle_sparse_aggregate_sum, 6},
-    {"_scuttle_sparse_aggregate_detected", (DL_FUNC) &_scuttle_sparse_aggregate_detected, 6},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };

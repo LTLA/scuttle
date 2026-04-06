@@ -103,14 +103,16 @@ NULL
 }
 
 #' @importFrom BiocParallel SerialParam 
-#' @importFrom DelayedArray rowAutoGrid blockApply
+#' @importFrom DelayedArray rowAutoGrid blockApply DelayedArray
+#' @importFrom beachmat initializeCpp
 .summarize_assay <- function(x, ids, statistics, threshold=0, subset.row=NULL, BPPARAM=SerialParam()) {
     if (!is.null(subset.row)) {
         x <- x[subset.row,,drop=FALSE]
     }
 
-    if (is(x, "dgCMatrix") && all(statistics %in% c("sum", "mean", "num.detected", "prop.detected"))) {
+    if (all(statistics %in% c("sum", "mean", "num.detected", "prop.detected"))) {
         # Fast path hack to get around DelayedArray's inefficiencies.
+        # Can't really be bothered to do it
         collected <- list()
         f <- factor(ids) # automatically drops unused levels.
         g <- as.integer(f) - 1L
@@ -118,26 +120,27 @@ NULL
         freq <- tabulate(g + 1L, ngroups)
         names(freq) <- levels(f)
 
-        if ("sum" %in% statistics || "mean" %in% statistics) {
-            summed <- sparse_aggregate_sum(x@x, x@i, x@p, g, ngroups, nrow(x))
-            if ("sum" %in% statistics) {
-                collected$sum <- summed
-            }
-            if ("mean" %in% statistics) {
-                collected$mean <- t(t(summed) / freq)
-            }
+        keep <- !is.na(g)
+        do_sum <- ("sum" %in% statistics || "mean" %in% statistics)
+        do_detected <- ("num.detected" %in% statistics || "prop.detected" %in% statistics)
+
+        collected <- aggregate_across_cells(
+            initializeCpp(DelayedArray(x)[,keep]),
+            g[keep],
+            ngroups,
+            do_sum,
+            do_detected
+        )
+        names(collected) <- c("sum", "num.detected")
+
+        if ("mean" %in% statistics) {
+            collected$mean <- t(t(collected$sum) / freq)
+        }
+        if ("prop.detected" %in% statistics) {
+            collected$prop.detected <- t(t(collected$num.detected) / freq)
         }
 
-        if ("num.detected" %in% statistics || "prop.detected" %in% statistics) {
-            detected <- sparse_aggregate_detected(x@x, x@i, x@p, g, ngroups, nrow(x))
-            if ("num.detected" %in% statistics) {
-                collected$num.detected <- detected
-            }
-            if ("prop.detected" %in% statistics) {
-                collected$prop.detected <- t(t(detected) / freq)
-            }
-        }
-
+        collected <- collected[statistics]
         for (i in seq_along(collected)) {
             rownames(collected[[i]]) <- rownames(x)
             colnames(collected[[i]]) <- levels(f)
