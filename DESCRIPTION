@@ -7,11 +7,11 @@ Authors@R: c(
 Version: 1.21.3
 Date: 2026-04-06
 License: GPL-3
-Title: Single-Cell RNA-Seq Analysis Utilities
+Title: Legacy Utilities for Single-Cell RNA-Seq Analysis
 Description: 
-    Provides basic utility functions for performing single-cell analyses,
-    focusing on simple normalization, quality control and data transformations.
-    Also provides some helper functions to assist development of other packages.
+    Provides some legacy utility functions for performing single-cell analyses.
+    Most of these functions are deprecated in favor of newer, more performant alternatives.
+    We just keep this package around for back-compatibility and to point to the replacement functions.
 Depends: 
     SingleCellExperiment
 Imports: 

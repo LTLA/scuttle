@@ -1,0 +1,185 @@
+---
+title: Legacy utilities for single-cell RNA-seq analysis
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+date: "Revised: April 6, 2026"
+package: scuttle 
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+vignette: >
+  %\VignetteIndexEntry{Single-cell utilities}
+  %\VignetteEngine{knitr::rmarkdown}
+  %VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE, results="hide"}
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+library(BiocStyle)
+set.seed(10918)
+```
+
+# Introduction
+
+Back in the old days, `r Biocpkg("scuttle")` implemented various low-level utilities for single-cell RNA-seq data analysis.
+This includes functions for quality control to remove damaged cells, scaling normalization for removing cell-specific biases, and other miscellany.
+Most of these functions are now deprecated or defunct, having since been superceded by more efficient implementations in other packages like `r Biocpkg("scrapper")`.
+Nonetheless, we still keep `r Biocpkg("scuttle")` around so that users of the older functions are properly redirected to their replacements.
+Also, this package has given several years of faithful service and, like any old working dog, deserves a nice retirement in the quieter parts of the build system. 
+
+```r
+# Show your love for this package by installing it
+# to bump up its download statistics.
+install.packages("BiocManager")
+BiocManager::install("scuttle")
+```
+
+Anyway, this vignette will go through some of the remaining non-deprecated functions in this package.
+In general, these functions are no longer part of routine single-cell analyses but we keep them around for historical purposes.
+We'll demonstrate on everyone's favorite demonstration dataset:
+
+```{r}
+library(scuttle)
+library(scRNAseq)
+sce <- ZeiselBrainData()
+sce
+```
+
+# Computing feature-level statistics
+
+Some basic feature-level statistics are computed by the `perFeatureQCMetrics()` function.
+This includes `mean`, the mean count of the gene/feature across all cells;
+`detected`, the percentage of cells with non-zero counts for each gene;
+`subsets_Y_ratio`, ratio of mean counts between the cell control set named Y and all cells.
+
+```{r}
+# Pretending that the first 10 cells are empty wells, for demonstration.
+per.feat <- perFeatureQCMetrics(sce, subsets=list(Empty=1:10))
+summary(per.feat$mean)
+summary(per.feat$detected)
+summary(per.feat$subsets_Empty_ratio)
+```
+
+A more refined calculation of the average is provided by the `calculateAverage()` function, 
+which adjusts the counts by the relative library size (or size factor) prior to taking the mean.
+
+```{r}
+ave <- calculateAverage(sce)
+summary(ave)
+```
+
+These metrics tend to be more useful for informing the analyst about the overall behavior of the experiment,
+rather than being explicitly used to filter out genes.
+For example, one would hope that the most abundant genes are the "usual suspects", e.g., ribosomal proteins, actin, histones.
+
+Users _may_ wish to filter out very lowly or non-expressed genes to reduce the size of the dataset prior to downstream processing.
+However, **be sure to publish the unfiltered count matrix!**
+It is very difficult to re-use a count matrix where the features are filtered;
+information from the filtered features cannot be recovered, complicating integration with other datasets.
+
+# Making gene symbols unique
+
+When publishing a dataset, the best practice is to provide gene annotations in the form of a stable identifier like those from Ensembl or Entrez.
+This provides an unambiguous reference to the identity of the gene, avoiding difficulties with synonynms and making it easier to cross-reference.
+However, when working with a dataset, it is more convenient to use the gene symbols as these are easier to remember.
+
+Thus, a common procedure is to replace the stable identifiers in the row names with gene symbols.
+However, this is not straightforward as the gene symbols may not exist (`NA`s) or may be duplicated.
+To assist this process, `r Biocpkg('scuttle')` provides the `uniquifyFeatureNames()` function that emit gene symbols if they are unique; append the identifier, if they are duplicated; and replace the symbol with the identifier if the former is missing.
+
+```{r}
+# Original row names are Ensembl IDs.
+sce.ens <- ZeiselBrainData(ensembl=TRUE)
+head(rownames(sce.ens)) 
+
+# Replacing with guaranteed unique and non-missing symbols:
+rownames(sce.ens) <- uniquifyFeatureNames(
+    rownames(sce.ens), rowData(sce.ens)$originalName
+)
+head(rownames(sce.ens)) 
+```
+
+# Creating a `data.frame`
+
+The `makePerCellDF()` and `makePerFeatureDF()` functions create `data.frame`s from the `SingleCellExperiment` object.
+In the `makePerCellDF()` case, each row of the output `data.frame` corresponds to a cell and each column represents the expression of a specified feature across cells, a field of the column metadata, or reduced dimensions (if any are available).
+
+```{r}
+out <- makePerCellDF(sce, features="Tspan12", assay.type="counts")
+colnames(out)
+```
+
+In the `makePerFeatureDF()` case, each row of the output `data.frame` corresponds to a gene and each column represents the expression profile of a specified cell or the values of a row metadata field.
+
+```{r}
+out2 <- makePerFeatureDF(
+    sce,
+    cells=c("1772063062_D05", "1772063061_D01", "1772060240_F02", "1772062114_F05"),
+    assay.type="counts"
+)
+colnames(out2)
+```
+
+The aim is to enable the data in a `SingleCellExperiment` to be easily used in functions like `model.matrix()` or in `ggplot()`,
+without requiring users to manually extract the desired fields from the `SingleCellExperiment` to construct their own `data.frame`.
+
+# Scaling normalization
+
+## Median-based normalization
+
+The `medianSizeFactors()` function uses a `r Biocpkg("DESeq2")`-esque approach based on the median ratio from an average pseudo-cell.
+Briefly, we assume that most genes are non-DE, such that any systematic fold difference in coverage (as defined by the median ratio) represents technical biases that must be removed.
+This is highly robust to composition biases but relies on sufficient sequencing coverage to obtain well-defined ratios.
+
+```{r}
+summary(medianSizeFactors(sce))
+```
+
+## Pooling normalization
+
+The `computePooledFactors` method implements the [pooling strategy for scaling normalization](https://doi.org/10.1186/s13059-016-0947-7).
+This uses an approach similar to `medianSizeFactors()` to remove composition biases, 
+but pools cells together to overcome problems with discreteness at low counts.
+Per-cell factors are then obtained from the pools using a deconvolution strategy.
+
+```{r}
+library(scran)
+clusters <- quickCluster(sce)
+
+sce <- computePooledFactors(sce, clusters=clusters)
+summary(sizeFactors(sce))
+```
+
+For larger data sets, a rough clustering should be performed prior to normalization.
+`computePooledFactors()` will then automatically apply normalization within each cluster first, before adjusting the scaling factors to be comparable across clusters.
+This reduces the risk of violating our assumptions (of a non-DE majority of genes) when many genes are DE between clusters in a heterogeneous population.
+In this case, we use the `quickCluster()` function from the `r Biocpkg("scran")` package, but any clustering function can be used, for example:
+
+```{r}
+sce <- computePooledFactors(sce, clusters=sce$level1class)
+summary(sizeFactors(sce))
+```
+
+We assume that quality control on the cells has already been performed prior to running this function.
+Low-quality cells with few expressed genes can often have negative size factor estimates.
+
+## Spike-in normalization
+
+An alternative approach is to normalize based on the spike-in counts. 
+The idea is that the same quantity of spike-in RNA was added to each cell prior to library preparation.
+Size factors are computed to scale the counts such that the total coverage of the spike-in transcripts is equal across cells.
+
+```{r}
+sce2 <- computeSpikeFactors(sce, "ERCC")
+summary(sizeFactors(sce2))
+```
+
+The main practical difference from the other strategies is that spike-in normalization preserves differences in total RNA content between cells, whereas `computePooledFactors` and other non-DE methods do not.
+This can be important in certain applications where changes in total RNA content are associated with a biological phenomenon of interest.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
