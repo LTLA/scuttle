@@ -2,7 +2,7 @@
 #include "scran_aggregate/scran_aggregate.hpp"
 
 //[[Rcpp::export(rng=false)]]
-SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected) {
+SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, int num_threads) {
     auto raw_mat = Rtatami::BoundNumericPointer(x);
     const auto& mat = raw_mat->ptr;
     const auto NC = mat->ncol();
@@ -42,6 +42,7 @@ SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, 
     }
 
     scran_aggregate::AggregateAcrossCellsOptions opt;
+    opt.num_threads = num_threads;
     scran_aggregate::aggregate_across_cells(*mat, gptr, buffers, opt);
 
     return output;

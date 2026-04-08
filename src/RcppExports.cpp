@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // aggregate_across_cells
-SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected);
-RcppExport SEXP _scuttle_aggregate_across_cells(SEXP xSEXP, SEXP groupsSEXP, SEXP num_groupsSEXP, SEXP do_sumSEXP, SEXP do_detectedSEXP) {
+SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, int num_threads);
+RcppExport SEXP _scuttle_aggregate_across_cells(SEXP xSEXP, SEXP groupsSEXP, SEXP num_groupsSEXP, SEXP do_sumSEXP, SEXP do_detectedSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
@@ -20,7 +20,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type num_groups(num_groupsSEXP);
     Rcpp::traits::input_parameter< bool >::type do_sum(do_sumSEXP);
     Rcpp::traits::input_parameter< bool >::type do_detected(do_detectedSEXP);
-    rcpp_result_gen = Rcpp::wrap(aggregate_across_cells(x, groups, num_groups, do_sum, do_detected));
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(aggregate_across_cells(x, groups, num_groups, do_sum, do_detected, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -93,6 +94,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// set_executor
+SEXP set_executor(SEXP ptr);
+RcppExport SEXP _scuttle_set_executor(SEXP ptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    rcpp_result_gen = Rcpp::wrap(set_executor(ptr));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_row_counts
 Rcpp::RObject sum_row_counts(Rcpp::RObject counts, Rcpp::IntegerVector genes, Rcpp::IntegerVector runs);
 RcppExport SEXP _scuttle_sum_row_counts(SEXP countsSEXP, SEXP genesSEXP, SEXP runsSEXP) {
@@ -107,12 +118,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 5},
+    {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 6},
     {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
     {"_scuttle_downsample_global", (DL_FUNC) &_scuttle_downsample_global, 6},
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 5},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 5},
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
+    {"_scuttle_set_executor", (DL_FUNC) &_scuttle_set_executor, 1},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},
     {NULL, NULL, 0}
 };

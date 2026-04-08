@@ -1,10 +1,7 @@
 #' Summarize an assay by group 
 #' 
-#' @description
 #' From an assay matrix, compute summary statistics for groups of cells.
 #' A typical example would be to compute various summary statistics for clusters.
-#'
-#' This has been deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 #'
 #' @param x A numeric matrix containing features in rows and cells in columns.
 #' Alternatively, a \linkS4class{SummarizedExperiment} object containing such a matrix.
@@ -43,8 +40,7 @@
 #' \item \code{"mean"}, the mean of all values in each group.
 #' This makes the most sense for normalized and/or transformed assays.
 #' \item \code{"median"}, the median of all values in each group.
-#' This makes the most sense for normalized and/or transformed assays, 
-#' usually generated from large counts where discreteness is less of an issue.
+#' This makes the most sense for normalized and/or transformed assays, usually generated from large counts where discreteness is less of an issue.
 #' \item \code{"num.detected"} and \code{"prop.detected"}, the number and proportion of values in each group that are non-zero.
 #' This makes the most sense for raw counts or sparsity-preserving transformations.
 #' }
@@ -79,20 +75,36 @@ NULL
 
 #' @importFrom BiocParallel SerialParam 
 #' @importFrom SummarizedExperiment SummarizedExperiment
-.summarize_assay_by_group <- function(x, ids, subset.row=NULL, subset.col=NULL,
-    statistics=c("mean", "sum", "num.detected", "prop.detected", "median"),
-    store.number="ncells", threshold=0, BPPARAM=SerialParam()) 
-{
+.summarize_assay_by_group <- function(
+    x,
+    ids,
+    subset.row=NULL,
+    subset.col=NULL,
+    statistics=c("mean", "sum", "num.detected", "prop.detected"),
+    store.number="ncells",
+    threshold=0,
+    BPPARAM=SerialParam()
+) {
     .Deprecated(old = "summarizeAssayByGroup", new = "scrapper::aggregateAcrossCells")
+
     new.ids <- .process_ids(x, ids, subset.col)
-    sum.out <- .summarize_assay(x, ids=new.ids, subset.row=subset.row,
-        statistics=match.arg(statistics, several.ok=TRUE),
-        threshold=threshold, BPPARAM=BPPARAM)
+    sum.out <- .summarize_assay(
+        x,
+        ids=new.ids,
+        subset.row=subset.row,
+        statistics=match.arg(statistics, c("mean", "sum", "num.detected", "prop.detected", "median"), several.ok=TRUE),
+        threshold=threshold,
+        BPPARAM=BPPARAM
+    )
 
     mat.out <- sum.out$summary
     mapping <- match(colnames(mat.out[[1]]), as.character(new.ids))
-    coldata <- .create_coldata(original.ids=ids, mapping=mapping, 
-        freq=sum.out$freq, store.number=store.number)
+    coldata <- .create_coldata(
+        original.ids=ids,
+        mapping=mapping, 
+        freq=sum.out$freq,
+        store.number=store.number
+    )
 
     # Sync'ing the names as coldata is the source of truth.
     for (i in seq_along(mat.out)) {
@@ -102,23 +114,20 @@ NULL
     SummarizedExperiment(mat.out, colData=coldata)
 }
 
-#' @importFrom BiocParallel SerialParam 
+#' @importFrom BiocParallel SerialParam bpnworkers
 #' @importFrom DelayedArray rowAutoGrid blockApply DelayedArray
 #' @importFrom beachmat initializeCpp
 .summarize_assay <- function(x, ids, statistics, threshold=0, subset.row=NULL, BPPARAM=SerialParam()) {
     if (!is.null(subset.row)) {
-        x <- x[subset.row,,drop=FALSE]
+        x <- DelayedArray(x)[subset.row,,drop=FALSE]
     }
 
     if (all(statistics %in% c("sum", "mean", "num.detected", "prop.detected"))) {
         # Fast path hack to get around DelayedArray's inefficiencies.
-        # Can't really be bothered to do it
         collected <- list()
         f <- factor(ids) # automatically drops unused levels.
         g <- as.integer(f) - 1L
         ngroups <- nlevels(f)
-        freq <- tabulate(g + 1L, ngroups)
-        names(freq) <- levels(f)
 
         keep <- !is.na(g)
         if (!all(keep)) {
@@ -126,18 +135,18 @@ NULL
             g <- g[keep]
         }
 
-        do_sum <- ("sum" %in% statistics || "mean" %in% statistics)
-        do_detected <- ("num.detected" %in% statistics || "prop.detected" %in% statistics)
-
         collected <- aggregate_across_cells(
             initializeCpp(x),
-            g,
-            ngroups,
-            do_sum,
-            do_detected
+            groups = g,
+            num_groups = ngroups,
+            do_sum = ("sum" %in% statistics || "mean" %in% statistics),
+            do_detected = ("num.detected" %in% statistics || "prop.detected" %in% statistics),
+            num_threads = bpnworkers(BPPARAM)
         )
         names(collected) <- c("sum", "num.detected")
 
+        freq <- tabulate(g + 1L, ngroups)
+        names(freq) <- levels(f)
         if ("mean" %in% statistics) {
             collected$mean <- t(t(collected$sum) / freq)
         }
@@ -153,18 +162,25 @@ NULL
 
     } else {
         lost <- is.na(ids)
-        ids <- ids[!lost]
         if (any(lost)) {
-            x <- x[,!lost,drop=FALSE]
+            x <- DelayedArray(x)[,!lost,drop=FALSE]
+            ids <- ids[!lost]
         }
 
         # Drop unused levels, as the subsequent mapping step to preserve the type of 'ids'
         # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
         by.group <- split(seq_along(ids), ids, drop=TRUE)
 
-        out <- blockApply(x, FUN=.summarize_assay_internal, by.group=by.group, 
-            statistics=statistics, threshold=threshold, BPPARAM=BPPARAM,
-            as.sparse=NA, grid=rowAutoGrid(x))
+        out <- blockApply(
+            x,
+            FUN=.summarize_assay_internal,
+            by.group=by.group, 
+            statistics=statistics,
+            threshold=threshold,
+            BPPARAM=BPPARAM,
+            as.sparse=NA,
+            grid=rowAutoGrid(x)
+        )
 
         collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
         names(collected) <- names(out[[1]])

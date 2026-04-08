@@ -5,6 +5,9 @@
 \item Improved the efficiency of the downsampling algorithm in \code{downsampleMatrix()}, which will change the results slightly.
 In addition, new options are added to control the output type (integer/double) and class (dense matrix or \code{SVT_SparseMatrix}).
 
+\item Removed \code{"median"} from the default \code{statistics=} in \code{summarizeAssayByGroup()}.
+This enables default use of the fast code path for improved performance.
+
 \item Deprecate all functions that have more efficient counterparts in \pkg{scrapper}.
 }}
 

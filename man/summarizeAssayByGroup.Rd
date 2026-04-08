@@ -13,7 +13,7 @@ summarizeAssayByGroup(x, ...)
   ids,
   subset.row = NULL,
   subset.col = NULL,
-  statistics = c("mean", "sum", "num.detected", "prop.detected", "median"),
+  statistics = c("mean", "sum", "num.detected", "prop.detected"),
   store.number = "ncells",
   threshold = 0,
   BPPARAM = SerialParam()
@@ -59,8 +59,6 @@ For DataFrame \code{ids}, each column corresponds to a unique combination of lev
 \description{
 From an assay matrix, compute summary statistics for groups of cells.
 A typical example would be to compute various summary statistics for clusters.
-
-This has been deprecated in favor of the \code{aggregateAcrossCells} function in the \pkg{scrapper} package.
 }
 \details{
 These functions provide a convenient method for summing or averaging expression values across multiple columns for each feature.
@@ -74,8 +72,7 @@ This makes the most sense for raw counts, to allow models to account for the mea
 \item \code{"mean"}, the mean of all values in each group.
 This makes the most sense for normalized and/or transformed assays.
 \item \code{"median"}, the median of all values in each group.
-This makes the most sense for normalized and/or transformed assays, 
-usually generated from large counts where discreteness is less of an issue.
+This makes the most sense for normalized and/or transformed assays, usually generated from large counts where discreteness is less of an issue.
 \item \code{"num.detected"} and \code{"prop.detected"}, the number and proportion of values in each group that are non-zero.
 This makes the most sense for raw counts or sparsity-preserving transformations.
 }
