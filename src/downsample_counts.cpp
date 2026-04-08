@@ -1,6 +1,7 @@
 #include "Rtatami.h"
 
 #include "tatami_stats/tatami_stats.hpp"
+#include "scuttle/downsample.h"
 
 #include <vector>
 #include <cmath>
@@ -26,7 +27,6 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
     const int ngenes = mat.nrow();
     const int ncells = mat.ncol();
 
-    // Computing cumulative sums to mitigate problems from loss of precision at very large counts.
     std::vector<double> partials;
     double required = 0;
     Rcpp::NumericVector prop_col;
@@ -35,6 +35,12 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
         if (prop_col.size() != ncells) {
             throw std::runtime_error("length of 'prop' should equal number of columns");
         }
+        for (auto x : colsums) {
+            if (scuttle::too_large_for_integer_precision(x)) {
+                throw std::runtime_error("column sums are too large to maintain integer precision");
+            }
+        }
+
     } else {
         partials.resize(colsums.size());
         double last = 0;
@@ -42,6 +48,10 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             auto idx = ncells - c - 1;
             partials[idx] = last + colsums[idx];
             last = partials[idx];
+        }
+
+        if (scuttle::too_large_for_integer_precision(last)) {
+            throw std::runtime_error("matrix sum is too large to maintain integer precision");
         }
         required = std::round(last * prop_global);
     }
@@ -61,25 +71,18 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
         auto ext = tatami::consecutive_extractor<true>(mat, false, 0, ncells);
 
         for (int c = 0; c < ncells; ++c) {
+            double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
+            double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
+
             auto range = ext->fetch(work_x.data(), work_i.data());
+            scuttle::downsample(range.value, range.value + range.number, work_x.data(), current_total, current_required);
+
             down_i.clear();
             down_x.clear();
-
-            const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
-            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
-            double accumulated_total = 0, accumulated_used = 0;
-
             for (int i = 0; i < range.number; ++i) {
-                accumulated_total += range.value[i];
-                if (accumulated_total > current_total || accumulated_used >= current_required) {
-                    break;
-                }
-
-                const auto out = Rf_rhyper(range.value[i], current_total - accumulated_total, current_required - accumulated_used);
-                accumulated_used += out;
-                if (out > 0) {
+                if (work_x[i] > 0) {
                     down_i.push_back(range.index[i]);
-                    down_x.push_back(out);
+                    down_x.push_back(work_x[i]);
                 }
             }
 
@@ -89,7 +92,7 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             );
 
             if (prop_column.isNull()) {
-                required -= accumulated_used;
+                required = current_required;
             }
         }
 
@@ -98,25 +101,18 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
         auto ext = tatami::consecutive_extractor<false>(mat, false, 0, ncells);
 
         for (int c = 0; c < ncells; ++c) {
+            double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
+            double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
+
             const auto ptr = ext->fetch(work_x.data());
+            scuttle::downsample(ptr, ptr + ngenes, work_x.data(), current_total, current_required);
+
             down_i.clear();
             down_x.clear();
-
-            const double current_total = (prop_column.isNull() ? partials[c] : colsums[c]);
-            const double current_required = (prop_column.isNull() ? required : std::round(current_total * prop_col[c]));
-            double accumulated_total = 0, accumulated_used = 0;
-
             for (int i = 0; i < ngenes; ++i) {
-                accumulated_total += ptr[i];
-                if (accumulated_total > current_total || accumulated_used >= current_required) {
-                    break;
-                }
-
-                const auto out = Rf_rhyper(ptr[i], current_total - accumulated_total, current_required - accumulated_used);
-                accumulated_used += out;
-                if (out > 0) {
+                if (work_x[i] > 0) {
                     down_i.push_back(i);
-                    down_x.push_back(out);
+                    down_x.push_back(work_x[i]);
                 }
             }
 
@@ -126,7 +122,7 @@ Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable
             );
 
             if (prop_column.isNull()) {
-                required -= accumulated_used;
+                required = current_required;
             }
         }
     }
