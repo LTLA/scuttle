@@ -121,12 +121,17 @@ NULL
         names(freq) <- levels(f)
 
         keep <- !is.na(g)
+        if (!all(keep)) {
+            x <- DelayedArray(x)[,keep,drop=FALSE]
+            g <- g[keep]
+        }
+
         do_sum <- ("sum" %in% statistics || "mean" %in% statistics)
         do_detected <- ("num.detected" %in% statistics || "prop.detected" %in% statistics)
 
         collected <- aggregate_across_cells(
-            initializeCpp(DelayedArray(x)[,keep]),
-            g[keep],
+            initializeCpp(x),
+            g,
             ngroups,
             do_sum,
             do_detected
