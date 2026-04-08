@@ -8,9 +8,14 @@
 #' All values should lie in [0, 1] specifying the downsampling proportion for the matrix or for each cell.
 #' @param bycol A logical scalar indicating whether downsampling should be performed on a column-by-column basis.
 #' @param sink Deprecated and ignored.
+#' @param as.sparse Boolean indicating whether to return a sparse matrix.
+#' Defaults to whether \code{x} itself is sparse. 
+#' @param as.integer Boolean indicating whether to return an integer matrix.
+#' Defaults to whether \code{x} itself contains integer values. 
 #' @param num.threads Integer specifying the number of threads for the initial column sums.
 #' 
-#' @return An numeric matrix-like object of downsampled counts as a \link[SparseArray]{SVT_SparseMatrix}.
+#' @return A numeric matrix-like object of downsampled counts. 
+#' This may be integer and/or sparse depending on \code{as.sparse} and \code{as.integer}.
 #' 
 #' @details
 #' Given multiple batches of very different sequencing depths, 
@@ -53,27 +58,56 @@
 #'
 #' @export
 #' @importClassesFrom SparseArray SVT_SparseArray
+#' @importFrom S4Arrays is_sparse
+#' @importFrom BiocGenerics type
 #' @importFrom beachmat initializeCpp
-downsampleMatrix <- function(x, prop, bycol = TRUE, sink = NULL, num.threads = 1) {
+downsampleMatrix <- function(
+    x,
+    prop,
+    bycol = TRUE,
+    sink = NULL,
+    as.sparse = is_sparse(x),
+    as.integer = type(x) == "integer",
+    num.threads = 1
+) {
+    input.integer <- (type(x) == "integer")
+
     if (bycol) {
-        global.prop <- 0.0
-        column.prop <- rep(prop, length.out = ncol(x))
+        raw.out <- downsample_column(
+            initializeCpp(x),
+            prop = rep(prop, length.out = ncol(x)),
+            already_integer = input.integer,
+            output_sparse = as.sparse,
+            output_integer = as.integer
+        )
+
     } else {
-        global.prop <- prop[1]
-        column.prop <- NULL
+        raw.out <- downsample_global(
+            initializeCpp(x),
+            prop = prop,
+            already_integer = input.integer,
+            output_sparse = as.sparse,
+            output_integer = as.integer,
+            num_threads = num.threads
+        )
     }
 
-    if (any(dim(x) == 0)) {
-        raw.out <- NULL
+    if (as.sparse){
+        if (any(dim(x) == 0)) {
+            raw.out <- NULL
+        }
+
+        output <- new(
+            "SVT_SparseMatrix",
+            SVT = raw.out,
+            type = ifelse(as.integer, "integer", "double"),
+            dim = dim(x),
+            dimnames = list(rownames(x), colnames(x))
+        )
     } else {
-        raw.out <- downsample(initializeCpp(x), global.prop, column.prop, num.threads)
+        output <- raw.out
+        dimnames(output) <- dimnames(x)
     }
 
-    new(
-        "SVT_SparseMatrix",
-        SVT = raw.out,
-        type = "double",
-        dim = dim(x),
-        dimnames = list(rownames(x), colnames(x))
-    )
+    output
 }

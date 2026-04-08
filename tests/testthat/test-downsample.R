@@ -71,7 +71,41 @@ test_that("downsampling from a count matrix gives expected sums", {
     ref <- downsampleMatrix(cbind(as.vector(u1)), prop=0.111, bycol=TRUE)
     ref <- ref[,1]
     dim(ref) <- dim(out1)
+    dimnames(ref) <- dimnames(out1)
     expect_identical(as.matrix(ref), as.matrix(out1))
+})
+
+test_that("downsampling automatically sanitizes its inputs", {
+    set.seed(500)
+    ncells <- 80
+    u1 <- matrix(rnorm(20000) * 10, ncol=ncells)
+    sanitized <- round(u1)
+    sanitized[sanitized < 0] <- 0
+
+    set.seed(501)
+    ref <- downsampleMatrix(sanitized, prop=0.5, bycol=FALSE)
+    set.seed(501)
+    out <- downsampleMatrix(u1, prop=0.5, bycol=FALSE)
+    expect_identical(ref, out)
+
+    set.seed(502)
+    ref <- downsampleMatrix(sanitized, prop=0.5, bycol=TRUE)
+    set.seed(502)
+    out <- downsampleMatrix(u1, prop=0.5, bycol=TRUE)
+    expect_identical(ref, out)
+})
+
+test_that("downsampling respects the dimnames", {
+    set.seed(5005)
+    ncells <- 50
+    u2 <- matrix(rpois(20000, 1), ncol=ncells)
+    dimnames(u2) <- list(sprintf("GENE-%s", seq_len(nrow(u2))), sprintf("CELL-%s", seq_len(ncol(u2))))
+    out <- downsampleMatrix(u2, 0.5)
+    expect_identical(dimnames(out), dimnames(u2))
+
+    s2 <- as(u2, "dgCMatrix")
+    out <- downsampleMatrix(u2, 0.5)
+    expect_identical(dimnames(out), dimnames(u2))
 })
 
 test_that("downsampling from a count matrix works with silly inputs", {
@@ -93,7 +127,7 @@ test_that("downsampling from a count matrix works with silly inputs", {
     expect_equivalent(downsampleMatrix(w1[0,0,drop=FALSE], prop=0.5), w1[0,0,drop=FALSE])
 })
 
-test_that("different matrix representations yield the same result", {
+test_that("downsampling a dgCMatrix yields the same result", {
     set.seed(500)
     ncells <- 100
     u1 <- matrix(rpois(20000, 5), ncol=ncells)
@@ -103,28 +137,106 @@ test_that("different matrix representations yield the same result", {
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(501)
         dd <- downsampleMatrix(u1, down)
+        expect_type(dd, "integer")
+
         set.seed(501)
         dc <- downsampleMatrix(v1, down)
-        expect_identical(dc, dd)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "double")
+
+        storage.mode(dd) <- "double"
+        expect_identical(dd, as.matrix(dc))
     }
 
     # Columnar downsampling.
     for (down in c(0.111, 0.333, 0.777)) { 
         set.seed(502)
         dd <- downsampleMatrix(u1, down, bycol=TRUE)
+        expect_type(dd, "integer")
+
         set.seed(502)
         dc <- downsampleMatrix(v1, down, bycol=TRUE)
-        expect_identical(dc, dd)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "double")
+
+        storage.mode(dd) <- "double"
+        expect_identical(dd, as.matrix(dc))
+    }
+
+    # Columnar downsampling (variable).
+    {
+        prop <- runif(ncol(u1))
+
+        set.seed(503)
+        dd <- downsampleMatrix(u1, prop, bycol=TRUE)
+        expect_type(dd, "integer")
+
+        set.seed(503)
+        dc <- downsampleMatrix(v1, prop, bycol=TRUE)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "double")
+
+        storage.mode(dd) <- "double"
+        expect_identical(dd, as.matrix(dc))
+    }
+})
+
+test_that("SVT_SparseMatrix representation yields the same result", {
+    set.seed(500)
+    ncells <- 100
+    u1 <- matrix(rpois(20000, 5), ncol=ncells)
+    v1 <- as(u1, "SVT_SparseMatrix")
+    storage.mode(u1) <- "double"
+
+    # Basic downsampling.
+    for (down in c(0.111, 0.333, 0.777)) { 
+        set.seed(501)
+        dd <- downsampleMatrix(u1, down)
+        expect_type(dd, "double")
+
+        set.seed(501)
+        dc <- downsampleMatrix(v1, down)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "integer")
+
+        dc <- as.matrix(dc)
+        storage.mode(dc) <- "double"
+        expect_identical(dd, dc)
     }
 
     # Columnar downsampling.
-    prop <- runif(ncol(u1))
+    for (down in c(0.111, 0.333, 0.777)) { 
+        set.seed(502)
+        dd <- downsampleMatrix(u1, down, bycol=TRUE)
+        expect_type(dd, "double")
 
-    set.seed(503)
-    dd <- downsampleMatrix(u1, prop, bycol=TRUE)
-    set.seed(503)
-    dc <- downsampleMatrix(v1, prop, bycol=TRUE)
-    expect_equivalent(dc, dd)
+        set.seed(502)
+        dc <- downsampleMatrix(v1, down, bycol=TRUE)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "integer")
+
+        dc <- as.matrix(dc)
+        storage.mode(dc) <- "double"
+        expect_identical(dd, dc)
+    }
+
+    # Columnar downsampling (variable).
+    {
+        prop <- runif(ncol(u1))
+
+        set.seed(503)
+        dd <- downsampleMatrix(u1, prop, bycol=TRUE)
+        expect_type(dd, "double")
+
+        set.seed(503)
+        dc <- downsampleMatrix(v1, prop, bycol=TRUE)
+        expect_s4_class(dc, "SVT_SparseMatrix")
+        expect_identical(type(dc), "integer")
+
+        dc <- as.matrix(dc)
+        storage.mode(dc) <- "double"
+        expect_identical(dd, dc)
+    }
 })
 
 set.seed(500)
@@ -204,9 +316,7 @@ test_that("downsampling batches gives expected results", {
 
     # Checking that it's a no-op when the coverage is the same
     # (aside from the type conversion).
-    mat <- as(u1, "SVT_SparseArray")
-    type(mat) <- "double"
-    expect_equal(downsampleBatches(u1, u1), List(mat, mat))
+    expect_equal(downsampleBatches(u1, u1), List(u1, u1))
 })
 
 set.seed(5001)

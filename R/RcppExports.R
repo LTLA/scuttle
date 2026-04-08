@@ -9,8 +9,12 @@ cumulative_prop <- function(input, top) {
     .Call(`_scuttle_cumulative_prop`, input, top)
 }
 
-downsample <- function(input, prop_global, prop_column, num_threads) {
-    .Call(`_scuttle_downsample`, input, prop_global, prop_column, num_threads)
+downsample_global <- function(input, prop_global, num_threads, already_integer, output_sparse, output_integer) {
+    .Call(`_scuttle_downsample_global`, input, prop_global, num_threads, already_integer, output_sparse, output_integer)
+}
+
+downsample_column <- function(input, prop_col, already_integer, output_sparse, output_integer) {
+    .Call(`_scuttle_downsample_column`, input, prop_col, already_integer, output_sparse, output_integer)
 }
 
 fit_linear_model <- function(qr, qraux, exprs, get_coefs, nthreads) {

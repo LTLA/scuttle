@@ -35,17 +35,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// downsample
-Rcpp::RObject downsample(Rcpp::RObject input, double prop_global, Rcpp::Nullable<Rcpp::NumericVector> prop_column, int num_threads);
-RcppExport SEXP _scuttle_downsample(SEXP inputSEXP, SEXP prop_globalSEXP, SEXP prop_columnSEXP, SEXP num_threadsSEXP) {
+// downsample_global
+Rcpp::RObject downsample_global(Rcpp::RObject input, double prop_global, int num_threads, bool already_integer, bool output_sparse, bool output_integer);
+RcppExport SEXP _scuttle_downsample_global(SEXP inputSEXP, SEXP prop_globalSEXP, SEXP num_threadsSEXP, SEXP already_integerSEXP, SEXP output_sparseSEXP, SEXP output_integerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::RObject >::type input(inputSEXP);
     Rcpp::traits::input_parameter< double >::type prop_global(prop_globalSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type prop_column(prop_columnSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(downsample(input, prop_global, prop_column, num_threads));
+    Rcpp::traits::input_parameter< bool >::type already_integer(already_integerSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_sparse(output_sparseSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_integer(output_integerSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample_global(input, prop_global, num_threads, already_integer, output_sparse, output_integer));
+    return rcpp_result_gen;
+END_RCPP
+}
+// downsample_column
+Rcpp::RObject downsample_column(Rcpp::RObject input, Rcpp::NumericVector prop_col, bool already_integer, bool output_sparse, bool output_integer);
+RcppExport SEXP _scuttle_downsample_column(SEXP inputSEXP, SEXP prop_colSEXP, SEXP already_integerSEXP, SEXP output_sparseSEXP, SEXP output_integerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::RObject >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type prop_col(prop_colSEXP);
+    Rcpp::traits::input_parameter< bool >::type already_integer(already_integerSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_sparse(output_sparseSEXP);
+    Rcpp::traits::input_parameter< bool >::type output_integer(output_integerSEXP);
+    rcpp_result_gen = Rcpp::wrap(downsample_column(input, prop_col, already_integer, output_sparse, output_integer));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -92,7 +109,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 5},
     {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
-    {"_scuttle_downsample", (DL_FUNC) &_scuttle_downsample, 4},
+    {"_scuttle_downsample_global", (DL_FUNC) &_scuttle_downsample_global, 6},
+    {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 5},
     {"_scuttle_fit_linear_model", (DL_FUNC) &_scuttle_fit_linear_model, 5},
     {"_scuttle_pool_size_factors", (DL_FUNC) &_scuttle_pool_size_factors, 4},
     {"_scuttle_sum_row_counts", (DL_FUNC) &_scuttle_sum_row_counts, 3},

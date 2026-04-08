@@ -4,7 +4,15 @@
 \alias{downsampleMatrix}
 \title{Downsample a count matrix}
 \usage{
-downsampleMatrix(x, prop, bycol = TRUE, sink = NULL, num.threads = 1)
+downsampleMatrix(
+  x,
+  prop,
+  bycol = TRUE,
+  sink = NULL,
+  as.sparse = is_sparse(x),
+  as.integer = type(x) == "integer",
+  num.threads = 1
+)
 }
 \arguments{
 \item{x}{An integer or numeric matrix-like object containing non-negative counts.
@@ -17,10 +25,17 @@ All values should lie in [0, 1] specifying the downsampling proportion for the m
 
 \item{sink}{Deprecated and ignored.}
 
+\item{as.sparse}{Boolean indicating whether to return a sparse matrix.
+Defaults to whether \code{x} itself is sparse.}
+
+\item{as.integer}{Boolean indicating whether to return an integer matrix.
+Defaults to whether \code{x} itself contains integer values.}
+
 \item{num.threads}{Integer specifying the number of threads for the initial column sums.}
 }
 \value{
-An numeric matrix-like object of downsampled counts as a \link[SparseArray]{SVT_SparseMatrix}.
+A numeric matrix-like object of downsampled counts. 
+This may be integer and/or sparse depending on \code{as.sparse} and \code{as.integer}.
 }
 \description{
 Downsample a count matrix to a desired proportion, either on a whole-matrix or per-cell basis.

@@ -3,7 +3,7 @@
 
 \section{Version 1.22}{\itemize{
 \item Improved the efficiency of the downsampling algorithm in \code{downsampleMatrix()}, which will change the results slightly.
-In addition, the function now returns a \code{SVT_SparseMatrix} for all inputs.
+In addition, new options are added to control the output type (integer/double) and class (dense matrix or \code{SVT_SparseMatrix}).
 
 \item Deprecate all functions that have more efficient counterparts in \pkg{scrapper}.
 }}
