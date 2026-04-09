@@ -85,7 +85,7 @@ NULL
     threshold=0,
     BPPARAM=SerialParam()
 ) {
-    .Deprecated(old = "summarizeAssayByGroup", new = "scrapper::aggregateAcrossCells")
+    .Deprecated(msg="'summarizeAssayByGroup' is deprecated.\nUse 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.")
 
     new.ids <- .process_ids(x, ids, subset.col)
     sum.out <- .summarize_assay(
