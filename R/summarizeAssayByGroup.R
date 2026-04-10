@@ -122,113 +122,44 @@ NULL
         x <- DelayedArray(x)[subset.row,,drop=FALSE]
     }
 
-    if (all(statistics %in% c("sum", "mean", "num.detected", "prop.detected"))) {
-        # Fast path hack to get around DelayedArray's inefficiencies.
-        collected <- list()
-        f <- factor(ids) # automatically drops unused levels.
-        g <- as.integer(f) - 1L
-        ngroups <- nlevels(f)
+    collected <- list()
+    f <- factor(ids) # automatically drops unused levels.
+    g <- as.integer(f) - 1L
+    ngroups <- nlevels(f)
 
-        keep <- !is.na(g)
-        if (!all(keep)) {
-            x <- DelayedArray(x)[,keep,drop=FALSE]
-            g <- g[keep]
-        }
+    keep <- !is.na(g)
+    if (!all(keep)) {
+        x <- DelayedArray(x)[,keep,drop=FALSE]
+        g <- g[keep]
+    }
 
-        collected <- aggregate_across_cells(
-            initializeCpp(x),
-            groups = g,
-            num_groups = ngroups,
-            do_sum = ("sum" %in% statistics || "mean" %in% statistics),
-            do_detected = ("num.detected" %in% statistics || "prop.detected" %in% statistics),
-            num_threads = bpnworkers(BPPARAM)
-        )
-        names(collected) <- c("sum", "num.detected")
+    collected <- aggregate_across_cells(
+        initializeCpp(x),
+        groups = g,
+        num_groups = ngroups,
+        do_sum = ("sum" %in% statistics || "mean" %in% statistics),
+        do_detected = ("num.detected" %in% statistics || "prop.detected" %in% statistics),
+        do_median = ("median" %in% statistics),
+        num_threads = bpnworkers(BPPARAM)
+    )
+    names(collected) <- c("sum", "num.detected", "median")
 
-        freq <- tabulate(g + 1L, ngroups)
-        names(freq) <- levels(f)
-        if ("mean" %in% statistics) {
-            collected$mean <- t(t(collected$sum) / freq)
-        }
-        if ("prop.detected" %in% statistics) {
-            collected$prop.detected <- t(t(collected$num.detected) / freq)
-        }
+    freq <- tabulate(g + 1L, ngroups)
+    names(freq) <- levels(f)
+    if ("mean" %in% statistics) {
+        collected$mean <- t(t(collected$sum) / freq)
+    }
+    if ("prop.detected" %in% statistics) {
+        collected$prop.detected <- t(t(collected$num.detected) / freq)
+    }
 
-        collected <- collected[statistics]
-        for (i in seq_along(collected)) {
-            rownames(collected[[i]]) <- rownames(x)
-            colnames(collected[[i]]) <- levels(f)
-        }
-
-    } else {
-        lost <- is.na(ids)
-        if (any(lost)) {
-            x <- DelayedArray(x)[,!lost,drop=FALSE]
-            ids <- ids[!lost]
-        }
-
-        # Drop unused levels, as the subsequent mapping step to preserve the type of 'ids'
-        # in .create_coldata doesn't make sense (as there is no mapping to a concrete observation).
-        by.group <- split(seq_along(ids), ids, drop=TRUE)
-
-        out <- blockApply(
-            x,
-            FUN=.summarize_assay_internal,
-            by.group=by.group, 
-            statistics=statistics,
-            threshold=threshold,
-            BPPARAM=BPPARAM,
-            as.sparse=NA,
-            grid=rowAutoGrid(x)
-        )
-
-        collected <- do.call(mapply, c(list(FUN=rbind, SIMPLIFY=FALSE, USE.NAMES=FALSE), out))
-        names(collected) <- names(out[[1]])
-
-        freq <- lengths(by.group)
-        if ("mean" %in% statistics) {
-            collected$mean <- t(t(collected$sum)/freq)
-        }
-        if ("prop.detected" %in% statistics) {
-            collected$prop.detected <- t(t(collected$num.detected)/freq)
-        }
+    collected <- collected[statistics]
+    for (i in seq_along(collected)) {
+        rownames(collected[[i]]) <- rownames(x)
+        colnames(collected[[i]]) <- levels(f)
     }
 
     list(summary=collected[statistics], freq=freq)
-}
-
-#' @importFrom MatrixGenerics rowSums rowMedians
-#' @importClassesFrom SparseArray COO_SparseMatrix SVT_SparseMatrix
-.summarize_assay_internal <- function(x, by.group, statistics, threshold) {
-    collated <- list()
-    
-    if ("sum" %in% statistics || "mean" %in% statistics) {
-        out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE]))
-        collated$sum <- .cbind_empty(out, x)
-    }
-
-    if ("median" %in% statistics) {
-        # This should auto-lookup the various *MatrixStats packages if they're installed.
-        out <- lapply(by.group, function(i) rowMedians(x[,i,drop=FALSE]))
-        out <- .cbind_empty(out, x)
-        rownames(out) <- rownames(x)
-        collated$median <- out
-    }
-
-    if ("num.detected" %in% statistics || "prop.detected" %in% statistics) {
-        out <- lapply(by.group, function(i) rowSums(x[,i,drop=FALSE] > threshold))
-        collated$num.detected <- .cbind_empty(out, x)
-    }
-
-    collated
-}
-
-.cbind_empty <- function(out, x) {
-    if (length(out)) {
-        do.call(cbind, out)
-    } else {
-        as.matrix(x[,0,drop=FALSE])
-    }
 }
 
 ##########################

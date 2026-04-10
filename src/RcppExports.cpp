@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // aggregate_across_cells
-SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, int num_threads);
-RcppExport SEXP _scuttle_aggregate_across_cells(SEXP xSEXP, SEXP groupsSEXP, SEXP num_groupsSEXP, SEXP do_sumSEXP, SEXP do_detectedSEXP, SEXP num_threadsSEXP) {
+SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, bool do_median, int num_threads);
+RcppExport SEXP _scuttle_aggregate_across_cells(SEXP xSEXP, SEXP groupsSEXP, SEXP num_groupsSEXP, SEXP do_sumSEXP, SEXP do_detectedSEXP, SEXP do_medianSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
@@ -20,8 +20,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type num_groups(num_groupsSEXP);
     Rcpp::traits::input_parameter< bool >::type do_sum(do_sumSEXP);
     Rcpp::traits::input_parameter< bool >::type do_detected(do_detectedSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_median(do_medianSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(aggregate_across_cells(x, groups, num_groups, do_sum, do_detected, num_threads));
+    rcpp_result_gen = Rcpp::wrap(aggregate_across_cells(x, groups, num_groups, do_sum, do_detected, do_median, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -118,7 +119,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 6},
+    {"_scuttle_aggregate_across_cells", (DL_FUNC) &_scuttle_aggregate_across_cells, 7},
     {"_scuttle_cumulative_prop", (DL_FUNC) &_scuttle_cumulative_prop, 2},
     {"_scuttle_downsample_global", (DL_FUNC) &_scuttle_downsample_global, 6},
     {"_scuttle_downsample_column", (DL_FUNC) &_scuttle_downsample_column, 5},

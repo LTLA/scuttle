@@ -2,7 +2,7 @@
 #include "scran_aggregate/scran_aggregate.hpp"
 
 //[[Rcpp::export(rng=false)]]
-SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, int num_threads) {
+SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, bool do_sum, bool do_detected, bool do_median, int num_threads) {
     auto raw_mat = Rtatami::BoundNumericPointer(x);
     const auto& mat = raw_mat->ptr;
     const auto NC = mat->ncol();
@@ -14,8 +14,8 @@ SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, 
 
     const int* gptr = groups.begin();
 
-    Rcpp::List output(2);
-    scran_aggregate::AggregateAcrossCellsBuffers<double, int> buffers;
+    Rcpp::List output(3);
+    scran_aggregate::AggregateAcrossCellsBuffers<double, int, double> buffers;
 
     if (do_sum) {
         Rcpp::NumericMatrix sums(NR, num_groups);
@@ -39,6 +39,18 @@ SEXP aggregate_across_cells(SEXP x, Rcpp::IntegerVector groups, int num_groups, 
         output[1] = detected;
     } else {
         output[1] = R_NilValue;
+    }
+
+    if (do_median) {
+        Rcpp::NumericMatrix medians(NR, num_groups);
+        buffers.medians.reserve(num_groups);
+        double* omedians = medians.begin();
+        for (int i = 0; i < num_groups; ++i) {
+            buffers.medians.push_back(omedians + sanisizer::product_unsafe<std::size_t>(NR, i));
+        }
+        output[2] = medians;
+    } else {
+        output[2] = R_NilValue;
     }
 
     scran_aggregate::AggregateAcrossCellsOptions opt;
