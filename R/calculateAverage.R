@@ -51,6 +51,7 @@ NULL
 
 #' @importFrom BiocParallel register bpparam SerialParam
 #' @importFrom MatrixGenerics rowMeans
+#' @importFrom Matrix t
 #' @importFrom DelayedArray getAutoBPPARAM setAutoBPPARAM
 .calculate_average <- function(x, size.factors=NULL, subset.row=NULL, BPPARAM = SerialParam(),
     size_factors=NULL, subset_row=NULL)
@@ -66,7 +67,12 @@ NULL
     setAutoBPPARAM(BPPARAM)
     on.exit(setAutoBPPARAM(oldbp))
 
-    rowMeans(normalizeCounts(x, size.factors, subset.row=subset.row, log=FALSE))
+    if (!is.null(subset.row)) {
+        x <- x[subset.row,,drop=FALSE]
+    }
+
+    x <- t(t(x) / size.factors)
+    rowMeans(x)
 }
 
 #' @export

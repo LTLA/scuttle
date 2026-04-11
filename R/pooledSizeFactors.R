@@ -310,7 +310,7 @@ NULL
 # Internal functions.
 #############################################################
 
-#' @importFrom Matrix qr qr.coef
+#' @importFrom Matrix qr qr.coef t
 #' @importFrom S4Arrays is_sparse
 #' @importFrom MatrixGenerics colSums
 .per_cluster_normalize <- function(x, sizes, min.mean=NULL, positive=FALSE, scaling=NULL) 
@@ -330,7 +330,7 @@ NULL
     if (any(scaling==0)) {
         stop("cells should have non-zero library sizes or 'scaling' values")
     }
-    exprs <- normalizeCounts(x, size.factors=scaling, center.size.factors=FALSE, log=FALSE)
+    exprs <- t(t(x) / scaling)
 
     ave.cell <- rowMeans(exprs) * mean(scaling) # equivalent to calculateAverage().
     high.ave <- min.mean <= ave.cell 
