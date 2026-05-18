@@ -8,7 +8,27 @@ In addition, new options are added to control the output type (integer/double) a
 \item Removed \code{"median"} from the default \code{statistics=} in \code{summarizeAssayByGroup()}.
 This enables default use of the fast code path for improved performance.
 
-\item Deprecate all functions that have more efficient counterparts in \pkg{scrapper}.
+\item Deprecate all functions that have more efficient counterparts in other packages, mostly \pkg{scrapper}.
+Specifically:
+\itemize{
+\item \code{addPerCellQcMetrics()} is replaced by \code{scrapper::quickRnaQc.se()}.
+\item \code{aggregateAcrossCells()} is replaced by \code{scrapper::aggregateAcrossCells.se()}.
+\item \code{aggregateAcrossFeatures()} is replaced by \code{scrapper::aggregateAcrossFeatures.se()}.
+\item \code{cleanSizeFactors()} is replaced by \code{scrapper::sanitizeSizeFactors()}.
+\item \code{geometricSizeFactors()} is replaced by \code{scrapper::computeClrm1Factors()}.
+\item \code{librarySizeFactors()} is replaced by \code{scrapper::centerSizeFactors()}.
+\item \code{logNormCounts()} is replaced by \code{scrapper::normalizeRnaCounts.se()}.
+\item \code{normalizeCounts()} is replaced by \code{scrapper::normalizeCounts()}.
+\item \code{numDetectedAcrossCells()} is replaced by \code{scrapper::computeRnaQcMetrics()}.
+\item \code{perCellQCFilters()} is replaced by \code{scrapper::suggestRnaQcThresholds()}.
+\item \code{perCellQCMetrics()} is replaced by \code{scrapper::computeRnaQcMetrics()}.
+\item \code{quickPerCellQC()} is replaced by \code{scrapper::quickRnaQc.se()}.
+\item \code{sumCountsAcrossCells()} is replaced by \code{scrapper::aggregateAcrossCells()}.
+\item \code{sumCountsAcrossFeatures()} is replaced by \code{scrapper::aggregateAcrossFeatures()}.
+\item \code{summarizeAssayByGroup()} is replaced by \code{scrapper::aggregateAcrossCells()} or \code{beachmat::tatami.sums.by.group()}.
+\item \code{uniquifyDataFrameByGroup()} is replaced by \code{scrapper::aggregateColData()}.
+\item \code{readSparseCounts()} is replaced by \code{SparseArray::readSparseCSV()}.
+}
 }}
 
 \section{Version 1.16}{\itemize{
