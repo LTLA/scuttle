@@ -4,8 +4,8 @@ Authors@R: c(
         person("Aaron", "Lun", role = c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
         person("Davis", "McCarthy", role="aut")
     )
-Version: 1.23.0
-Date: 2026-04-11
+Version: 1.23.1
+Date: 2026-05-18
 License: GPL-3
 Title: Legacy Utilities for Single-Cell RNA-Seq Analysis
 Description: 
@@ -56,6 +56,8 @@ LinkingTo:
     Rcpp,
     beachmat,
     assorthead
+URL: https://github.com/LTLA/scuttle
+BugReports: https://github.com/LTLA/scuttle/issues
 SystemRequirements: C++17
 RoxygenNote: 7.3.3
 Encoding: UTF-8
