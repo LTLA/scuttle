@@ -122,9 +122,9 @@ Rcpp::RObject downsample_global(Rcpp::RObject input, double prop_global, int num
 
     // Just computing the total sum in a decently fast manner.
     // Probably could replace with a sums::total() function to switch between row and column sums, but that would be pretty niche.
-    tatami_stats::sums::Options opt;
+    tatami_stats::SumOptions opt;
     opt.num_threads = num_threads;
-    auto colsums = tatami_stats::sums::by_column(mat, opt);
+    auto colsums = tatami_stats::sum(false, mat, opt);
 
     const double total = std::accumulate(colsums.begin(), colsums.end(), 0.0);
     if (scuttle::too_large_for_integer_precision(total)) {

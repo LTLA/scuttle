@@ -1,6 +1,6 @@
 #include "Rcpp.h"
 #include "Rtatami.h"
-#include "tatami_stats/tatami_stats.hpp"
+#include "quickstats/quickstats.hpp"
 
 #include <stdexcept>
 #include <algorithm>
@@ -191,7 +191,7 @@ Rcpp::List pool_size_factors (Rcpp::RObject exprs, Rcpp::NumericVector pseudo_ce
                 (*rIt) = *cIt / *pcIt;
             }
 
-            pool_factor[rownum] = tatami_stats::medians::direct(ratios.data(), ratios.size(), false); // zeros in reference already stripped out.
+            pool_factor[rownum] = quickstats::median(ratios.size(), ratios.data()); // zeros in reference already stripped out.
         }
     }    
 
